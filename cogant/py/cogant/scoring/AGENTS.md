@@ -125,47 +125,43 @@ bundle = {
 
 ### CodebaseMetrics (metrics.py)
 
-Tracks multi-dimensional quality metrics across bundles.
+Computes ratio-based architectural quality metrics for one bundle.
 
-**MetricsReport** — NamedTuple holding summary metrics:
-- `complexity_score` — [0.0, 100.0] inverse of average cyclomatic complexity
-- `coupling_score` — [0.0, 100.0] inverse of module instability
-- `cohesion_score` — [0.0, 100.0] factor graph cohesion
-- `semantic_coverage` — [0.0, 100.0] % of nodes with semantic roles assigned
-- `observability_score` — [0.0, 100.0] % of hidden variables observable
-- `controllability_score` — [0.0, 100.0] % of hidden variables controllable
+**Accepted input shapes:** `graph["nodes"]` / `graph["edges"]` may be the
+dict-keyed-by-id layout written to `program_graph.json` by
+`cogant.api.orchestration.program_graph_to_dict` or plain lists of payloads.
+Edge endpoints are read from `source_id` / `target_id`, falling back to
+`source` / `target`. Mappings may be keyed by mapping id (the pipeline
+layout) or by node id.
+
+**MetricsReport** — flat dataclass; every score is a float in [0.0, 1.0]:
+- `complexity_score` — `0.6 * density + 0.4 * min(1, log2(n + 1) / log2(1000))`
+- `coupling_score` — fraction of edges whose endpoints sit in different modules
+- `cohesion_score` — fraction of edges whose endpoints sit in the same module
+- `semantic_coverage` — fraction of nodes named in some mapping's `graph_fragment_node_ids`
+- `observability_score` — fraction of state variables listed in some observation's `observes_state_vars`
+- `controllability_score` — fraction of state variables listed in some action's `affects_state_vars`
 - `node_count`, `edge_count` — structural counts
 - `state_var_count`, `observation_count`, `action_count` — state space dimensions
 
-**CodebaseMetrics** — computes multi-dimensional quality:
+**Module resolution (coupling/cohesion):** a node's module is its
+`parent_id`, else `attributes.module`, else its source `path` (all nodes
+extracted from one file share that path), else the `"root"` bucket. Edges
+with an endpoint that is not a known node count toward neither score, so the
+two scores need not sum to 1.0. Coupling is 0.0 when every node resolves to a
+single module.
 
 **Key Methods:**
-- `__init__(graph_dict, state_space_dict, mappings_dict)` — initialize from bundle dicts
-- `complexity_score() -> float` — [0.0, 100.0] based on avg cyclomatic complexity
-  - Formula: `100 - min(100, avg_cc * 10)` (lower complexity → higher score)
-- `coupling_score() -> float` — [0.0, 100.0] based on instability metric
-  - Formula: `100 * (1 - avg_instability)` (lower instability → higher score)
-- `cohesion_score() -> float` — [0.0, 100.0] factor graph cohesion
-  - Measures % of factors with high internal message consistency
-- `semantic_coverage() -> float` — [0.0, 100.0] % of nodes with assigned roles
-  - Formula: `100 * nodes_with_roles / total_nodes`
-- `observability_score() -> float` — [0.0, 100.0] % of state variables observable
-  - Formula: `100 * observable_vars / total_hidden_vars`
-- `controllability_score() -> float` — [0.0, 100.0] % of state variables controllable
-  - Formula: `100 * controllable_vars / total_hidden_vars`
+- `__init__(graph, state_space, mappings)` — initialize from bundle dicts
+- `complexity_score()`, `coupling_score()`, `cohesion_score()`,
+  `semantic_coverage()`, `observability_score()`, `controllability_score()`
 - `summary() -> MetricsReport` — aggregate all scores
-- `format_report() -> str` — human-readable markdown report
+- `format_report() -> str` — human-readable markdown report (scores as percentages)
 - `to_dict() -> dict[str, Any]` — serialize to JSON
 
-**Scoring Philosophy:**
-- **Complexity**: Favors simpler code (lower avg cyclomatic); threshold 10 CC is "high complexity"
-- **Coupling**: Favors independent modules; threshold instability I > 0.8 is "unstable"
-- **Cohesion**: Favors tightly-integrated factor groups
-- **Coverage**: Favors comprehensive semantic analysis; threshold 90% is "good"
-- **Observability**: Favors observable state; hidden variables without outputs are "unobservable"
-- **Controllability**: Favors controllable state; variables not affected by any action are "uncontrollable"
-
-All scores are normalized to [0.0, 100.0] for uniformity; composite quality score is typically the average.
+Empty graphs and empty state spaces score 1.0 for coverage, observability, and
+controllability (vacuously covered) and 0.0 for complexity, coupling, and
+cohesion.
 
 ## Data Representations
 

@@ -9,8 +9,8 @@ compare very different repositories on the same scale:
 * **Complexity** — graph density blended with a log-scaled node count.
 * **Coupling** — fraction of edges that cross module boundaries.
 * **Cohesion** — fraction of edges that stay inside a single module.
-* **Semantic coverage** — fraction of nodes that carry at least one
-  :class:`SemanticMapping`.
+* **Semantic coverage** — fraction of nodes named in the
+  ``graph_fragment_node_ids`` of at least one :class:`SemanticMapping`.
 * **Observability** — fraction of state variables that are referenced
   by at least one :class:`ObservationModality`.
 * **Controllability** — fraction of state variables that are referenced
@@ -32,6 +32,8 @@ import logging
 import math
 from dataclasses import dataclass
 from typing import Any
+
+from cogant.scoring._records import edge_endpoints, iter_records
 
 logger = logging.getLogger(__name__)
 
@@ -111,8 +113,10 @@ class CodebaseMetrics:
         self.state_space = state_space or {}
         self.mappings = mappings or {}
 
-        self.nodes = self.graph.get("nodes", [])
-        self.edges = self.graph.get("edges", [])
+        # ``program_graph.json`` stores nodes/edges as dicts keyed by id;
+        # fixtures use lists. Normalize both to lists of payload dicts.
+        self.nodes = iter_records(self.graph.get("nodes"))
+        self.edges = iter_records(self.graph.get("edges"))
         self.state_vars = self.state_space.get("states", [])
         self.observations = self.state_space.get("observations", [])
         self.actions = self.state_space.get("actions", [])
@@ -171,15 +175,70 @@ class CodebaseMetrics:
         complexity = 0.6 * density + 0.4 * min(size_factor, 1.0)
         return min(complexity, 1.0)
 
+    @staticmethod
+    def _node_module(node: dict[str, Any]) -> str:
+        """Resolve the module bucket a serialized node belongs to.
+
+        Lookup order: an explicit ``parent_id``, then
+        ``attributes.module`` metadata, then the node's source ``path``
+        (every node COGANT extracts from one file shares that file's
+        path, so the path identifies its module), then the literal
+        ``"root"`` bucket.
+        """
+        parent_id = node.get("parent_id")
+        if parent_id:
+            return str(parent_id)
+        attributes = node.get("attributes")
+        if isinstance(attributes, dict) and attributes.get("module"):
+            return str(attributes["module"])
+        path = node.get("path")
+        if path:
+            return str(path)
+        return "root"
+
+    def _module_index(self) -> dict[str, str]:
+        """Map every node id to its module bucket in a single pass."""
+        index: dict[str, str] = {}
+        for node in self.nodes:
+            node_id = node.get("id")
+            if node_id:
+                index[str(node_id)] = self._node_module(node)
+        return index
+
+    def _count_edges_by_boundary(self, module_of: dict[str, str]) -> tuple[int, int]:
+        """Return ``(cross_module, intra_module)`` edge counts.
+
+        Edges with a missing endpoint, or an endpoint that is not a
+        known node, are counted in neither bucket.
+        """
+        cross = 0
+        intra = 0
+        for edge in self.edges:
+            src_id, tgt_id = edge_endpoints(edge)
+            if not src_id or not tgt_id:
+                continue
+            src_module = module_of.get(src_id)
+            tgt_module = module_of.get(tgt_id)
+            if src_module is None or tgt_module is None:
+                continue
+            if src_module == tgt_module:
+                intra += 1
+            else:
+                cross += 1
+        return cross, intra
+
     def coupling_score(self) -> float:
         """Compute cross-module coupling as a ratio of cross-boundary edges.
 
-        Groups every node into its parent module (falling back to
-        ``attributes.module`` metadata, then to the literal ``"root"``
-        bucket) and counts the fraction of edges whose source and
-        target are in different modules. A result near 1.0 means the
-        codebase is dominated by inter-module edges; a result near 0.0
-        means modules are internally self-contained.
+        Groups every node into its module (see :meth:`_node_module`:
+        ``parent_id``, then ``attributes.module``, then the source
+        ``path``, then the literal ``"root"`` bucket) and counts the
+        fraction of edges whose source and target are in different
+        modules. Edge endpoints are read from ``source_id`` /
+        ``target_id`` (the serialized program graph) with ``source`` /
+        ``target`` as a fallback. A result near 1.0 means the codebase
+        is dominated by inter-module edges; a result near 0.0 means
+        modules are internally self-contained.
 
         Returns:
             Coupling score in ``[0.0, 1.0]``. Returns 0.0 if there are
@@ -189,39 +248,12 @@ class CodebaseMetrics:
         if not self.edges:
             return 0.0
 
-        # Group nodes by module (assume 'parent_id' or 'attributes.module' indicates module)
-        modules: dict[str, list[str]] = {}
-        for node in self.nodes:
-            module_id = node.get("parent_id") or node.get("attributes", {}).get("module", "root")
-            if module_id not in modules:
-                modules[module_id] = []
-            modules[module_id].append(node.get("id"))
-
-        if len(modules) <= 1:
+        module_of = self._module_index()
+        if len(set(module_of.values())) <= 1:
             return 0.0
 
-        # Count cross-module edges
-        cross_module_edges = 0
-        for edge in self.edges:
-            src_id = edge.get("source")
-            tgt_id = edge.get("target")
-            if not src_id or not tgt_id:
-                continue
-
-            # Find modules for src and tgt
-            src_module = None
-            tgt_module = None
-            for mod, node_ids in modules.items():
-                if src_id in node_ids:
-                    src_module = mod
-                if tgt_id in node_ids:
-                    tgt_module = mod
-
-            if src_module and tgt_module and src_module != tgt_module:
-                cross_module_edges += 1
-
-        total_edges = len(self.edges)
-        coupling = cross_module_edges / total_edges if total_edges > 0 else 0.0
+        cross_module_edges, _ = self._count_edges_by_boundary(module_of)
+        coupling = cross_module_edges / len(self.edges)
         return min(coupling, 1.0)
 
     def cohesion_score(self) -> float:
@@ -240,48 +272,48 @@ class CodebaseMetrics:
         if not self.edges:
             return 0.0
 
-        # Group nodes by module
-        modules: dict[str, list[str]] = {}
-        for node in self.nodes:
-            module_id = node.get("parent_id") or node.get("attributes", {}).get("module", "root")
-            if module_id not in modules:
-                modules[module_id] = []
-            modules[module_id].append(node.get("id"))
-
-        if len(modules) == 0:
+        module_of = self._module_index()
+        if not module_of:
             return 0.0
 
-        # Count intra-module edges
-        intra_module_edges = 0
-        for edge in self.edges:
-            src_id = edge.get("source")
-            tgt_id = edge.get("target")
-            if not src_id or not tgt_id:
-                continue
-
-            # Find modules for src and tgt
-            src_module = None
-            tgt_module = None
-            for mod, node_ids in modules.items():
-                if src_id in node_ids:
-                    src_module = mod
-                if tgt_id in node_ids:
-                    tgt_module = mod
-
-            if src_module and tgt_module and src_module == tgt_module:
-                intra_module_edges += 1
-
-        total_edges = len(self.edges)
-        cohesion = intra_module_edges / total_edges if total_edges > 0 else 0.0
+        _, intra_module_edges = self._count_edges_by_boundary(module_of)
+        cohesion = intra_module_edges / len(self.edges)
         return min(cohesion, 1.0)
+
+    def _covered_node_ids(self) -> set[str]:
+        """Collect the node ids referenced by ``self.mappings``.
+
+        Semantic mappings are keyed by mapping id and name the nodes
+        they cover in ``graph_fragment_node_ids``; every listed id
+        counts as covered. Dict keys are also accepted as node ids so
+        node-keyed mapping dicts keep working.
+        """
+        covered: set[str] = set()
+        records: list[Any]
+        if isinstance(self.mappings, dict):
+            covered.update(str(key) for key in self.mappings)
+            records = list(self.mappings.values())
+        elif isinstance(self.mappings, list):
+            records = self.mappings
+        else:
+            return covered
+        for mapping in records:
+            if isinstance(mapping, dict):
+                fragment = mapping.get("graph_fragment_node_ids")
+            else:
+                fragment = getattr(mapping, "graph_fragment_node_ids", None)
+            if isinstance(fragment, list | tuple | set):
+                covered.update(str(node_id) for node_id in fragment if node_id)
+        return covered
 
     def semantic_coverage(self) -> float:
         """Fraction of graph nodes that carry at least one semantic mapping.
 
-        A node is "covered" when its id appears as a key in the
-        ``self.mappings`` dict passed at construction. Empty graphs
-        return 1.0 (vacuously fully covered) so that empty repos do
-        not penalize aggregate dashboards.
+        A node is "covered" when its id appears in the
+        ``graph_fragment_node_ids`` of any mapping passed at
+        construction, or as a key of a node-keyed mappings dict.
+        Empty graphs return 1.0 (vacuously fully covered) so that
+        empty repos do not penalize aggregate dashboards.
 
         Returns:
             Coverage in ``[0.0, 1.0]``.
@@ -289,10 +321,11 @@ class CodebaseMetrics:
         if not self.nodes:
             return 1.0  # Empty graph is "covered"
 
+        covered = self._covered_node_ids()
         mapped_count = 0
         for node in self.nodes:
             node_id = node.get("id")
-            if node_id and node_id in self.mappings:
+            if node_id and str(node_id) in covered:
                 mapped_count += 1
 
         coverage = mapped_count / len(self.nodes)
