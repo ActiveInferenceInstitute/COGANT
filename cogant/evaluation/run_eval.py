@@ -45,10 +45,23 @@ REPOS: list[str] = [
     "fastapi",
 ]
 
-# Pipeline stages exercised by the evaluation. ``dynamic`` is intentionally
-# omitted so the evaluation runs offline and deterministically without
-# requiring a live Python interpreter to import each target repo.
+# Pipeline stages exercised by the evaluation. ``dynamic`` is omitted by
+# default so the evaluation runs offline and deterministically without
+# requiring a live Python interpreter to import each target repo;
+# ``--include-dynamic`` inserts it after ``graph`` (see ``_stages_for``).
 STAGES: list[str] = ["ingest", "static", "normalize", "graph", "translate", "statespace"]
+
+
+def _stages_for(*, skip_dynamic: bool) -> list[str]:
+    """Return the stage list for one run, in the pipeline's canonical order.
+
+    ``PipelineRunner`` only executes stages listed in ``config.stages``, so
+    clearing ``skip_dynamic`` alone would never run ``dynamic``.
+    """
+    stages = list(STAGES)
+    if not skip_dynamic:
+        stages.insert(stages.index("graph") + 1, "dynamic")
+    return stages
 
 
 def _count_gnn_sections(md_block: str) -> int:
@@ -120,7 +133,9 @@ def run_one(repo_name: str, *, skip_dynamic: bool = True) -> dict[str, Any]:
         return result
 
     runner = PipelineRunner()
-    config = PipelineConfig(stages=STAGES, skip_dynamic=skip_dynamic)
+    config = PipelineConfig(
+        stages=_stages_for(skip_dynamic=skip_dynamic), skip_dynamic=skip_dynamic
+    )
     start = time.time()
     bundle = None
     try:
