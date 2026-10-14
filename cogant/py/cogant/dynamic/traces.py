@@ -8,6 +8,25 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+_PHASE_ORDER = {"B": 0, "X": 1, "E": 2}
+
+
+def _duration(evt: dict[str, Any]) -> float:
+    """Return an event's ``dur`` as a non-negative number (0 when absent)."""
+    try:
+        return max(0.0, float(evt.get("dur") or 0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _thread_order_key(evt: dict[str, Any]) -> tuple[Any, int, float]:
+    """Order one thread's events: by ``ts``, ``B`` < ``X`` < ``E``, longer ``X`` first.
+
+    Putting the longer of two same-timestamp complete events first makes an
+    enclosing span precede the spans it contains.
+    """
+    return (evt["ts"], _PHASE_ORDER.get(evt.get("ph", ""), 1), -_duration(evt))
+
 
 class TraceIngester:
     """
@@ -311,9 +330,9 @@ class TraceIngester:
                 thread_events[key].append(evt)
 
         for _thread_key, events in thread_events.items():
-            # Sort by timestamp, then B before E for same timestamp
-            phase_order = {"B": 0, "X": 1, "E": 2}
-            events.sort(key=lambda e: (e["ts"], phase_order.get(e.get("ph", ""), 1)))
+            # Sort by timestamp, then B before E for same timestamp, and an
+            # enclosing (longer) X before the X events it contains.
+            events.sort(key=_thread_order_key)
 
             stack: list[str] = []
             sequence: list[str] = []
@@ -342,6 +361,11 @@ class TraceIngester:
         """
         Build call graph from traces.
 
+        Per pid/tid, an event is a callee of the innermost span open when
+        it starts: a ``B`` span stays open until its ``E``; an ``X``
+        (complete) span covers ``[ts, ts + dur)``, so ``X``-only traces
+        nest by time containment.
+
         Returns:
             Dict mapping function names to list of functions they call.
         """
@@ -359,25 +383,37 @@ class TraceIngester:
                 thread_events[key].append(evt)
 
         for _thread_key, events in thread_events.items():
-            phase_order = {"B": 0, "X": 1, "E": 2}
-            events.sort(key=lambda e: (e["ts"], phase_order.get(e.get("ph", ""), 1)))
+            events.sort(key=_thread_order_key)
 
-            stack: list[str] = []
+            # Open spans, innermost last: (name, end_ts). ``B`` spans stay
+            # open until their ``E`` (end_ts None); ``X`` spans cover
+            # [ts, ts + dur) and close once a later event starts at or
+            # after their end, so an event starting inside one is its callee.
+            stack: list[tuple[str, float | None]] = []
 
             for evt in events:
                 ph = evt.get("ph", "")
                 name = evt.get("name", "")
+                ts = evt["ts"]
+
+                while stack and stack[-1][1] is not None and stack[-1][1] <= ts:
+                    stack.pop()
 
                 if ph == "B":
                     if stack:
-                        adjacency[stack[-1]].add(name)
-                    stack.append(name)
+                        adjacency[stack[-1][0]].add(name)
+                    stack.append((name, None))
                 elif ph == "E":
+                    # Complete spans still above the B span outlive their
+                    # parent (malformed); close them with it.
+                    while stack and stack[-1][1] is not None:
+                        stack.pop()
                     if stack:
                         stack.pop()
                 elif ph == "X":
                     if stack:
-                        adjacency[stack[-1]].add(name)
+                        adjacency[stack[-1][0]].add(name)
+                    stack.append((name, ts + _duration(evt)))
 
         self.call_graph = {caller: sorted(callees) for caller, callees in adjacency.items()}
 
