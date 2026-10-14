@@ -191,12 +191,13 @@ def test_incremental_zero_change_uses_full_cache_hit(tmp_path: Path) -> None:
     assert warm_elapsed > 0.0
 
 
-def test_incremental_after_edit_reparses_only_changed(tmp_path: Path) -> None:
-    """After editing one file, incremental reparses exactly that file.
+def test_incremental_after_edit_reanalyses_full_snapshot(tmp_path: Path) -> None:
+    """After editing one file, incremental re-analyses the whole snapshot.
 
     This complements the zero-change benchmark above: it verifies the
-    *partial-hit* branch of ``_incremental_preflight`` — the actual
-    graph-delta patching path.
+    *partial* branch of ``_incremental_preflight``. The cache stores JSON
+    stage results only (no per-file graph merge), so a source change must
+    rebuild the model over every file rather than over the edited one.
     """
     repo = _make_fixture_repo(tmp_path)
     cache_dir = tmp_path / "cache"
@@ -239,9 +240,12 @@ def test_incremental_after_edit_reparses_only_changed(tmp_path: Path) -> None:
     stats = bundle.metadata.get("incremental_stats") or {}
 
     assert stats.get("enabled") is True
-    assert stats.get("cache_hit") is True, (
-        f"Partial incremental should still see a cache hit, got {stats}"
+    assert stats.get("cache_hit") is False, (
+        f"A source change reuses nothing from the cache, got {stats}"
     )
-    # Exactly one file changed between baseline_sha and HEAD.
-    assert stats.get("files_reparsed") == 1, f"Expected 1 file reparsed, got stats={stats}"
+    # Exactly one file changed between baseline_sha and HEAD ...
+    assert stats.get("files_changed") == 1, f"Expected 1 change record, got stats={stats}"
+    # ... and every file is re-analysed so unchanged modules stay in the model.
+    assert stats.get("files_reparsed") == stats.get("files_total"), stats
+    assert bundle.stage_results["ingest"]["file_count"] >= 3
     assert elapsed > 0.0

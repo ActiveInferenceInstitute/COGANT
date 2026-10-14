@@ -194,7 +194,7 @@ class TestIncrementalPreflight:
         # The cached bundle's stage_results are restored.
         assert "ingest" in b2.stage_results
 
-    def test_partial_hit_reparses_only_changed_files(self, py_repo, tmp_path):
+    def test_partial_change_reanalyses_full_snapshot(self, py_repo, tmp_path):
         cache = tmp_path / "cache"
         out = tmp_path / "out"
         cfg = PipelineConfig(
@@ -208,19 +208,20 @@ class TestIncrementalPreflight:
         # Seed the cache with a full run against the initial commit.
         runner.run(str(py_repo), cfg)
 
-        # Modify only a.py and commit → exactly one file should be reparsed.
+        # Modify only a.py and commit → one change record. There is no
+        # per-file merge of cached results, so the run must re-analyse the
+        # whole snapshot instead of rebuilding the model from a.py alone.
         (py_repo / "a.py").write_text("def alpha():\n    return 99\n")
         _git(py_repo, "add", "-A")
         _git(py_repo, "commit", "-q", "-m", "alpha=99")
 
         b = runner.run(str(py_repo), cfg)
         stats = b.metadata["incremental_stats"]
-        assert stats["cache_hit"] is True
-        assert stats["files_reparsed"] == 1
-        # The ingest stage should report the filtered subset, not the
-        # full repo file count.
+        assert stats["cache_hit"] is False
+        assert stats["files_changed"] == 1
+        assert stats["files_reparsed"] == stats["files_total"] == 2
         ingest = b.stage_results["ingest"]
-        assert ingest["file_count"] == 1
+        assert ingest["file_count"] == 2
         assert "incremental" in ingest
         assert ingest["incremental"]["changed_count"] == 1
 
@@ -244,9 +245,9 @@ class TestIncrementalOff:
 
 
 class TestOrchestrationFilter:
-    def test_ingest_honors_incremental_metadata(self, py_repo, tmp_path):
+    def test_ingest_reports_changes_without_dropping_files(self, py_repo, tmp_path):
         """Directly invoke ``run_ingest`` with a pre-populated incremental
-        metadata block to confirm the filter runs."""
+        metadata block: the change count is reported, every file is kept."""
         from cogant.api.bundle import Bundle
         from cogant.api.orchestration import run_ingest
 
@@ -256,8 +257,9 @@ class TestOrchestrationFilter:
             "changed_count": 1,
         }
         result = run_ingest(str(py_repo), bundle)
-        assert result["file_count"] == 1
-        # b.py must have been filtered out
+        assert result["file_count"] == 2
+        assert result["incremental"]["changed_count"] == 1
+        # b.py is unchanged but still part of the model.
         snapshot = bundle.artifacts["repo_snapshot"]
         remaining = {Path(f.path).name for f in snapshot.files}
-        assert remaining == {"a.py"}
+        assert remaining == {"a.py", "b.py"}

@@ -168,10 +168,13 @@ def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]:
     ``bundle.artifacts['repo_snapshot']``, and computes a per-language
     file count distribution.
 
-    When ``bundle.metadata['_incremental']`` is present, the snapshot's
-    ``files`` list is filtered down to just the subset whose absolute
-    paths appear in ``changed_files``. This lets downstream stages
-    re-parse only the modified subset of a large repository.
+    When ``bundle.metadata['_incremental']`` is present (an incremental run
+    whose sources changed since the cached snapshot), its ``changed_count``
+    is echoed under ``result['incremental']``. The snapshot always keeps
+    every file: downstream stages rebuild the graph, mappings, and state
+    space from the snapshot, and there is no per-file merge of cached
+    results, so restricting ingest to the changed subset would drop every
+    unchanged file from the model.
 
     Args:
         bundle_target: Local path (or path-like string) to the repository root.
@@ -185,18 +188,9 @@ def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]:
     ingester = RepoIngester()
     snapshot = ingester.ingest_local(root, include_test_files=True, compute_checksums=False)
 
-    # Honor incremental mode by shrinking the file list to the changed
-    # subset. We preserve the snapshot's metadata and dependency info,
-    # so downstream stages still see a complete-looking RepoSnapshot
-    # object, just with fewer ``files`` entries to iterate.
     incremental = (
         getattr(bundle, "metadata", {}).get("_incremental") if hasattr(bundle, "metadata") else None
     )
-    total_files = len(snapshot.files)
-    if incremental and incremental.get("changed_files"):
-        changed_set = {str(Path(p).resolve()) for p in incremental["changed_files"]}
-        filtered = [f for f in snapshot.files if str(Path(f.path).resolve()) in changed_set]
-        snapshot.files = filtered
 
     bundle.artifacts["repo_snapshot"] = snapshot
 
@@ -213,10 +207,7 @@ def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]:
         "root": str(snapshot.root_path),
     }
     if incremental:
-        result["incremental"] = {
-            "changed_count": incremental.get("changed_count", 0),
-            "total_before_filter": total_files,
-        }
+        result["incremental"] = {"changed_count": incremental.get("changed_count", 0)}
     return result
 
 

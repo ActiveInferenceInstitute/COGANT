@@ -3,7 +3,7 @@
 Content-addressed on-disk cache used by incremental pipeline runs
 (`PipelineConfig.incremental_since`). Stage outputs are keyed on
 `sha256` of the inputs so re-running an unchanged repository skips
-ingest / static / graph and reuses the previous bundle.
+every stage and reuses the previous bundle.
 
 ## Public API
 
@@ -26,11 +26,17 @@ Re-exported from `cogant/cache/__init__.py`:
 
 ## Conventions
 
-* Cache hits are decided per-file: only Python files that changed
-  between `incremental_since` and `HEAD` are re-parsed.
+* A cache hit is all-or-nothing: when no source changed since
+  `incremental_since` and the content digest matches the cached entry,
+  the cached stage results are returned as-is. The cache holds JSON
+  stage results only, with no per-file merge of graphs or mappings, so
+  any source change re-runs every stage over the full snapshot (never
+  over the changed subset alone, which would drop unchanged files from
+  the model).
 * `incremental_stats` on `bundle.metadata` records `cache_hit`,
-  `files_total`, `files_reparsed`, and a free-form `reason` so audits
-  can confirm the cache fired.
+  `files_total`, `files_changed`, `files_reparsed` (files actually
+  re-analysed: `0` on a hit, `files_total` otherwise), and a free-form
+  `reason` so audits can confirm the cache fired.
 * `cache_dir=` in `PipelineConfig` redirects the root for tests and
   benchmarks without touching the user's home dir.
 

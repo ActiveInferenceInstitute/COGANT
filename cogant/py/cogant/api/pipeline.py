@@ -115,10 +115,11 @@ class PipelineRunner:
 
         # Incremental-mode pre-flight: try to short-circuit the full run
         # when the caller opted in and a cached bundle is available. On a
-        # full cache hit we return the cached bundle unmodified; on a
-        # partial hit we stash the restricted file list under
-        # ``bundle.metadata['_incremental']`` so ``run_ingest`` can pick
-        # it up and re-parse only the changed subset.
+        # full cache hit we return the cached bundle unmodified. When
+        # sources changed, every stage re-runs over the full snapshot (the
+        # cache holds JSON stage results only, with no per-file merge), and
+        # the change records are kept under ``bundle.metadata['_incremental']``
+        # for reporting.
         if config.incremental_since:
             cache_outcome = self._incremental_preflight(target, bundle, config)
             if cache_outcome == "full_hit":
@@ -332,12 +333,19 @@ class PipelineRunner:
         * ``"full_hit"`` — nothing changed since ``config.incremental_since``
           and a cached bundle was successfully restored onto ``bundle``.
           The caller should return the bundle directly.
-        * ``"partial"`` — a cached bundle exists but some files changed;
-          the restricted file list is recorded on
-          ``bundle.metadata['_incremental']`` so ``run_ingest`` can honor
-          it. Downstream stages still run over the merged result.
+        * ``"partial"`` — a previous snapshot for the same config/contract
+          exists but sources changed. The cache stores JSON stage results
+          only and there is no per-file merge of graphs or mappings, so the
+          caller re-runs every stage over the full snapshot; nothing from
+          the cached bundle is restored. The change records are kept on
+          ``bundle.metadata['_incremental']`` for reporting.
         * ``"miss"`` — no usable cache entry or no git repo; the caller
           falls back to a full run (incremental stats still recorded).
+
+        ``incremental_stats['files_reparsed']`` counts the files the run
+        actually re-analyses: ``0`` on a full hit and ``files_total``
+        otherwise. ``files_changed`` counts the source change records
+        since ``config.incremental_since``.
         """
         from cogant.cache.store import CacheStore
         from cogant.ingest.incremental import IncrementalIngester
@@ -391,37 +399,37 @@ class PipelineRunner:
         changed = [
             change.path for change in changes if change.change_type != "D" and change.path.exists()
         ]
-        stats["files_reparsed"] = len(changed)
         stats["files_changed"] = len(changes)
 
         if entry is None:
             stats["reason"] = "no cached bundle"
+            stats["files_reparsed"] = stats["files_total"]
             return "miss"
-
-        # Restore the cached stage_results onto the bundle. Artifacts are
-        # *not* restored (they contain live Python objects that would not
-        # round-trip through JSON), but stage_results carry every piece
-        # of information the CLI actually displays to the user.
-        cached = entry.stage_results
-        bundle.stage_results.update(cached.get("stage_results") or {})
-        bundle.errors = list(cached.get("errors") or [])
-        for name, outcome in (cached.get("stage_outcomes") or {}).items():
-            try:
-                bundle.stage_outcomes[name] = StageOutcome(outcome)
-            except ValueError:
-                bundle.stage_outcomes[name] = StageOutcome.PARTIAL
-        stats["cache_hit"] = True
 
         if not changes and entry.key.content_hash == key.content_hash:
             # Full hit: the user asked "what changed since <ref>?" and
-            # the answer is "nothing". Return the cached bundle as-is.
+            # the answer is "nothing". Restore the cached stage_results
+            # onto the bundle and return it as-is. Artifacts are *not*
+            # restored (they contain live Python objects that would not
+            # round-trip through JSON), but stage_results carry every
+            # piece of information the CLI actually displays to the user.
+            cached = entry.stage_results
+            bundle.stage_results.update(cached.get("stage_results") or {})
+            bundle.errors = list(cached.get("errors") or [])
+            for name, outcome in (cached.get("stage_outcomes") or {}).items():
+                try:
+                    bundle.stage_outcomes[name] = StageOutcome(outcome)
+                except ValueError:
+                    bundle.stage_outcomes[name] = StageOutcome.PARTIAL
+            stats["cache_hit"] = True
             return "full_hit"
 
-        # Partial hit: downstream stages will re-run, but ``run_ingest``
-        # will restrict itself to the changed files. Pass the restricted
-        # list through bundle metadata so orchestration.run_ingest can
-        # read it without us having to thread a new parameter through
-        # every stage signature.
+        # Sources changed since the cached snapshot. The cache holds JSON
+        # stage results only, so there is nothing to merge the changed
+        # files into: every stage re-runs over the full snapshot, and the
+        # cached stage results, errors, and outcomes are deliberately not
+        # restored (they describe the old sources). The change records are
+        # kept for reporting only.
         bundle.metadata["_incremental"] = {
             "changed_files": [str(p) for p in changed],
             "changed_count": len(changed),
@@ -429,7 +437,12 @@ class PipelineRunner:
                 {"path": str(change.path), "change_type": change.change_type} for change in changes
             ],
         }
-        stats["reason"] = f"{len(changes)} source change(s) detected"
+        stats["files_reparsed"] = stats["files_total"]
+        stats["reason"] = (
+            f"{len(changes)} source change(s) detected; re-analysing the full snapshot"
+            if changes
+            else "sources differ from the cached snapshot; re-analysing the full snapshot"
+        )
         return "partial"
 
     def _incremental_cache_save(self, target: str, bundle: Bundle, config: PipelineConfig) -> None:

@@ -158,8 +158,14 @@ class TestRunIngest:
         # Snapshot is stashed in artifacts
         assert "repo_snapshot" in bundle.artifacts
 
-    def test_ingest_with_incremental_metadata_filters_files(self, tiny_repo: Path) -> None:
-        """bundle.metadata['_incremental'] filters snapshot.files down."""
+    def test_ingest_with_incremental_metadata_keeps_every_file(self, tiny_repo: Path) -> None:
+        """bundle.metadata['_incremental'] is reported but never shrinks the snapshot.
+
+        Downstream stages rebuild the whole model from the snapshot and the
+        cache has no per-file merge, so dropping unchanged files here would
+        drop them from the graph, mappings, and state space.
+        """
+        full = run_ingest(str(tiny_repo), Bundle(target=str(tiny_repo)))
         bundle = Bundle(target=str(tiny_repo))
         # Only helper.py is "changed"
         bundle.metadata["_incremental"] = {
@@ -167,11 +173,9 @@ class TestRunIngest:
             "changed_count": 1,
         }
         result = run_ingest(str(tiny_repo), bundle)
-        # Only the changed file should be in the filtered snapshot
-        assert result["file_count"] == 1
+        assert result["file_count"] == full["file_count"] >= 2
         assert "incremental" in result
         assert result["incremental"]["changed_count"] == 1
-        assert result["incremental"]["total_before_filter"] >= 2
 
 
 class TestRunStatic:
