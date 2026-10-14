@@ -107,7 +107,23 @@ impl GnnBundle {
     }
 }
 
+/// Escape a value for use inside a GitHub-flavoured Markdown table cell.
+///
+/// An unescaped `|` starts a new cell (e.g. a PEP 604 type such as
+/// `int | None`) and a line break ends the row, so both would corrupt the
+/// table layout.
+fn md_cell(value: &str) -> String {
+    value
+        .replace('|', "\\|")
+        .replace("\r\n", " ")
+        .replace(['\n', '\r'], " ")
+}
+
 /// Format a program graph as GNN in Markdown format.
+///
+/// The Nodes and Edges sections are GitHub-flavoured Markdown tables whose
+/// delimiter rows match their header cell counts; cell values are escaped
+/// with [`md_cell`].
 pub fn format_markdown(graph: &ProgramGraph, title: &str) -> String {
     let mut output = String::new();
 
@@ -124,17 +140,17 @@ pub fn format_markdown(graph: &ProgramGraph, title: &str) -> String {
     // Nodes
     output.push_str("## Nodes\n\n");
     output.push_str("| ID | Name | Kind | Role | Type | Confidence |\n");
-    output.push_str("|----|----|----|----|----|----|----|\n");
+    output.push_str("|----|------|------|------|------|------------|\n");
 
     for node in graph.nodes() {
         let type_str = node.type_name.as_deref().unwrap_or("-");
         output.push_str(&format!(
             "| {} | {} | {} | {} | {} | {:.2} |\n",
-            node.id.short_id,
-            node.name,
+            md_cell(&node.id.short_id),
+            md_cell(&node.name),
             node.kind,
             node.role,
-            type_str,
+            md_cell(type_str),
             node.confidence.value()
         ));
     }
@@ -143,17 +159,17 @@ pub fn format_markdown(graph: &ProgramGraph, title: &str) -> String {
     // Edges
     output.push_str("## Edges\n\n");
     output.push_str("| From | To | Kind | Confidence | Label |\n");
-    output.push_str("|-----|----|----|----|----|----|\n");
+    output.push_str("|------|----|------|------------|-------|\n");
 
     for (source, target, edge) in graph.edges() {
         let label = edge.label.as_deref().unwrap_or("-");
         output.push_str(&format!(
             "| {} | {} | {} | {:.2} | {} |\n",
-            source.id.short_id,
-            target.id.short_id,
+            md_cell(&source.id.short_id),
+            md_cell(&target.id.short_id),
             edge.kind,
             edge.confidence.value(),
-            label
+            md_cell(label)
         ));
     }
     output.push('\n');
@@ -377,6 +393,63 @@ mod tests {
         assert!(md.contains("Test Graph"));
         assert!(md.contains("Nodes"));
         assert!(md.contains("Edges"));
+    }
+
+    /// Count GFM table cells in a row, ignoring backslash-escaped pipes.
+    fn table_cell_count(row: &str) -> usize {
+        let mut pipes: usize = 0;
+        let mut prev = '\0';
+        for ch in row.chars() {
+            if ch == '|' && prev != '\\' {
+                pipes += 1;
+            }
+            prev = ch;
+        }
+        pipes.saturating_sub(1)
+    }
+
+    #[test]
+    fn test_format_markdown_tables_are_valid_gfm() {
+        let mut graph = create_test_graph();
+        let mut typed = NodeData::new(
+            StableId::new("var_opt"),
+            "maybe",
+            NodeKind::Variable,
+            SemanticRole::VariableDef,
+            Provenance::Unknown,
+        )
+        .with_type("int | None");
+        typed.add_attribute("note", "a|b");
+        graph.add_node(typed);
+
+        let md = format_markdown(&graph, "Tables");
+        let lines: Vec<&str> = md.lines().collect();
+        let mut tables = 0;
+        for (i, line) in lines.iter().enumerate() {
+            if !line.starts_with("|-") {
+                continue;
+            }
+            tables += 1;
+            let header = lines[i - 1];
+            let expected = table_cell_count(header);
+            assert_eq!(
+                table_cell_count(line),
+                expected,
+                "delimiter row {line:?} does not match header {header:?}"
+            );
+            for row in lines[i + 1..].iter().take_while(|r| r.starts_with('|')) {
+                assert_eq!(
+                    table_cell_count(row),
+                    expected,
+                    "row {row:?} under {header:?}"
+                );
+            }
+        }
+        assert_eq!(tables, 2, "expected the Nodes and Edges tables");
+        assert!(
+            md.contains(r"int \| None"),
+            "pipe in a cell must be escaped"
+        );
     }
 
     #[test]
