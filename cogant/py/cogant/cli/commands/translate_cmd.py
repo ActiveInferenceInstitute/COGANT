@@ -39,18 +39,23 @@ def translate(
         "--skip",
         help="Comma-separated list of stages to skip (e.g. 'dynamic,validate').",
     ),
-    output_dir: str = typer.Option(
-        "output",
+    output_dir: str | None = typer.Option(
+        None,
         "--output",
         "-o",
-        help="Directory where bundle.json and derived artifacts are written.",
+        help=(
+            "Directory where bundle.json and derived artifacts are written. "
+            "Defaults to pipeline.output_dir from --config or "
+            "COGANT_PIPELINE__OUTPUT_DIR, else 'output'."
+        ),
     ),
-    layout_output: bool = typer.Option(
-        False,
+    layout_output: bool | None = typer.Option(
+        None,
         "--layout-output",
         help=(
             "After export, move artifacts into data/, diagrams/, site/, "
-            "reports/, figures/ subdirectories."
+            "reports/, figures/ subdirectories. Defaults to "
+            "pipeline.layout_output from --config or the environment."
         ),
     ),
     no_dynamic: bool = typer.Option(
@@ -161,10 +166,14 @@ def translate(
 
     from cogant.config.loaders import ConfigLoader, ConfigLoadError
 
-    cli_pipeline: dict[str, object] = {
-        "output_dir": output_dir,
-        "layout_output": layout_output,
-    }
+    # Only flags the user actually passed belong to the CLI layer; otherwise
+    # pipeline.output_dir / layout_output from --config or the environment
+    # (lower-precedence layers) would be silently overridden by defaults.
+    cli_pipeline: dict[str, object] = {}
+    if output_dir is not None:
+        cli_pipeline["output_dir"] = output_dir
+    if layout_output is not None:
+        cli_pipeline["layout_output"] = layout_output
     if min_confidence is not None:
         cli_pipeline["min_confidence"] = min_confidence
     try:
@@ -257,16 +266,17 @@ def translate(
         if inc_stats.get("reason"):
             console.print(f"[dim]  {inc_stats['reason']}[/dim]")
 
-    out = Path(output_dir)
+    out = Path(config.output_dir)
     out.mkdir(parents=True, exist_ok=True)
     bundle_path = out / "bundle.json"
     bundle.save_json(str(bundle_path))
 
-    if layout_output:
+    if config.layout_output:
         from cogant.tools.organize_example_outputs import organize_run_dir
 
         organize_run_dir(out, dry_run=False)
+        bundle_path = out / "data" / "bundle.json"
 
     console.print("\n[green]✓ Translation complete[/green]")
-    console.print(f"Output: {output_dir}")
+    console.print(f"Output: {config.output_dir}")
     console.print(f"[dim]Saved bundle: {bundle_path}[/dim]")
