@@ -5,6 +5,7 @@ import logging
 import re
 import shutil
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -192,14 +193,14 @@ class RepoIngester:
         name = Path(raw_name).name
         if not name or name in {".", ".."}:
             name = hashlib.sha256(url.encode("utf-8")).hexdigest()[:12]
-        repo_path = self.work_dir / name
-
-        # Remove if already exists
-        if repo_path.exists():
-            try:
-                shutil.rmtree(repo_path)
-            except Exception as e:
-                logger.warning(f"Failed to remove existing repo at {repo_path}: {e}")
+        # Clone into a fresh private directory under ``work_dir`` so that an
+        # existing directory with the same name (the user's own checkout, or
+        # a concurrent ingest of another repository with the same basename)
+        # is never deleted or overwritten. Only this directory is removed on
+        # cleanup.
+        self.work_dir.mkdir(parents=True, exist_ok=True)
+        clone_root = Path(tempfile.mkdtemp(prefix="clone-", dir=self.work_dir))
+        repo_path = clone_root / name
 
         try:
             cmd = ["git", "clone"]
@@ -216,8 +217,10 @@ class RepoIngester:
                 raise RuntimeError(f"Failed to clone repository: {result.stderr}")
 
         except subprocess.TimeoutExpired as exc:
+            shutil.rmtree(clone_root, ignore_errors=True)
             raise RuntimeError(f"Clone operation timed out for {url}") from exc
         except Exception as e:
+            shutil.rmtree(clone_root, ignore_errors=True)
             raise RuntimeError(f"Failed to clone repository {url}: {e}") from e
 
         try:
@@ -236,7 +239,7 @@ class RepoIngester:
         finally:
             if cleanup:
                 try:
-                    shutil.rmtree(repo_path)
+                    shutil.rmtree(clone_root)
                     logger.info(f"Cleaned up cloned repository at {repo_path}")
                 except Exception as e:
                     logger.warning(f"Failed to cleanup repository: {e}")

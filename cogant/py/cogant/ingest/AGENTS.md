@@ -60,15 +60,17 @@ The RepoSnapshot serves as the **contract between ingest and all downstream cons
   - `compute_checksums`: Compute SHA256 hash per file (default False, slower)
 - **Returns**: RepoSnapshot with files, dependencies, metadata
 
-**`ingest_remote(repo_url: str, include_test_files=True, shallow=False) -> RepoSnapshot`**
-- Clone remote repository (git, https, ssh)
-- Create temporary directory under work_dir
+**`ingest_git_remote(url: str, branch=None, include_test_files=True, compute_checksums=False, cleanup=True) -> RepoSnapshot`**
+- Validate the URL/branch (no option injection), then clone (git, https, ssh, file)
+- Clone into a fresh private `clone-*` directory under work_dir; existing directories in work_dir are never removed
 - Call ingest_local on clone
-- Clean up temporary files after snapshot creation
+- With `cleanup=True` (default) remove only that private clone directory after snapshot creation
 - **Args**:
-  - `repo_url`: Git URL (ssh:// or https://)
+  - `url`: Git URL (https://, ssh://, git://, file:// or scp-style `user@host:path`)
+  - `branch`: Optional branch/tag passed to `git clone --branch`
   - `include_test_files`: Include tests
-  - `shallow`: Use `git clone --depth 1` for speed (default False)
+  - `compute_checksums`: Compute SHA256 hash per file
+  - `cleanup`: Remove the clone after ingestion (the snapshot's `root_path` then no longer exists)
 - **Returns**: RepoSnapshot
 
 **`_extract_metadata(repo_path: Path) -> RepoMetadata`**
@@ -359,10 +361,9 @@ print(f"Languages: {set(f.language for f in snapshot.files if f.language)}")
 from cogant.ingest.repo import RepoIngester
 
 ingester = RepoIngester(work_dir=Path("/tmp/my_work"))
-snapshot = ingester.ingest_remote(
+snapshot = ingester.ingest_git_remote(
     "https://github.com/user/repo.git",
     include_test_files=True,
-    shallow=True  # --depth 1 for faster clone
 )
 
 # Snapshot is ready; temporary clone is cleaned up

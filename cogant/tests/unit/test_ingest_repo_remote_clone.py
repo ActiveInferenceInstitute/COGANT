@@ -75,17 +75,21 @@ class TestRepoIngesterCloneRemote:
             cleanup=False,
         )
         assert snapshot.metadata.url == f"file://{src_repo}"
-        cloned = work_dir / "src_repo2"
-        # Clone is preserved on disk
+        cloned = snapshot.root_path
+        # Clone is preserved on disk, in a private directory under work_dir
         assert cloned.exists() and cloned.is_dir()
+        assert cloned.name == "src_repo2"
+        assert cloned.is_relative_to(work_dir.resolve())
 
-    def test_ingest_git_remote_reclones_over_existing_dir(self, tmp_path: Path) -> None:
-        """If the target clone dir already exists it must be wiped first."""
+    def test_ingest_git_remote_leaves_existing_same_named_dir_untouched(
+        self, tmp_path: Path
+    ) -> None:
+        """A pre-existing ``work_dir/<name>`` directory is never wiped by a clone."""
         src_repo = _make_local_git_repo(tmp_path / "src_repo3")
         work_dir = tmp_path / "work3"
         existing = work_dir / "src_repo3"
         existing.mkdir(parents=True, exist_ok=True)
-        # Place a file that must be wiped by the rmtree branch
+        # Place a file that must survive the clone
         sentinel = existing / "old_file.txt"
         sentinel.write_text("old")
         assert sentinel.exists()
@@ -96,10 +100,12 @@ class TestRepoIngesterCloneRemote:
             cleanup=False,
         )
         assert snapshot.metadata.url == f"file://{src_repo}"
-        # After clone the sentinel must be gone (pre-existing dir wiped)
-        assert not sentinel.exists()
-        # And the cloned README must now be in place
-        assert (existing / "README.md").exists()
+        # The pre-existing directory is untouched ...
+        assert sentinel.read_text() == "old"
+        assert not (existing / "README.md").exists()
+        # ... and the clone lives in its own directory with the README
+        assert snapshot.root_path != existing.resolve()
+        assert (snapshot.root_path / "README.md").exists()
 
     def test_ingest_git_remote_on_invalid_url_raises(self, tmp_path: Path) -> None:
         """A non-existent remote URL surfaces as RuntimeError from subprocess."""
