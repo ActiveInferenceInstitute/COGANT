@@ -58,7 +58,6 @@ class _FakeStateSpace:
         self.transitions = transitions or {}
         self.likelihoods = likelihoods or []
         self.preferences = preferences or {}
-        self._state_var_objects: dict = {}
 
 
 class _FakeProcessModel:
@@ -295,11 +294,14 @@ class TestObjectLookups:
         b = _make_builder()
         assert b._state_var_object("nonexistent") is None
 
-    def test_state_var_object_returns_from_store(self):
-        ss = _FakeStateSpace(variables=["v1"])
-        ss._state_var_objects = {"v1": "var_object"}
+    def test_state_var_object_returns_from_variables_dict(self):
+        class FakeVar:
+            name = "myvar"
+
+        var = FakeVar()
+        ss = _FakeStateSpace(variables={"v1": var})
         b = _make_builder(state_space=ss)
-        assert b._state_var_object("v1") == "var_object"
+        assert b._state_var_object("v1") is var
 
     def test_action_object_returns_none_no_actions(self):
         b = _make_builder()
@@ -331,7 +333,7 @@ class TestExtractionHelpers:
         ss = _FakeStateSpace(variables=["v1", "v2"])
         b = _make_builder(state_space=ss)
         result = b._extract_state_variables()
-        # Falls back to id/name/type dict when no _state_var_objects
+        # Falls back to id/name/type dict when only bare ids are available
         assert len(result) == 2
         assert result[0]["type"] == "variable"
 
@@ -342,18 +344,19 @@ class TestExtractionHelpers:
             var_type = None
             cardinality = 3
             domain = None
-            factor = "f1"
+            factors = ["f1"]
             description = "test var"
-            source_node_ids = ["node1"]
+            node_id = "node1"
             confidence = None
 
-        ss = _FakeStateSpace(variables=["v1"])
-        ss._state_var_objects = {"v1": FakeVar()}
+        ss = _FakeStateSpace(variables={"v1": FakeVar()})
         b = _make_builder(state_space=ss)
         result = b._extract_state_variables()
         assert len(result) == 1
         assert result[0]["name"] == "myvar"
         assert result[0]["cardinality"] == 3
+        assert result[0]["factors"] == ["f1"]
+        assert result[0]["source_node_ids"] == ["node1"]
 
     def test_extract_observation_space_empty(self):
         b = _make_builder()
@@ -601,10 +604,9 @@ class TestExtractionHelpers:
 
     def test_extract_factorization_with_factor_attr(self):
         class FakeVar:
-            factor = "f1"
+            factors = ["f1"]
 
-        ss = _FakeStateSpace(variables=["v1"])
-        ss._state_var_objects = {"v1": FakeVar()}
+        ss = _FakeStateSpace(variables={"v1": FakeVar()})
         b = _make_builder(state_space=ss)
         result = b._extract_factorization()
         assert result["factor_count"] == 1

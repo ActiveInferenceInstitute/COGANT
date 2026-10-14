@@ -1108,11 +1108,9 @@ class TestPackageBuilderVisualizationFallbacks:
 class TestPackageBuilderExtractBranches:
     """Cover the conditional branches in the extract_* helpers."""
 
-    def test_state_var_object_returns_none_when_no_store(self) -> None:
-        """Cover line 792 (the ``return None`` path)."""
+    def test_state_var_object_returns_none_for_unknown_id(self) -> None:
+        """Unknown variable ids resolve to ``None``."""
         builder = _make_builder()
-        # The default StateSpaceModel has no _state_var_objects attribute,
-        # so the lookup falls through to None.
         assert builder._state_var_object("nope") is None
 
     def test_extract_observation_space_returns_empty_when_none(self) -> None:
@@ -1273,21 +1271,17 @@ class TestPackageBuilderExtractBranches:
         assert any(r.get("expression") == "latency<10" for r in result)
 
     def test_extract_factorization_default_extends_when_groups_present(self) -> None:
-        """Cover line 1089: groups exist *and* ungrouped exist → extend default."""
-        # Build a state space whose _state_var_objects has some vars with
-        # `factor` set and some without.
+        """Groups exist *and* ungrouped variables exist → extend default."""
+        # Some StateVariables carry a compiler-assigned factor, some do not.
         ss = _empty_state_space()
-        ss.variables = {"v1": "v1", "v2": "v2", "v3": "v3"}  # type: ignore[assignment]
-
-        class _SVar:
-            def __init__(self, factor: str | None) -> None:
-                self.factor = factor
-
-        ss._state_var_objects = {  # type: ignore[attr-defined]
-            "v1": _SVar("group_a"),
-            "v2": _SVar(None),
-            "v3": _SVar("group_a"),
-        }
+        for var_id, factors in (("v1", ["group_a"]), ("v2", None), ("v3", ["group_a"])):
+            ss.variables[var_id] = StateVariable(
+                id=var_id,
+                name=var_id,
+                var_type=StateVariableType.DISCRETE,
+                node_id=f"n_{var_id}",
+                factors=factors,
+            )
         builder = _make_builder(state_space=ss)
         result = builder._extract_factorization()
         # Should have group_a and default factors

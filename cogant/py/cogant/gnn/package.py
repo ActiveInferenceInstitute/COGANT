@@ -817,14 +817,16 @@ class GNNPackageBuilder:
     def _state_var_object(self, var_id: str) -> Any | None:
         """Resolve a state-space variable id back to its full object.
 
-        ``StateSpaceModel.variables`` is a list of string ids; the full
-        ``StateVariable`` objects live on
-        ``StateSpaceModel._state_var_objects`` (an internal dict the
-        compiler populates). This helper centralises the lookup.
+        ``StateSpaceModel.variables`` is a ``dict[str, StateVariable]``
+        keyed by variable id. This helper returns the ``StateVariable``
+        for *var_id*, or ``None`` when the id is unknown or the state
+        space only carries bare string ids (duck-typed stand-ins).
         """
-        store = getattr(self.state_space, "_state_var_objects", None)
-        if isinstance(store, dict):
-            return store.get(var_id)
+        variables = getattr(self.state_space, "variables", None)
+        if isinstance(variables, dict):
+            obj = variables.get(var_id)
+            if obj is not None and not isinstance(obj, str):
+                return obj
         return None
 
     def _action_object(self, action_id: str) -> Any | None:
@@ -842,6 +844,7 @@ class GNNPackageBuilder:
             if obj is None:
                 out.append({"id": str(var_id), "name": str(var_id), "type": "variable"})
                 continue
+            node_id = getattr(obj, "node_id", None)
             out.append(
                 {
                     "id": getattr(obj, "id", str(var_id)),
@@ -850,9 +853,12 @@ class GNNPackageBuilder:
                     or str(getattr(obj, "var_type", "")),
                     "cardinality": getattr(obj, "cardinality", None),
                     "domain": getattr(obj, "domain", None),
-                    "factor": getattr(obj, "factor", None),
-                    "description": getattr(obj, "description", ""),
-                    "source_node_ids": getattr(obj, "source_node_ids", []) or [],
+                    "factors": list(getattr(obj, "factors", None) or []),
+                    "is_discrete": getattr(obj, "is_discrete", None),
+                    "observable": getattr(obj, "observable", False),
+                    "description": getattr(obj, "description", "") or "",
+                    "node_id": node_id,
+                    "source_node_ids": [node_id] if node_id else [],
                     "confidence": _enum_value(getattr(obj, "confidence", None)),
                 }
             )
@@ -870,11 +876,22 @@ class GNNPackageBuilder:
             iterable = observations
         for obs in iterable:
             if hasattr(obs, "name"):
+                # ``ObservationModality`` names its channel class
+                # ``modality_type``; ``modality`` is kept as the emitted key
+                # (and accepted from duck-typed inputs) for compatibility.
+                modality = (
+                    getattr(obs, "modality_type", None)
+                    or getattr(obs, "modality", None)
+                    or "symbolic"
+                )
                 out.append(
                     {
                         "id": getattr(obs, "id", str(obs)),
                         "name": getattr(obs, "name", ""),
-                        "modality": getattr(obs, "modality", "symbolic"),
+                        "modality": str(modality),
+                        "modality_type": str(modality),
+                        "source_node_id": getattr(obs, "source_node_id", None),
+                        "cardinality": getattr(obs, "cardinality", None),
                         "values": getattr(obs, "values", None),
                         "source_channels": getattr(obs, "source_channels", []) or [],
                         "description": getattr(obs, "description", ""),
@@ -1094,31 +1111,34 @@ class GNNPackageBuilder:
     def _extract_factorization(self) -> dict[str, Any]:
         """Extract factorization structure from the state space.
 
-        Groups state variables by their ``factor`` attribute (assigned by
-        the compiler) and returns the factor → variable mapping plus a
-        small summary so the GNN package always carries a real
-        factorization view.
+        Groups state variables by their ``StateVariable.factors`` list
+        (assigned by the compiler; a variable may belong to several
+        factors). Variables without a factor are collected under a
+        ``"default"`` factor so the GNN package always carries a
+        factorization view. Returns the factor → variable mapping plus a
+        small summary; ``variable_count`` counts distinct variables.
         """
         from collections import defaultdict
 
         groups: dict[str, list[str]] = defaultdict(list)
         ungrouped: list[str] = []
+        seen: set[str] = set()
         for var_id in getattr(self.state_space, "variables", []) or []:
+            seen.add(str(var_id))
             obj = self._state_var_object(var_id)
-            factor = getattr(obj, "factor", None) if obj else None
-            if factor:
-                groups[str(factor)].append(var_id)
+            factors = [str(f) for f in (getattr(obj, "factors", None) or []) if f]
+            if factors:
+                for factor in dict.fromkeys(factors):
+                    groups[factor].append(var_id)
             else:
                 ungrouped.append(var_id)
-        if not groups and ungrouped:
-            groups["default"] = ungrouped
-        elif ungrouped:
+        if ungrouped:
             groups["default"].extend(ungrouped)
 
         return {
             "type": "factor_partition" if groups else "none",
             "factor_count": len(groups),
-            "variable_count": sum(len(v) for v in groups.values()),
+            "variable_count": len(seen) if groups else 0,
             "factors": [{"id": fid, "variables": sorted(vs)} for fid, vs in sorted(groups.items())],
         }
 
