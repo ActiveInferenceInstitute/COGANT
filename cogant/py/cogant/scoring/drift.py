@@ -27,7 +27,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Any
 
-from cogant.scoring._records import edge_key, iter_records
+from cogant.scoring._records import edge_key, iter_records, stable_payload
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +207,10 @@ class DriftAnalyzer:
         or the legacy ``source``/``target`` names. A node that exists in
         both but compares non-equal at the dict level is counted as
         "changed" (the entire subdict must be identical to be stable,
-        so cosmetic changes such as renamed labels flag as drift).
+        so cosmetic changes such as renamed labels flag as drift). Run
+        timestamps (``created_at``, ``updated_at``, ``timestamp``) are
+        ignored, so re-running the pipeline on unchanged source does
+        not mark nodes as changed.
 
         Accepts both the list-shaped graph layout
         (``{"nodes": [...], "edges": [...]}``) used by in-memory test
@@ -241,10 +244,10 @@ class DriftAnalyzer:
         added_nodes = set(nodes_b.keys()) - set(nodes_a.keys())
         removed_nodes = set(nodes_a.keys()) - set(nodes_b.keys())
 
-        # Changed nodes: exist in both but differ
+        # Changed nodes: exist in both but differ beyond run timestamps
         changed_nodes = []
         for nid in set(nodes_a.keys()) & set(nodes_b.keys()):
-            if nodes_a[nid] != nodes_b[nid]:
+            if stable_payload(nodes_a[nid]) != stable_payload(nodes_b[nid]):
                 changed_nodes.append(nid)
 
         added_edges = edges_b - edges_a
@@ -267,7 +270,8 @@ class DriftAnalyzer:
         Uses mapping ids as the diff key. A mapping present in both
         bundles whose full dict representation differs (kind,
         confidence, graph_fragment_node_ids, etc.) is counted as
-        "changed".
+        "changed"; run timestamps, including the per-provenance
+        ``timestamp``, are ignored.
 
         Returns:
             Dict with ``new_mappings``/``lost_mappings``/
@@ -280,10 +284,10 @@ class DriftAnalyzer:
         new_mappings = mapping_ids_b - mapping_ids_a
         lost_mappings = mapping_ids_a - mapping_ids_b
 
-        # Changed mappings: exist in both but differ
+        # Changed mappings: exist in both but differ beyond run timestamps
         changed_mappings = []
         for mid in mapping_ids_a & mapping_ids_b:
-            if self.mappings_a.get(mid) != self.mappings_b.get(mid):
+            if stable_payload(self.mappings_a.get(mid)) != stable_payload(self.mappings_b.get(mid)):
                 changed_mappings.append(mid)
 
         return {
@@ -325,7 +329,7 @@ class DriftAnalyzer:
                 [
                     s
                     for s in set(states_a.keys()) & set(states_b.keys())
-                    if states_a[s] != states_b[s]
+                    if stable_payload(states_a[s]) != stable_payload(states_b[s])
                 ]
             ),
             "observations_added": len(set(obs_b.keys()) - set(obs_a.keys())),

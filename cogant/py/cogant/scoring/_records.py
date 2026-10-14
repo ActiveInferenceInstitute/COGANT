@@ -18,6 +18,29 @@ from __future__ import annotations
 
 from typing import Any
 
+#: Payload fields stamped with the wall clock of a pipeline run. They
+#: differ between two runs over identical source, so drift comparison
+#: ignores them at every nesting level.
+VOLATILE_PAYLOAD_KEYS: frozenset[str] = frozenset({"created_at", "updated_at", "timestamp"})
+
+
+def stable_payload(value: Any) -> Any:
+    """Return ``value`` with :data:`VOLATILE_PAYLOAD_KEYS` removed recursively.
+
+    Dicts lose the volatile keys, lists and tuples are rebuilt
+    element-wise, and every other value is returned unchanged. Used to
+    compare two serialized payloads for real (non-timestamp) change.
+    """
+    if isinstance(value, dict):
+        return {
+            key: stable_payload(item)
+            for key, item in value.items()
+            if key not in VOLATILE_PAYLOAD_KEYS
+        }
+    if isinstance(value, list | tuple):
+        return [stable_payload(item) for item in value]
+    return value
+
 
 def iter_records(collection: Any, id_key: str = "id") -> list[dict[str, Any]]:
     """Normalize a list- or dict-shaped collection to a list of payload dicts.
