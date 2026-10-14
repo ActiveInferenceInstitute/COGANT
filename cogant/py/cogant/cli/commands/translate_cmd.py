@@ -18,7 +18,13 @@ from cogant.cli._app import (
     friendly_pipeline_error as _friendly_pipeline_error,
 )
 from cogant.cli._app import (
+    pipeline_run_failed as _pipeline_run_failed,
+)
+from cogant.cli._app import (
     run_pipeline_with_progress as _run_pipeline_with_progress,
+)
+from cogant.cli._app import (
+    stage_status_label as _stage_status_label,
 )
 
 
@@ -140,7 +146,8 @@ def translate(
     → dynamic → translate → statespace → process → export → validate.
     The ``dynamic`` enrichment stage runs by default and is skipped only
     with ``--no-dynamic``. Each stage is logged; on failure, the bundle is
-    still written with ``errors`` populated so you can post-mortem the run.
+    still written with ``errors`` populated so you can post-mortem the run,
+    and the command exits with code 1.
     """
     console.print(
         Panel(
@@ -239,13 +246,9 @@ def translate(
     results_table.add_column("Stage", style="cyan")
     results_table.add_column("Status", style="magenta")
 
+    skipped = set(config.skip_stages) | ({"dynamic"} if config.skip_dynamic else set())
     for stage in config.stages:
-        if stage in bundle.stage_results:
-            results_table.add_row(stage, "[green]✓ Success[/green]")
-        elif stage in config.skip_stages:
-            results_table.add_row(stage, "[yellow]⊘ Skipped[/yellow]")
-        else:
-            results_table.add_row(stage, "[red]✗ Failed[/red]")
+        results_table.add_row(stage, _stage_status_label(bundle, stage, skipped))
 
     console.print(results_table)
 
@@ -276,6 +279,12 @@ def translate(
 
         organize_run_dir(out, dry_run=False)
         bundle_path = out / "data" / "bundle.json"
+
+    if _pipeline_run_failed(bundle):
+        console.print("\n[red bold]✗ Translation failed[/red bold] — see the errors above")
+        console.print(f"Output: {config.output_dir}")
+        console.print(f"[dim]Saved bundle: {bundle_path}[/dim]")
+        raise typer.Exit(code=1)
 
     console.print("\n[green]✓ Translation complete[/green]")
     console.print(f"Output: {config.output_dir}")

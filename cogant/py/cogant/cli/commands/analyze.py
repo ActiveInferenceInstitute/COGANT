@@ -20,7 +20,13 @@ from cogant.cli._app import (
     friendly_pipeline_error as _friendly_pipeline_error,
 )
 from cogant.cli._app import (
+    pipeline_run_failed as _pipeline_run_failed,
+)
+from cogant.cli._app import (
     run_pipeline_with_progress as _run_pipeline_with_progress,
+)
+from cogant.cli._app import (
+    stage_status_label as _stage_status_label,
 )
 
 
@@ -257,19 +263,17 @@ def analyze(
         import json as _json
 
         print(_json.dumps(payload, indent=2, default=str))
+        if _pipeline_run_failed(bundle):
+            raise typer.Exit(code=1)
         return
     if not quiet:
         console.print("\n[bold green]Analyze Results[/bold green]")
         results_table = Table()
         results_table.add_column("Stage", style="cyan")
         results_table.add_column("Status", style="magenta")
+        skipped = set(config.skip_stages) | ({"dynamic"} if config.skip_dynamic else set())
         for stage in config.stages:
-            if stage in bundle.stage_results:
-                results_table.add_row(stage, "[green]✓ Success[/green]")
-            elif stage in config.skip_stages or (stage == "dynamic" and config.skip_dynamic):
-                results_table.add_row(stage, "[yellow]⊘ Skipped[/yellow]")
-            else:
-                results_table.add_row(stage, "[red]✗ Failed[/red]")
+            results_table.add_row(stage, _stage_status_label(bundle, stage, skipped))
         console.print(results_table)
 
     if bundle.errors and not quiet:
@@ -287,6 +291,12 @@ def analyze(
         )
         if inc_stats.get("reason"):
             console.print(f"[dim]  {inc_stats['reason']}[/dim]")
+
+    if _pipeline_run_failed(bundle):
+        if not quiet:
+            console.print("\n[red bold]✗ Analysis failed[/red bold] — see the errors above")
+            console.print(f"[dim]Saved bundle: {bundle_path}[/dim]")
+        raise typer.Exit(code=1)
 
     if not quiet:
         console.print("\n[green]✓ Analysis complete[/green]")

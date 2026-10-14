@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
 
-from cogant.api.bundle import Bundle
+from cogant.api.bundle import Bundle, StageOutcome
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
 
 logging.basicConfig(
@@ -158,6 +158,48 @@ def friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> N
     console.print("  [dim]→ Run [bold]cogant doctor[/bold] to check your environment[/dim]")
     console.print(
         "  [dim]→ File a bug at https://github.com/ActiveInferenceInstitute/COGANT/issues[/dim]"
+    )
+
+
+_STAGE_OUTCOME_LABELS: dict[StageOutcome, str] = {
+    StageOutcome.SUCCESS: "[green]✓ Success[/green]",
+    StageOutcome.PARTIAL: "[yellow]◐ Partial[/yellow]",
+    StageOutcome.SKIPPED: "[yellow]⊘ Skipped[/yellow]",
+    StageOutcome.UNAVAILABLE: "[yellow]⊘ Unavailable[/yellow]",
+    StageOutcome.FAILED: "[red]✗ Failed[/red]",
+}
+
+
+def stage_status_label(bundle: "Bundle", stage: str, skipped: set[str]) -> str:
+    """Return the Rich status label for one requested pipeline stage.
+
+    ``bundle.stage_outcomes`` is authoritative: a stage present in
+    ``stage_results`` may still have failed (validate returning
+    ``passed=False``) or been skipped (the ``--no-dynamic`` placeholder).
+    Bundles without a recorded outcome fall back to presence in
+    ``stage_results`` / ``skipped``.
+    """
+
+    outcome = bundle.stage_outcomes.get(stage)
+    if outcome is not None:
+        return _STAGE_OUTCOME_LABELS[StageOutcome(outcome)]
+    if stage in skipped:
+        return _STAGE_OUTCOME_LABELS[StageOutcome.SKIPPED]
+    if stage in bundle.stage_results:
+        return _STAGE_OUTCOME_LABELS[StageOutcome.SUCCESS]
+    return _STAGE_OUTCOME_LABELS[StageOutcome.FAILED]
+
+
+def pipeline_run_failed(bundle: "Bundle") -> bool:
+    """Return ``True`` when a run recorded errors or any failed stage.
+
+    ``translate`` and ``analyze`` use this to exit non-zero after still
+    writing the bundle, so scripts and CI do not treat failed runs as green.
+    Partial, skipped, and unavailable stages do not fail the run.
+    """
+
+    return bool(bundle.errors) or any(
+        StageOutcome(outcome) is StageOutcome.FAILED for outcome in bundle.stage_outcomes.values()
     )
 
 

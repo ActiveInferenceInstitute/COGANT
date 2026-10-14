@@ -14,7 +14,7 @@ cogant extract-dynamic: Extract dynamic analysis (traces, coverage). Reserved ru
 
 cogant graph: Build program dependency graph from target, showing node and edge counts. Runs ingest and static stages as prerequisites.
 
-cogant translate: Run full analysis pipeline (all stages) translating codebase to GNN. Shows stage results table, error summary, and saves bundle.json. Supports --skip to exclude stages, --layout-output for post-export organization.
+cogant translate: Run full analysis pipeline (all stages) translating codebase to GNN. Shows the per-stage outcome table (success / partial / skipped / unavailable / failed), error summary, and saves bundle.json; exits 1 when any stage failed or errors were recorded. Supports --skip to exclude stages, --layout-output for post-export organization.
 
 cogant statespace: Compile state space model showing states, observations, actions, and policies. Runs prerequisites through translate stage.
 
