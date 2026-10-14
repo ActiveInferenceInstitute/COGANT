@@ -117,6 +117,32 @@ def _resolve_workspace_path(
 # Metrics store (Prometheus text format).
 # ---------------------------------------------------------------------------
 
+#: HTTP verbs that keep their own ``method`` label; anything else is "OTHER".
+_METRIC_METHODS = frozenset({"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
+
+#: ``path`` label for requests that do not target a registered route.
+_UNMATCHED_PATH_LABEL = "<unmatched>"
+
+
+def _metric_labels(request: Any) -> tuple[str, str]:
+    """Return bounded ``(method, path)`` metric labels for ``request``.
+
+    The raw URL path and method are client-controlled, and the middleware
+    meters requests before authentication. Using them verbatim as label
+    values would let any caller mint an unbounded number of series. Paths
+    of registered routes keep their own label; every other path collapses
+    to ``<unmatched>`` and non-standard verbs to ``OTHER``.
+    """
+    method = request.method if request.method in _METRIC_METHODS else "OTHER"
+    path = request.url.path
+    route_paths = {getattr(route, "path", None) for route in request.app.routes}
+    return method, path if path in route_paths else _UNMATCHED_PATH_LABEL
+
+
+def _escape_label_value(value: object) -> str:
+    """Escape a Prometheus text-format label value (``\\``, ``"``, newline)."""
+    return str(value).replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
+
 
 @dataclass
 class _MetricsStore:
@@ -144,8 +170,9 @@ class _MetricsStore:
         """Increment counters for a finished request.
 
         Args:
-            method: HTTP verb (``GET``, ``POST``, ...).
-            path: Request URL path.
+            method: HTTP verb label (``GET``, ``POST``, ..., or ``OTHER``).
+            path: Route path label; the middleware passes the registered
+                route path or ``<unmatched>`` (see :func:`_metric_labels`).
             status: HTTP status code returned to the client.
             duration_s: Server-side processing duration in seconds.
         """
@@ -170,39 +197,40 @@ class _MetricsStore:
         """
         lines: list[str] = []
 
+        def labels(method: str, path: str) -> str:
+            return f'method="{_escape_label_value(method)}",path="{_escape_label_value(path)}"'
+
         lines.append("# HELP cogant_http_requests_total Total HTTP requests by method/path/status.")
         lines.append("# TYPE cogant_http_requests_total counter")
         for (method, path, status), count in sorted(self.requests.items()):
             lines.append(
-                f'cogant_http_requests_total{{method="{method}",path="{path}",status="{status}"}} {count}'
+                f'cogant_http_requests_total{{{labels(method, path)},status="{status}"}} {count}'
             )
 
         lines.append("# HELP cogant_http_errors_total Total 5xx responses by method/path.")
         lines.append("# TYPE cogant_http_errors_total counter")
         for (method, path), count in sorted(self.errors.items()):
-            lines.append(f'cogant_http_errors_total{{method="{method}",path="{path}"}} {count}')
+            lines.append(f"cogant_http_errors_total{{{labels(method, path)}}} {count}")
 
         lines.append("# HELP cogant_http_rate_limited_total Rate-limited requests by method/path.")
         lines.append("# TYPE cogant_http_rate_limited_total counter")
         for (method, path), count in sorted(self.rate_limited.items()):
-            lines.append(
-                f'cogant_http_rate_limited_total{{method="{method}",path="{path}"}} {count}'
-            )
+            lines.append(f"cogant_http_rate_limited_total{{{labels(method, path)}}} {count}")
 
         lines.append("# HELP cogant_http_request_duration_seconds Cumulative request duration.")
         lines.append("# TYPE cogant_http_request_duration_seconds summary")
         for (method, path), total in sorted(self.duration_sum.items()):
             count = self.duration_count.get((method, path), 0)
             lines.append(
-                f'cogant_http_request_duration_seconds_sum{{method="{method}",path="{path}"}} {total:.6f}'
+                f"cogant_http_request_duration_seconds_sum{{{labels(method, path)}}} {total:.6f}"
             )
             lines.append(
-                f'cogant_http_request_duration_seconds_count{{method="{method}",path="{path}"}} {count}'
+                f"cogant_http_request_duration_seconds_count{{{labels(method, path)}}} {count}"
             )
 
         lines.append("# HELP cogant_build_info COGANT build / version info.")
         lines.append("# TYPE cogant_build_info gauge")
-        lines.append(f'cogant_build_info{{version="{cogant.__version__}"}} 1')
+        lines.append(f'cogant_build_info{{version="{_escape_label_value(cogant.__version__)}"}} 1')
 
         # Prometheus wants a trailing newline.
         return "\n".join(lines) + "\n"
@@ -579,6 +607,9 @@ def create_app(
         """
         method = request.method
         path = request.url.path
+        # Metric labels are bounded (registered routes / standard verbs only)
+        # because this middleware also meters unauthenticated requests.
+        metric_method, metric_path = _metric_labels(request)
         client_host = request.client.host if request.client else "unknown"
         start = time.perf_counter()
         request_id = str(uuid.uuid4())
@@ -593,7 +624,7 @@ def create_app(
         try:
             declared_length = int(content_length) if content_length is not None else 0
         except ValueError:
-            metrics.record(method, path, 400, time.perf_counter() - start)
+            metrics.record(metric_method, metric_path, 400, time.perf_counter() - start)
             return JSONResponse(
                 status_code=400,
                 content={
@@ -603,7 +634,7 @@ def create_app(
                 },
             )
         if declared_length < 0:
-            metrics.record(method, path, 400, time.perf_counter() - start)
+            metrics.record(metric_method, metric_path, 400, time.perf_counter() - start)
             return JSONResponse(
                 status_code=400,
                 content={
@@ -613,7 +644,7 @@ def create_app(
                 },
             )
         if declared_length > request.app.state.max_request_bytes:
-            metrics.record(method, path, 413, time.perf_counter() - start)
+            metrics.record(metric_method, metric_path, 413, time.perf_counter() - start)
             return JSONResponse(
                 status_code=413,
                 content={
@@ -646,7 +677,7 @@ def create_app(
                     break
             request._body = b"".join(body_parts)
         except _RequestBodyTooLarge:
-            metrics.record(method, path, 413, time.perf_counter() - start)
+            metrics.record(metric_method, metric_path, 413, time.perf_counter() - start)
             return JSONResponse(
                 status_code=413,
                 content={
@@ -663,7 +694,7 @@ def create_app(
             # extended route list silently drops the token from new endpoints.
             expected = f"Bearer {request.app.state.auth_token}"
             if request.headers.get("authorization") != expected:
-                metrics.record(method, path, 401, time.perf_counter() - start)
+                metrics.record(metric_method, metric_path, 401, time.perf_counter() - start)
                 return JSONResponse(
                     status_code=401,
                     content={
@@ -675,7 +706,7 @@ def create_app(
 
         if path in request.app.state.rate_limited_paths:
             if not limiter.check(f"{client_host}:{path}"):
-                metrics.record_rate_limited(method, path)
+                metrics.record_rate_limited(metric_method, metric_path)
                 duration = time.perf_counter() - start
                 # Structured kwargs only work when a structlog-bound logger is
                 # active; fall back to stdlib %-formatting otherwise (mirrors
@@ -701,7 +732,7 @@ def create_app(
                         duration * 1000,
                         request_id,
                     )
-                metrics.record(method, path, 429, duration)
+                metrics.record(metric_method, metric_path, 429, duration)
                 return JSONResponse(
                     status_code=429,
                     content={
@@ -725,7 +756,7 @@ def create_app(
                 semaphore: asyncio.Semaphore = request.app.state.request_semaphore
                 if semaphore.locked():
                     duration = time.perf_counter() - start
-                    metrics.record(method, path, 503, duration)
+                    metrics.record(metric_method, metric_path, 503, duration)
                     return JSONResponse(
                         status_code=503,
                         content={
@@ -743,7 +774,7 @@ def create_app(
             status_code = response.status_code
         except _RequestBodyTooLarge:
             duration = time.perf_counter() - start
-            metrics.record(method, path, 413, duration)
+            metrics.record(metric_method, metric_path, 413, duration)
             return JSONResponse(
                 status_code=413,
                 content={
@@ -754,7 +785,7 @@ def create_app(
             )
         except TimeoutError:
             duration = time.perf_counter() - start
-            metrics.record(method, path, 504, duration)
+            metrics.record(metric_method, metric_path, 504, duration)
             return JSONResponse(
                 status_code=504,
                 content={
@@ -765,7 +796,7 @@ def create_app(
             )
         except Exception as exc:  # noqa: BLE001 - final safety net
             duration = time.perf_counter() - start
-            metrics.record(method, path, 500, duration)
+            metrics.record(metric_method, metric_path, 500, duration)
             logger.exception("unhandled server error: %s", exc)
             return JSONResponse(
                 status_code=500,
@@ -781,7 +812,7 @@ def create_app(
                 request.app.state.request_semaphore.release()
 
         duration = time.perf_counter() - start
-        metrics.record(method, path, status_code, duration)
+        metrics.record(metric_method, metric_path, status_code, duration)
         # Structured logger may or may not accept keyword metadata
         # depending on whether structlog is installed. The
         # ``hasattr`` guard keeps the middleware robust either way.
