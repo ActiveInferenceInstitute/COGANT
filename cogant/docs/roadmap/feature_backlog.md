@@ -13,7 +13,7 @@ These items are implemented and tested in the current tree.
 |------|-----------|-------|
 | JS/TS tree-sitter parser (arrow fns, async, generics, interfaces, decorators) | v0.4.0 | JS grammar fallback for `.ts` |
 | Rust PyO3 `connected_components` FFI; `COGANT_USE_RUST=1` gate | v0.4.0 | Pure-Python fallback default |
-| Incremental analysis: `--incremental <git-ref>` / `PipelineConfig.incremental_since` | current | 19.6× no-change, 5.6× single-file speedup on Flask |
+| Incremental analysis: `--incremental <git-ref>` / `PipelineConfig.incremental_since` | current | 19.6× no-change speedup on Flask; source changes re-analyse the full snapshot (per-file patching is future work) |
 | Multi-episode Bayesian learning: `run_multi_episode`, `update_D_from_posterior`, `update_A_from_counts` | current | |
 | Production FastAPI server with `/health` + `/translate`; Dockerfile + docker-compose | current | EXPOSE 8080 |
 | Roundtrip role-preservation benchmark | v0.6.0 | Current native ledger records 25/25 ROLE_PRESERVED, 0/25 DRIFT, 0 non-native rows, and 1/25 strict structural-isomorphism row confined to `roundtrip_strict_minimal` |

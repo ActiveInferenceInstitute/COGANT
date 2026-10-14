@@ -3,6 +3,15 @@
 Measures the wall-time speedup of `cogant translate --incremental <commit>`
 against the full pipeline on a real-world Python repository.
 
+> **2026-10-14 correction.** The Scenario 2 figure below (5.57× for a one-file
+> change) was measured on a partial path that re-parsed only the changed files
+> and **dropped every unchanged file from the resulting model**, then cached
+> the reduced result. That path was a data-loss defect and was removed in
+> v0.7.0: a source change now re-analyses the full snapshot. The no-change
+> path (Scenario 1) is unaffected, and it now also requires that the cached
+> run's exported outputs exist in the current `output_dir`. See
+> [Re-measurement (2026-10-14)](#re-measurement-2026-10-14).
+
 ## Setup
 
 | Field | Value |
@@ -122,3 +131,21 @@ bundle = runner.run("../../evaluation/eval_repos/flask", cfg)
 print(bundle.metadata["incremental_stats"])
 PY
 ```
+
+## Re-measurement (2026-10-14)
+
+Same scenarios, same target (Flask, 83 Python files, stages `dynamic`,
+`export`, `validate` skipped), on a shared 4-vCPU Linux container with
+Python 3.13 and COGANT 0.7.0. Medians of 3 baseline runs and 5 incremental
+runs; absolute times are slower than the 2026-04 macOS host, so compare the
+ratios.
+
+| Scenario | Median | Ratio vs. full run | `incremental_stats` |
+| --- | --- | --- | --- |
+| Full run (no incremental) | 2.360 s | 1.00× | — |
+| No change (`--incremental HEAD`, cache hit) | 0.094 s | **25.16×** | `cache_hit=True`, 0/83 re-parsed |
+| One file changed (`--incremental HEAD~1`) | 2.463 s | **0.96×** | `cache_hit=False`, 83/83 re-parsed, reason `1 source change(s) detected; re-analysing the full snapshot` |
+
+A one-file change now costs one full analysis: correctness over speed. A
+genuine partial speedup needs per-file patching of the cached program graph,
+mappings and downstream stage results, which the cache does not store today.

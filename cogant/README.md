@@ -28,9 +28,9 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
   `DRIFT`, or `FAILED`; the current native ledger is role-preserved for 25 of 25 targets, with
   one strict structural-isomorphism row confined to `roundtrip_strict_minimal`.
 - **Incremental mode**: `cogant analyze --incremental <git-ref>` (or
-  `PipelineConfig.incremental_since`) re-uses the previous run's program graph for unchanged
-  source paths, measuring **19.6× no-change** and **5.6× single-file** speedups on the Flask
-  benchmark.
+  `PipelineConfig.incremental_since`) reuses the cached run when nothing changed and its outputs
+  exist (**19.6×** on the Flask benchmark; 25.2× re-measured 2026-10-14). Any source change
+  re-analyses the full snapshot, so the model never drops unchanged files.
 - **Packaged demo server**: `cogant.server.app` exposes HTTP endpoints including `/health`
   and `/translate`; a packaged `Dockerfile` (python:3.12-slim + uv, `EXPOSE 8080`) and
   `docker-compose.yml` make it runnable as a container. The default server is loopback-only;
@@ -113,8 +113,8 @@ from this package root or `./run_all.sh` from the COGANT project root.
 - **Principled state-space semantics** — Markov blanket partition, variational free energy
   computation, expected free energy optimization — not keyword heuristics.
 - **Incremental analysis mode** — `cogant analyze --incremental <git-ref>` or
-  `PipelineConfig.incremental_since` — 19.6× no-change (cached graph), 5.6× single-file
-  (partial re-run) speedups on Flask. Complements `cogant changed` git-diff helper for CI.
+  `PipelineConfig.incremental_since` — 19.6× no-change (cached run) on Flask; a source change
+  re-analyses the full snapshot. Complements `cogant changed` git-diff helper for CI.
 - **Multi-episode Bayesian learning**: `AgentRuntime.run_multi_episode`, `run_episode`,
   `update_D_from_posterior`, `update_A_from_counts`.
 - **Packaged FastAPI server**: `cogant.server.app` with versioned HTTP endpoints,

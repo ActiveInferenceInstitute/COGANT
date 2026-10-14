@@ -9,8 +9,8 @@ and the Flask benchmark (`cogant translate --incremental`).
 
 | Benchmark | Result | Notes |
 |-----------|--------|-------|
-| Flask app — no-change incremental | **19.6× speedup** | Re-uses previous ProgramGraph |
-| Flask app — single-file change | **5.6× speedup** | Only changed paths re-analyzed |
+| Flask app — no-change incremental | **19.6× speedup** (25.2× re-measured 2026-10-14) | Reuses the cached run when outputs exist |
+| Flask app — single-file change | **≈1×** (0.96× re-measured 2026-10-14) | Full snapshot re-analysed; the former 5.6× partial path dropped unchanged files and was withdrawn |
 | Roundtrip ledger classification (25 fixtures/reductions) | **25 ROLE_PRESERVED / 0 DRIFT / 0 non-native rows** | Current native ledger; strict structural isomorphism is 1/25 and confined to `roundtrip_strict_minimal` |
 | AII validator score (all fixtures) | **100/100** | |
 | `cogant translate` on 8 real-world repos | all pass | flask, requests, dulwich, etc. |
