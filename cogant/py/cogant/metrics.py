@@ -4,6 +4,13 @@ Loads and exposes values from cogant/evaluation/METRICS.yaml,
 providing a stable programmatic interface for scripts, tests, and
 manuscript injection tooling.
 
+This module is source-checkout-only: ``METRICS.yaml`` lives in the
+repository's ``evaluation/`` directory and is not shipped as package data,
+and pyyaml is not a runtime dependency of the package. Importing the module
+always works; ``load()`` (and every accessor) raises ``ImportError`` when
+pyyaml is missing and ``FileNotFoundError`` when ``METRICS.yaml`` is not
+present next to the package sources.
+
 Usage::
 
     from cogant.metrics import version, coverage, role_preserved_count
@@ -18,8 +25,6 @@ from __future__ import annotations
 import functools
 from pathlib import Path
 from typing import Any
-
-import yaml  # pyyaml — already a dev dep
 
 __all__ = [
     "load",
@@ -40,8 +45,27 @@ _METRICS_PATH = Path(__file__).parent.parent.parent / "evaluation" / "METRICS.ya
 
 @functools.lru_cache(maxsize=1)
 def load() -> dict[str, Any]:
-    """Load and return the full METRICS.yaml as a dict."""
-    with open(_METRICS_PATH) as f:
+    """Load and return the full METRICS.yaml as a dict.
+
+    Raises:
+        ImportError: pyyaml is not installed.
+        FileNotFoundError: ``METRICS.yaml`` is absent, i.e. the package is
+            not running from a COGANT source checkout.
+    """
+    try:
+        import yaml
+    except ImportError as exc:
+        raise ImportError(
+            "cogant.metrics needs pyyaml to read METRICS.yaml; install it with "
+            "`pip install pyyaml` (it ships with the `upstream` extra and the dev group)."
+        ) from exc
+    if not _METRICS_PATH.is_file():
+        raise FileNotFoundError(
+            f"METRICS.yaml not found at {_METRICS_PATH}; cogant.metrics reads "
+            "evaluation/METRICS.yaml from a COGANT source checkout and is not "
+            "available from an installed wheel."
+        )
+    with open(_METRICS_PATH, encoding="utf-8") as f:
         result: dict[str, Any] = yaml.safe_load(f)
         return result
 
