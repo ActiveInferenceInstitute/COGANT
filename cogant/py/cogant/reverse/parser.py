@@ -148,8 +148,12 @@ class ReverseGNNModel:
             errors.append("D is required when hidden-state variables are declared")
         if self.observations and not self.C:
             errors.append("C is required when observation variables are declared")
-        if self.actions and not self.B:
-            errors.append("B is required when action variables are declared")
+        # B is indexed by hidden state, so it only exists when both hidden
+        # states and actions are declared.  A stateless model whose callables
+        # are ACTION roles has no transition tensor (the GNN validator
+        # requires B to be empty when there are no hidden states).
+        if self.hidden_states and self.actions and not self.B:
+            errors.append("B is required when hidden-state and action variables are declared")
         if self.D and any(value < 0 for value in self.D):
             errors.append("D contains a negative probability")
         return errors

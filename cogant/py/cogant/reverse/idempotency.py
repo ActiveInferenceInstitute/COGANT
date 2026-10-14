@@ -790,6 +790,47 @@ def _roundtrip_status_from_invariants(
     return ROUNDTRIP_STATUS_DRIFT
 
 
+def _synthesis_failed_result(
+    original_roles: Counter[str],
+    exc: Exception,
+    *,
+    role_threshold: float,
+) -> RoundtripResult:
+    """Return the ``FAILED`` result for a model that could not be synthesized.
+
+    Planning and synthesis reject models whose matrix semantics are
+    incomplete or invalid (:class:`ReverseModelError` is a ``ValueError``).
+    That is a round-trip outcome, not a crash: the module contract says
+    ``FAILED`` covers a failed synthesis, so callers receive the source role
+    multiset, an all-false invariant ledger, and the reason in ``errors``.
+    """
+    error = f"synthesis failed: {type(exc).__name__}: {exc}"
+    invariants = _invariants(
+        role_preservation_score=0.0,
+        role_threshold=role_threshold,
+        shape_match={},
+        graph_delta={},
+        matrix_delta={},
+        gnn_diff={},
+        generated_code_ok=False,
+        forward_error=error,
+    )
+    return RoundtripResult(
+        roundtrip_status=ROUNDTRIP_STATUS_FAILED,
+        role_preservation_score=0.0,
+        role_preserved=False,
+        structurally_isomorphic=False,
+        matrix_preserved=False,
+        gnn_sections_preserved=False,
+        generated_code_ok=False,
+        vacuous_roundtrip=False,
+        original_roles=dict(original_roles),
+        synthesized_roles={},
+        invariants=invariants,
+        errors=[error],
+    )
+
+
 def _generated_code_status(package_path: Path) -> tuple[bool, list[str]]:
     """Compile generated Python files as a deterministic smoke check."""
     errors: list[str] = []
@@ -1007,9 +1048,12 @@ def verify_roundtrip(
             after the run. Useful for debugging.
 
     Returns:
-        A :class:`RoundtripResult` summarising the run. The result is
-        always returned — exceptions inside the forward pipeline are
-        captured as ``errors`` rather than raised.
+        A :class:`RoundtripResult` summarising the run. Once the source GNN
+        has been parsed, the result is always returned — a model that
+        planning or synthesis rejects yields ``roundtrip_status=FAILED``,
+        and exceptions inside the forward pipeline are captured as
+        ``errors`` rather than raised. A temporary directory created here
+        is removed even when the run fails.
     """
     gnn_path = Path(gnn_path).expanduser().resolve()
 
@@ -1027,8 +1071,42 @@ def verify_roundtrip(
         tmp_dir_obj = Path(tmp_dir).expanduser().resolve()
         tmp_dir_obj.mkdir(parents=True, exist_ok=True)
 
-    plan = plan_package(model, expected_roles=original_roles)
-    package_path = synthesize_package(plan, model, tmp_dir_obj)
+    try:
+        result = _verify_gnn_roundtrip_in(
+            gnn_path,
+            model,
+            original_roles,
+            tmp_dir_obj,
+            role_threshold=role_threshold,
+        )
+    finally:
+        # 6. Cleanup, also when synthesis or scoring raised.
+        if cleanup_dir is not None:
+            shutil.rmtree(cleanup_dir, ignore_errors=True)
+    if cleanup_dir is not None:
+        # The package_path points to deleted files; clear it so callers don't
+        # try to read deleted files.
+        result.package_path = None
+
+    logger.info("Round-trip result: %s", result.summary())
+    return result
+
+
+def _verify_gnn_roundtrip_in(
+    gnn_path: Path,
+    model: ReverseGNNModel,
+    original_roles: Counter[str],
+    tmp_dir_obj: Path,
+    *,
+    role_threshold: float,
+) -> RoundtripResult:
+    """Synthesize ``model`` under ``tmp_dir_obj`` and score the round-trip."""
+    try:
+        plan = plan_package(model, expected_roles=original_roles)
+        package_path = synthesize_package(plan, model, tmp_dir_obj)
+    except ValueError as exc:
+        logger.warning("Reverse synthesis failed for %s: %s", gnn_path, exc)
+        return _synthesis_failed_result(original_roles, exc, role_threshold=role_threshold)
 
     # 3. Run the forward pipeline on the synthesized package.
     forward = _run_forward(package_path)
@@ -1126,7 +1204,7 @@ def verify_roundtrip(
         invariants=invariants,
     )
 
-    result = RoundtripResult(
+    return RoundtripResult(
         roundtrip_status=_roundtrip_status_from_invariants(
             role_preserved=role_preserved,
             structurally_isomorphic=structurally_isomorphic,
@@ -1155,19 +1233,6 @@ def verify_roundtrip(
         errors=errors,
         vacuous_roundtrip=vacuous_roundtrip,
     )
-
-    # 6. Cleanup.
-    if cleanup_dir is not None:
-        try:
-            shutil.rmtree(cleanup_dir, ignore_errors=True)
-            # The package_path points to deleted files; clear it so callers don't
-            # try to read deleted files.
-            result.package_path = None
-        except OSError:  # pragma: no cover - defensive
-            pass
-
-    logger.info("Round-trip result: %s", result.summary())
-    return result
 
 
 def verify_repo_roundtrip(
@@ -1209,7 +1274,8 @@ def verify_repo_roundtrip(
     Returns:
         :class:`RoundtripResult` with ``original_roles`` drawn from the
         first forward pass and ``synthesized_roles`` drawn from the
-        second.
+        second. When planning or synthesis rejects the emitted model, the
+        result has ``roundtrip_status=FAILED`` and the reason in ``errors``.
     """
     from cogant.api.session import Session
 
@@ -1251,13 +1317,18 @@ def verify_repo_roundtrip(
         gnn_path.write_text(gnn_md, encoding="utf-8")
         logger.info("Wrote forward GNN to %s", gnn_path)
 
-        # Stage 2+3: parse → plan → synthesize.
+        # Stage 2+3: parse → plan → synthesize.  A model that planning or
+        # synthesis rejects is a FAILED round-trip, not a crash.
         model = parse_gnn(gnn_path)
-        plan = plan_package(model, expected_roles=original_roles)
-        if supports_stable_minimal_profile(plan, model):
-            package_path = synthesize_stable_minimal_package(plan, model, reverse_dir)
-        else:
-            package_path = synthesize_package(plan, model, reverse_dir)
+        try:
+            plan = plan_package(model, expected_roles=original_roles)
+            if supports_stable_minimal_profile(plan, model):
+                package_path = synthesize_stable_minimal_package(plan, model, reverse_dir)
+            else:
+                package_path = synthesize_package(plan, model, reverse_dir)
+        except ValueError as exc:
+            logger.warning("Reverse synthesis failed for %s: %s", repo_path, exc)
+            return _synthesis_failed_result(original_roles, exc, role_threshold=role_threshold)
 
         # Stage 4: forward on the synthesized package.
         forward = _run_forward(package_path)

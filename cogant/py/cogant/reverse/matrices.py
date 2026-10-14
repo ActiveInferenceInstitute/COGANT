@@ -89,7 +89,7 @@ def _validate_matrix_semantics(model: ReverseGNNModel) -> None:
         raise ReverseModelError("D is required to establish the hidden-state dimension")
     if model.observations and not model.C:
         raise ReverseModelError("C is required to establish the observation dimension")
-    if model.actions and not model.B:
+    if model.hidden_states and model.actions and not model.B:
         raise ReverseModelError("B is required to establish the action dimension")
 
     if len(model.D) != n_states:
@@ -141,11 +141,13 @@ def _validate_matrix_semantics(model: ReverseGNNModel) -> None:
         product = math.prod(declared_cards)
         if product != n_states:
             raise ReverseModelError("hidden-state cardinalities do not match the D dimension")
-    for label, declarations, dimension in (
-        ("observation", model.observations, n_obs),
-        ("action", model.actions, n_actions),
+    for label, declarations, dimension, established in (
+        ("observation", model.observations, n_obs, True),
+        # Without hidden states there is no B tensor, so no emitted matrix
+        # establishes an action dimension to cross-check declarations against.
+        ("action", model.actions, n_actions, bool(model.B)),
     ):
-        if declarations and not model.degraded:
+        if declarations and established and not model.degraded:
             cards = [model.cardinalities.get(slot, 0) for slot in declarations]
             if any(card <= 0 for card in cards):
                 raise ReverseModelError(f"every {label} declaration needs a positive cardinality")
