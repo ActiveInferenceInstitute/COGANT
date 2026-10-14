@@ -182,8 +182,18 @@ def validate(
         console.print(f"[red]✗ Not a file or directory:[/red] {bundle_path}")
         raise typer.Exit(code=2)
 
-    with open(json_path) as f:
-        data = json.load(f)
+    try:
+        with open(json_path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        console.print(f"[red]✗ Not a bundle JSON object:[/red] {json_path} ({exc})")
+        raise typer.Exit(code=2) from exc
+    if not isinstance(data, dict):
+        console.print(
+            f"[red]✗ Not a bundle JSON object:[/red] {json_path} "
+            f"(top level is {type(data).__name__})"
+        )
+        raise typer.Exit(code=2)
 
     checks = {
         "has_target": "target" in data,
