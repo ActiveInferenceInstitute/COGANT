@@ -15,8 +15,8 @@ The notation surface is also validator-backed: `uv run python tools/audit_manusc
 | $G$ | Program graph | @def:program-graph | Tuple $(V, E, \lambda_V, \lambda_E, \tau)$ |
 | $V$ | Finite set of program nodes | @def:program-graph | Modules, classes, methods, functions, … |
 | $E$ | Finite set of typed directed edges; $E \subseteq V \times V \times K$ | @def:program-graph | Drawn from edge-kind alphabet $K$ |
-| $K$ | Edge-kind alphabet (18 kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
-| $\mathcal{N}$ | Node-kind alphabet (18 kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
+| $K$ | Edge-kind alphabet ({{EDGE_KIND_COUNT}} kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
+| $\mathcal{N}$ | Node-kind alphabet ({{NODE_KIND_COUNT}} kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
 | $\lambda_V$ | Node-kind labelling function; $\lambda_V : V \to \mathcal{N}$ | @def:program-graph | |
 | $\lambda_E$ | Edge-kind labelling function; $\lambda_E : E \to K$ | @def:program-graph | Trivial projection onto edge kind |
 | $\tau$ | Type annotation map; $\tau : V \to (T \cup \{\bot\})$ | @def:program-graph | $\bot$ when no annotation available |
