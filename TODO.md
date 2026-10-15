@@ -48,12 +48,9 @@ Source-of-truth rules:
   - Acceptance: a clean offline environment collects and runs the documented
     core suite without an unrelated installed `tests` package or upstream
     network access.
-  - Blocker: the complete historical `pytest tests/` lane now collects cleanly
-    but still contains legacy contract failures in older configuration,
-    reverse-matrix, cache-layout, parser-loader, server-error, GNN-package,
-    and optional-upstream tests. The canonical registry and strict server
-    boundary remain authoritative; the focused current-contract lane must not
-    be presented as a full-suite certification.
+  - Verification: run the complete `pytest tests/` lane and aggregate release
+    gate against the current commit. Focused contract tests do not replace
+    full-suite qualification; current results belong in generated evidence.
 
 - [~] **cog-p0-03 — Close the documentation and packaging boundary.**
   - Priority: P0.
@@ -85,9 +82,8 @@ Source-of-truth rules:
   - Priority: P1.
   - Depends on: cog-p0-01.
   - Deliverable: `ProjectConfig` and one preset registry as the authoritative
-    model, legacy translation/warnings for one deprecation cycle, and a schema
-    version/migration mechanism.
-  - Acceptance: compatibility fixtures prove precedence
+    model, canonical sectioned input, and strict schema-version validation.
+  - Acceptance: executable fixtures prove precedence
     `defaults < preset < file < environment < CLI`; no parallel registry remains.
 
 - [~] **cog-p1-03 — Fail-closed pipeline contracts.**
@@ -270,10 +266,10 @@ Source-of-truth rules:
 - [ ] **cog-p5-04 — Deprecation and maintenance policy.**
   - Priority: P5.
   - Depends on: cog-p1-01, cog-p1-02.
-  - Deliverable: removal schedule for legacy config fields, parser aliases, stub
-    paths, and CLI behavior; generated output remains disposable and reproducible.
-  - Acceptance: deprecation warnings, migration tests, and regeneration docs
-    remain green for one complete compatibility cycle.
+  - Deliverable: one supported interface for configuration and parser selection;
+    generated output remains disposable and reproducible.
+  - Acceptance: canonical input, rejection controls, and regeneration docs
+    remain green after interface retirement.
 
 ## Execution order
 
@@ -431,7 +427,7 @@ fixes); `check_coverage_table --strict` red (missing benchmark JSON sidecar).
 
 ## Completed/Closed — 2026-08-02 docs-deep review pass
 
-Fleet docs-deep pass (log: [`REVIEW_LOG_2026-08-02.md`](REVIEW_LOG_2026-08-02.md)).
+Fleet docs-deep pass (historical review evidence retained in Git history).
 Findings below were verified against the live parser registry, CLI help, module
 layout, and METRICS.yaml before editing. Commits: `d86528c`, `d2d7156`.
 
@@ -544,7 +540,7 @@ package suite is green — 9612 passed / 0 failed / 47 skipped, coverage
 - [x] **Template-contract test de-coupled from checkout directory case**
   (`9ac186d`): a sidecar clone named `COGANT` no longer fails
   `test_project_root_points_to_cogant_staging_root`.
-- [x] **REVIEW_LOG_2026-08-02 open items**: the audit-test failure was
+- [x] **August 2026 review open items**: the audit-test failure was
   already fixed (see the ticked 2026-08-02 item above); METRICS.yaml
   regenerated against commit-bound HEAD this pass; the 12 notebook stubs
   remain deliberately open.

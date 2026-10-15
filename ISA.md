@@ -115,7 +115,7 @@ target.
   (parser capability registry + fallback contract tests); METRICS.yaml
   regenerated against commit-bound HEAD and the manuscript chain re-rendered
   (publication readiness: ready). Full suite 9612 passed / 0 failed / 47
-  skipped, coverage 94.61%. See `REVIEW_LOG_2026-09-08.md`.
+  skipped, coverage 94.61%. Historical review evidence remains in Git history.
 - **2026-06-08 — Post-review hardening + held-out eval (round 2).**
   - **Guard audit (durable):** added `tools/audit_manuscript_math_adjacency.py`
     + `tests/test_audit_manuscript_math_adjacency.py` and wired it into the gate

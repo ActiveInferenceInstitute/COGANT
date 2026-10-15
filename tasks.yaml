@@ -35,8 +35,8 @@ tasks:
   deps:
   - cog-p0
   tags: [config, compatibility]
-  notes: 'TODO.md cog-p1-01: ProjectConfig, one preset registry, legacy
-    warnings, precedence fixtures, and schema-version migration.'
+  notes: 'TODO.md cog-p1-01: ProjectConfig, one preset registry,
+    canonical sections, precedence fixtures, and strict schema-version validation.'
 - id: cog-p1-02
   title: Explicit parser capability and fallback contract
   status: in_progress
@@ -264,10 +264,9 @@ tasks:
   - cog-p1-01
   - cog-p1-02
   tags: [maintenance, compatibility]
-  notes: 'TODO.md cog-p5-04: removal schedule, migration tests, warnings, and
-    reproducible generated-output guidance. Legacy config normalization and
-    parser refresh compatibility hooks are active; the removal schedule and
-    complete compatibility cycle remain.'
+  notes: 'TODO.md cog-p5-04: canonical-input rejection tests and reproducible
+    generated-output guidance. Configuration uses sectioned ProjectConfig
+    inputs and parser selection uses cogant.parsers.registry.'
 - id: cog-2
   title: Roundtrip diagnostics + graph/GNN visual diff panels
   status: done
