@@ -320,10 +320,13 @@ class MermaidGenerator:
             if key not in assignment_ids:
                 node_id = f"c{len(assignment_ids)}"
                 assignment_ids[key] = node_id
-                label = ", ".join(
-                    f"{name}={json.dumps(value, sort_keys=True, ensure_ascii=False, allow_nan=False)}"
-                    for name, value in sorted(assignment.items())
-                ) or "Unspecified state assignment"
+                label = (
+                    ", ".join(
+                        f"{name}={json.dumps(value, sort_keys=True, ensure_ascii=False, allow_nan=False)}"
+                        for name, value in sorted(assignment.items())
+                    )
+                    or "Unspecified state assignment"
+                )
                 lines.append(f"    state {_quoted_text(label)} as {node_id}")
             return assignment_ids[key]
 
