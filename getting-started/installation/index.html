@@ -3537,6 +3537,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/finite_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explicit Finite Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/static/" class="md-nav__link">
         
   
@@ -10527,6 +10555,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/handwired/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwired Construction Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12609,7 +12665,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 cogant<span class="w"> </span>--help
 </code></pre></div>
 <h2 id="verify-the-install">Verify the install</h2>
-<div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>--help<span class="w">           </span><span class="c1"># authoritative list: 28 top-level names (26 commands + plugin + migrate groups)</span>
+<div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>--help<span class="w">           </span><span class="c1"># authoritative command index, including finite, plugin, and migrate groups</span>
 cogant<span class="w"> </span>scan<span class="w"> </span>.<span class="w">           </span><span class="c1"># run a minimal static analysis on the current directory</span>
 </code></pre></div>
 <p>If <code>cogant --help</code> lists subcommands, the install is working. <strong>Leaves:</strong> 29 runnable subcommands in total — the two groups add <code>plugin list</code>, <code>plugin info</code>, and <code>migrate migrate</code> under the 26 <code>@app.command</code> registrations. The analysis and artifact commands (<code>analyze-static</code>, <code>analyze-graph</code>, <code>visualize</code>, <code>export</code>) run real package APIs and write JSON/diagram/export files — see <a href="../../cli_reference/">CLI reference</a>. If the <code>cogant</code> entry point is missing or <code>--help</code> fails, re-check Python 3.11+ and that the venv containing COGANT is activated.</p>

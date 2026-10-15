@@ -3432,6 +3432,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/finite_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explicit Finite Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/static/" class="md-nav__link">
         
   
@@ -10422,6 +10450,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/handwired/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwired Construction Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12590,6 +12646,10 @@ artifacts through a reproducible static-analysis pipeline:</p>
 <li>export GNN, JSON, GraphML, Parquet, HTML, and dashboard artifacts;</li>
 <li>validate generated artifacts and expose provenance.</li>
 </ol>
+<p>A separate <a href="../../api/finite_models/">finite-model interface</a> compiles authored
+transition and observation tables into checked A/B/C/D matrices. Its coefficient
+checks and independent toggle/counter reference tests concern the declared model;
+they do not increase the repository roundtrip success counts.</p>
 <p>The project is strongest for Python static analysis and GNN export. JavaScript
 and TypeScript support exist as forward parsers and cross-language fixtures, but
 the native v0.6 release ledger is Python-centered.</p>
@@ -12605,12 +12665,12 @@ the native v0.6 release ledger is Python-centered.</p>
 <tbody>
 <tr>
 <td>Collected tests</td>
-<td style="text-align: right;">9961</td>
+<td style="text-align: right;">10068</td>
 <td><code>METRICS.yaml</code></td>
 </tr>
 <tr>
 <td>Passing tests</td>
-<td style="text-align: right;">9912</td>
+<td style="text-align: right;">10019</td>
 <td><code>METRICS.yaml</code></td>
 </tr>
 <tr>
@@ -12620,7 +12680,7 @@ the native v0.6 release ledger is Python-centered.</p>
 </tr>
 <tr>
 <td>Line coverage</td>
-<td style="text-align: right;">94.55%</td>
+<td style="text-align: right;">94.59%</td>
 <td><code>METRICS.yaml</code> / <code>coverage.json</code></td>
 </tr>
 <tr>
@@ -12635,7 +12695,7 @@ the native v0.6 release ledger is Python-centered.</p>
 </tr>
 <tr>
 <td>Python source files</td>
-<td style="text-align: right;">247</td>
+<td style="text-align: right;">251</td>
 <td><code>METRICS.yaml</code></td>
 </tr>
 <tr>
@@ -12727,7 +12787,7 @@ uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </sp
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/audit_manuscript_citations.py
 uv<span class="w"> </span>run<span class="w"> </span>--directory<span class="w"> </span>cogant<span class="w"> </span>python<span class="w"> </span>docs/verify_doc_links.py
 uv<span class="w"> </span>run<span class="w"> </span>--directory<span class="w"> </span>cogant<span class="w"> </span>python<span class="w"> </span>docs/verify_manuscript_links.py
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/claim_ledger.py<span class="w"> </span>--manuscript-dir<span class="w"> </span>manuscript<span class="w"> </span>--output-dir<span class="w"> </span>/tmp/cogant_claim_ledger<span class="w"> </span>--fail-on-literal-numbers
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/claim_ledger.py<span class="w"> </span>--manuscript-dir<span class="w"> </span>manuscript<span class="w"> </span>--output-dir<span class="w"> </span>output/reports/claim_ledger<span class="w"> </span>--fail-on-literal-numbers
 </code></pre></div>
 
 

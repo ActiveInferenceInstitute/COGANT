@@ -3432,6 +3432,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/finite_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explicit Finite Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/static/" class="md-nav__link">
         
   
@@ -9661,23 +9689,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Implementation status">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#type-checking-gate-bound" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Type-checking gate — bound
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -10492,6 +10503,34 @@
     
   
     Organization State Spaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/handwired/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwired Construction Patterns
   
 
     
@@ -12460,23 +12499,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Implementation status">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#type-checking-gate-bound" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Type-checking gate — bound
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -12538,6 +12560,11 @@
 <td><code>translate/</code> — 22 shipped declarative rules with fixpoint + conflict resolution; many repositories exercise only a structural subset, so mapping counts vary by project shape (see <code>docs/rules/</code>).</td>
 </tr>
 <tr>
+<td>Explicit finite models</td>
+<td>Implemented</td>
+<td><code>statespace/finite_spec.py</code>, <code>finite_model.py</code>, and <code>finite_verification.py</code>; authored domains and probability kernels compile to checked A/B/C/D, exposed by <code>cogant finite compile</code> and <code>cogant finite verify</code>. See <a href="../../api/finite_models/">the interface contract</a>.</td>
+</tr>
+<tr>
 <td>State space + process extraction</td>
 <td>Partial</td>
 <td><code>statespace/compiler.py</code>, <code>process/extractor.py</code> — <strong>implemented</strong>; “partial” means not every codebase yields full behavioral fidelity without dynamic traces or optional parsers.</td>
@@ -12589,13 +12616,25 @@
 </tr>
 <tr>
 <td><code>mypy --strict</code> gate</td>
-<td>Partial (resolution-bounded)</td>
-<td><code>METRICS.yaml: mypy_strict_errors</code> is the tracked figure. <strong>No genuine type defects remain among reported diagnostics</strong> in the <code>.py</code> sources (the last one, a dead <code># type: ignore</code> in <code>viz/ablation_view.py</code>, was removed). The residual count is a single tooling-resolution artifact: the hand-written <code>.pyi</code> stubs <code>from pydantic import …</code>, and <code>uv run mypy</code> does not place the PEP 561-typed core dependency <code>pydantic</code> on mypy's stub-resolution path (one <code>import-not-found</code> plus a per-model "subclass of <code>Any</code>" cascade). <strong>Bound:</strong> because the cascade is invariant to <code>uv run --with pydantic</code> and <code>--strict</code> does <em>not</em> enable <code>--disallow-any-unimported</code>, pydantic-model-derived types degrade to <code>Any</code>, so the gate is <strong>partially blind on consumers of cogant pydantic models</strong> until the stub resolution is fixed. It is reported here, not suppressed with a blanket <code>ignore_missing_imports</code> (which would silently drop real checking of a core typed dependency).</td>
+<td>Implemented (resolution-bounded)</td>
+<td>The canonical invocation uses the configured <code>pydantic.mypy</code> plugin. Current diagnostics are recorded in <code>METRICS.yaml</code>; a typed finite-model consumer passes, while an incompatible argument is rejected.</td>
+</tr>
+<tr>
+<td>### Type-checking gate — bound</td>
+<td></td>
+<td></td>
 </tr>
 </tbody>
 </table>
-<h3 id="type-checking-gate-bound">Type-checking gate — bound</h3>
-<p>The <code>mypy --strict</code> figure in <code>METRICS.yaml</code> should be read as <em>errors among reported diagnostics</em>, not a completeness certificate. Verified state: <code>0</code> genuine errors are emitted for the implementation <code>.py</code> sources under both the canonical <code>uv run mypy --strict py/cogant/</code> and the <code>uv run --with pydantic …</code> runs; every residual diagnostic is the pydantic <code>.pyi</code> stub-resolution artifact above. The unknown that cannot be excluded in the current toolchain is <em>masked</em> consumer-side diagnostics (Any-typed pydantic models flowing into call sites that <code>--strict</code> does not flag without <code>--disallow-any-unimported</code>). Closing that requires resolving the <code>.pyi</code>/pydantic path under the canonical invocation, tracked toward zero.</p>
+<p>Run <code>MYPYPATH=py uv run mypy --package cogant --strict</code> from the inner package root.
+The configured Pydantic plugin is active, and the canonical run emits no errors.
+A valid public finite-model consumer passes; passing a string to
+<code>compile_finite_model</code> produces an <code>arg-type</code> error. These controls replace the
+previous unresolved-Pydantic narrative.</p>
+<p>The figure in <code>METRICS.yaml</code> remains errors among reported diagnostics, rather
+than a completeness certificate. Documented overrides and untyped third-party
+interfaces limit what strict checking establishes; consumer-side type coverage
+should be assessed for the specific interface in use.</p>
 
 
 

@@ -2970,6 +2970,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#finite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        finite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#statespace" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3728,6 +3739,34 @@
     
   
     cogant.statespace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/finite_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explicit Finite Models
   
 
     
@@ -10738,6 +10777,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/handwired/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwired Construction Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12785,6 +12852,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#finite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        finite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#statespace" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12977,7 +13055,7 @@
   <h1>Commands</h1>
 
 <h2 id="commands">Commands</h2>
-<p>The Typer app in <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/cli/main.py"><code>py/cogant/cli/main.py</code></a> registers the current top-level subcommands for v0.6.0. <code>cogant --help</code> is ground truth; the entries below are kept in sync by the doc-link verifier.</p>
+<p>The Typer app in <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/cli/main.py"><code>py/cogant/cli/main.py</code></a> registers the current top-level commands and groups. <code>cogant --help</code> is ground truth; command inventory tests guard the registered surface, and the doc-link verifier checks reference links.</p>
 <h3 id="init">init</h3>
 <p>Initialize a new COGANT project with configuration. Safe to re-run: creates <code>.cogant/config.json</code> if missing and refuses to clobber an existing config.</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>init<span class="w"> </span>&lt;path&gt;
@@ -13053,11 +13131,11 @@ cogant<span class="w"> </span>translate<span class="w"> </span>./my_repo<span cl
 - <code>--no-dynamic</code>: Skip the dynamic-analysis enrichment stage (coverage + trace). Faster but less accurate.
 - <code>--coverage</code>: Path to a coverage database (<code>.coverage</code>) or Cobertura <code>coverage.xml</code>.
 - <code>--trace</code>: Path to a Chrome DevTools trace JSON file for dynamic analysis.
-- <code>--incremental</code>: Git ref (e.g. <code>HEAD~1</code>, a commit hash, or a tag) to use as the incremental baseline. Only files that changed between this ref and HEAD are re-parsed; unchanged results are served from <code>~/.cache/cogant</code> when available.
+- <code>--incremental</code>: Git ref (e.g. <code>HEAD~1</code>, a commit hash, or a tag) to use as the incremental baseline. An unchanged snapshot can reuse complete cached outputs; source changes trigger full-snapshot analysis. See <code>analyze</code> below for the cache contract.
 - <code>--cache-dir</code>: Override the incremental cache directory. Defaults to <code>~/.cache/cogant</code>. Useful for tests and benchmarks that need an isolated cache state.</p>
 <p><strong>Artifacts:</strong> Writes <strong><code>bundle.json</code></strong> in the output directory (full pipeline <code>Bundle</code> snapshot for <code>cogant render</code> / <code>cogant validate</code>) plus stage exports from the <code>export</code> stage when run.</p>
 <p><strong>Exit status:</strong> The results table shows each stage's recorded outcome (success, partial, skipped, unavailable, failed). The command exits <code>1</code> when any stage failed or errors were recorded; the bundle is still written for inspection.</p>
-<p><strong>Stages:</strong> ingest, static, normalize, graph, translate, statespace, process, export, validate</p>
+<p><strong>Stages:</strong> ingest, static, normalize, graph, dynamic, translate, statespace, process, export, validate. Dynamic enrichment can be skipped with <code>--no-dynamic</code>.</p>
 <h3 id="analyze">analyze</h3>
 <p>Canonical entry point for running the COGANT pipeline on a codebase, with first-class incremental support. In its default form it is equivalent to <code>cogant translate</code>. With <code>--incremental &lt;commit&gt;</code> it resolves <code>git diff --name-only &lt;commit&gt; HEAD</code> and looks up a cached run in <code>~/.cache/cogant</code>. When nothing changed and the cached run's exported outputs exist in the current output directory, the cached bundle is returned without re-parsing (the fast path). Any source change, cache miss, or stale cached output re-analyses the full snapshot and refreshes the cache; per-file patching of cached graphs is not implemented, so a changed-files-only run never drops unchanged files.</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>analyze<span class="w"> </span>&lt;target&gt;
@@ -13074,6 +13152,17 @@ cogant<span class="w"> </span>analyze<span class="w"> </span>./my_repo<span clas
 - <code>--skip</code>: Comma-separated list of stages to skip (e.g. <code>'dynamic,validate'</code>).
 - <code>--quiet, -q</code>: Suppress per-stage progress output (still prints summary).</p>
 <p>Incremental stats (<code>cache_hit</code>, <code>files_reparsed</code>, <code>files_total</code>, <code>reason</code>) are reported after the run and persisted on <code>bundle.metadata['incremental_stats']</code>.</p>
+<h3 id="finite">finite</h3>
+<p>Compile and check an explicitly authored finite generative model. Run from the
+inner package root:</p>
+<div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>finite<span class="w"> </span>compile<span class="w"> </span>examples/finite_models/toggle.json<span class="w"> </span>-o<span class="w"> </span>output/finite/toggle.json
+cogant<span class="w"> </span>finite<span class="w"> </span>verify<span class="w"> </span>examples/finite_models/toggle.json<span class="w"> </span>output/finite/toggle.json
+</code></pre></div>
+<p>Compilation validates total transition and observation kernels before allocating
+the immutable A/B/C/D artifact. <code>--max-entries</code> bounds dense allocation, and an
+output path must be new. Verification checks source identity and every matrix
+coefficient. See the <a href="../../api/finite_models/">finite-model contract</a> for schema,
+axes, exit codes, Python runtime use, and evidence limits.</p>
 <h3 id="statespace">statespace</h3>
 <p>Compile semantic state space model.</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>statespace<span class="w"> </span>&lt;target&gt;

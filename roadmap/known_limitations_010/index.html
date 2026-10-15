@@ -3432,6 +3432,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/finite_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explicit Finite Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/static/" class="md-nav__link">
         
   
@@ -10422,6 +10450,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/handwired/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwired Construction Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12736,7 +12792,7 @@ Flask scripts, data science notebooks) has lower rule confidence due to missing 
 (~380s, 8.5 GB RAM). Wave-15 fixes reduced the documented run to ~65s and a
 206 MB generated package, so this is now a regression watch item rather than a
 current v1.0 blocker.</p>
-<p><strong>Workaround:</strong> Use <code>cogant translate --incremental &lt;git-ref&gt;</code> (19.6× no-change speedup).
+<p><strong>Workaround:</strong> Use <code>cogant analyze --incremental &lt;git-ref&gt;</code> for unchanged-snapshot cache reuse.
 Split large monorepos by module: <code>cogant translate --include src/core/</code>.</p>
 <p><strong>Target fix:</strong> Keep Dulwich-class fixtures in the performance suite and add streaming graph/export
 paths for larger held-out repositories.</p>

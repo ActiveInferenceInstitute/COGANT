@@ -3532,6 +3532,34 @@
   
   
     <li class="md-nav__item">
+      <a href="api/finite_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explicit Finite Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="api/static/" class="md-nav__link">
         
   
@@ -10522,6 +10550,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rnd/handwired/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwired Construction Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12557,7 +12613,7 @@
 <hr />
 <h2 id="why-cogant">Why COGANT</h2>
 <ul>
-<li><strong>Structural, not heuristic.</strong> Roles are assigned from <code>NodeKind</code>, <code>EdgeKind</code>, name keywords, and degree statistics — every decision is inspectable and reproducible.</li>
+<li><strong>Inspectable rules.</strong> Roles are assigned from <code>NodeKind</code>, <code>EdgeKind</code>, name keywords, and degree statistics. These structural heuristics produce reviewable candidate models with explicit provenance.</li>
 <li><strong>Provenance-first.</strong> Every node, edge, and mapping is traceable to a source span or a documented inference rule.</li>
 <li><strong>Confidence-aware.</strong> Every mapping carries an epistemic score; partial inputs degrade gracefully instead of halting.</li>
 <li><strong>GNN-native.</strong> Output follows the Active Inference Institute's Generalized Notation Notation bracket format and validates against a shipped schema.</li>
@@ -12570,7 +12626,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"coga
 </code></pre></div>
 <p>From source:</p>
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ActiveInferenceInstitute/COGANT.git
-<span class="nb">cd</span><span class="w"> </span>cogant
+<span class="nb">cd</span><span class="w"> </span>COGANT/cogant
 uv<span class="w"> </span>sync<span class="w"> </span>--all-extras
 </code></pre></div>
 <p>See <a href="getting-started/installation/">Installation</a> for the full matrix.</p>
@@ -12591,6 +12647,7 @@ cogant<span class="w"> </span>explain<span class="w"> </span>./my_repo<span clas
 <li><strong><a href="tutorials/flask/">Flask app walkthrough</a></strong> — a 98-node / 597-edge real-world example with role counts and GNN output excerpts.</li>
 <li><strong><a href="theory/active_inference/">Active Inference mapping</a></strong> — the 22 translation rules and the seven <strong>Active Inference</strong> <code>MappingKind</code> labels counted in <code>METRICS.yaml</code> (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT). <code>SemanticRole</code> and rule outputs also use values such as PARAMETER separately; see the mapping page.</li>
 <li><strong><a href="theory/roundtrip/">Round-trip verification</a></strong> — <code>roundtrip_status</code>, <code>role_preservation_score</code>, strict invariant ledgers, and generated-code checks.</li>
+<li><strong><a href="api/finite_models/">Explicit finite models</a></strong> — declare state/action domains and probability kernels, compile A/B/C/D, verify every entry, and run the model.</li>
 <li><strong><a href="theory/gnn_format/">GNN format</a></strong> — bracket notation, A/B/C/D matrices, and an example export block.</li>
 <li><strong><a href="cli_reference/">CLI Reference</a></strong> — every subcommand, flag, and output artifact.</li>
 <li><strong><a href="api/translate/">API Reference</a></strong> — auto-generated module docs for <code>cogant.translate</code>, <code>cogant.gnn</code>, <code>cogant.markov</code>, <code>cogant.statespace</code>, <code>cogant.static</code>, and <code>cogant.simulate</code>.</li>

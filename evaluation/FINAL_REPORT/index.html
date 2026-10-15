@@ -3432,6 +3432,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/finite_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explicit Finite Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/static/" class="md-nav__link">
         
   
@@ -10422,6 +10450,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/handwired/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwired Construction Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12626,7 +12682,7 @@
 GNN-style Active Inference artifacts, then synthesizing a Python package from
 that emitted GNN and measuring what survives a second forward pass.</p>
 <p>The current evidence supports a <strong>scoped artifact-generation and role-preservation
-claim</strong>. It also includes one deliberately minimal strict-roundtrip fixed point.
+claim</strong>. No current native ledger row meets the strict structural contract.
 It does not support broad strict graph isomorphism, semantic equivalence for
 arbitrary programs, or calibrated behavioral modeling.</p>
 <h2 id="current-headline-metrics">Current Headline Metrics</h2>
@@ -12644,11 +12700,11 @@ arbitrary programs, or calibrated behavioral modeling.</p>
 </tr>
 <tr>
 <td>Test count</td>
-<td style="text-align: right;">9,912 passing / 0 failing / 49 skipped</td>
+<td style="text-align: right;">10,019 passing / 0 failing / 49 skipped</td>
 </tr>
 <tr>
 <td>Coverage</td>
-<td style="text-align: right;">94.55%</td>
+<td style="text-align: right;">94.59%</td>
 </tr>
 <tr>
 <td>mypy strict errors</td>
@@ -12738,7 +12794,7 @@ strict structural preservation.</p>
 </tr>
 <tr>
 <td>Strict graph/matrix/section deltas</td>
-<td>1 strict success, confined to the minimal reversible fixture</td>
+<td>No strict successes in the current native ledger</td>
 <td>Preserve node/edge counts, edge-kind distributions, GNN sections, and matrix values on ordinary fixtures</td>
 </tr>
 <tr>
@@ -12780,7 +12836,7 @@ uv<span class="w"> </span>run<span class="w"> </span>--directory<span class="w">
 uv<span class="w"> </span>run<span class="w"> </span>--directory<span class="w"> </span>cogant<span class="w"> </span>mypy<span class="w"> </span>py/cogant
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/check_metrics_fresh.py
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/audit_docs_constants.py
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/claim_ledger.py<span class="w"> </span>--manuscript-dir<span class="w"> </span>manuscript<span class="w"> </span>--output-dir<span class="w"> </span>/tmp/cogant_claim_ledger<span class="w"> </span>--fail-on-literal-numbers
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/claim_ledger.py<span class="w"> </span>--manuscript-dir<span class="w"> </span>manuscript<span class="w"> </span>--output-dir<span class="w"> </span>output/reports/claim_ledger<span class="w"> </span>--fail-on-literal-numbers
 uv<span class="w"> </span>run<span class="w"> </span>--directory<span class="w"> </span>cogant<span class="w"> </span>python<span class="w"> </span>docs/verify_doc_links.py
 uv<span class="w"> </span>run<span class="w"> </span>--directory<span class="w"> </span>cogant<span class="w"> </span>python<span class="w"> </span>docs/verify_manuscript_links.py
 </code></pre></div>
