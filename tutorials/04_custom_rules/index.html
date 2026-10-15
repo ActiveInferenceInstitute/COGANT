@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11037,14 +11037,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12646,17 +12646,17 @@ rule, copy the same shape into a new class and change the patterns.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.translate.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">TranslationRule</span>
 
 <span class="n">OBSERVATION_KEYWORDS</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">,</span> <span class="s2">&quot;fetch&quot;</span><span class="p">,</span> <span class="s2">&quot;query&quot;</span><span class="p">,</span> <span class="s2">&quot;display&quot;</span><span class="p">,</span> <span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">,</span>
+    <span class="s2">"get"</span><span class="p">,</span> <span class="s2">"read"</span><span class="p">,</span> <span class="s2">"fetch"</span><span class="p">,</span> <span class="s2">"query"</span><span class="p">,</span> <span class="s2">"display"</span><span class="p">,</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">,</span> <span class="s2">"list"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ObservationRule</span><span class="p">(</span><span class="n">TranslationRule</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maps getter/query functions and read-only methods to OBSERVATION.</span>
+<span class="w">    </span><span class="sd">"""Maps getter/query functions and read-only methods to OBSERVATION.</span>
 
 <span class="sd">    Fires when either:</span>
 <span class="sd">      1. The node name contains an observation keyword, OR</span>
 <span class="sd">      2. The node has READS edges and no WRITES edges (structural fallback).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">ProgramGraph</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">GraphQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -12672,29 +12672,29 @@ rule, copy the same shape into a new class and change the patterns.</p>
 
             <span class="k">if</span> <span class="n">keyword_match</span> <span class="ow">or</span> <span class="p">(</span><span class="n">reads</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">writes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
                 <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                    <span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                    <span class="s2">&quot;read_count&quot;</span><span class="p">:</span> <span class="n">reads</span><span class="p">,</span>
-                    <span class="s2">&quot;write_count&quot;</span><span class="p">:</span> <span class="n">writes</span><span class="p">,</span>
-                    <span class="s2">&quot;keyword_match&quot;</span><span class="p">:</span> <span class="n">keyword_match</span><span class="p">,</span>
+                    <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="s2">"read_count"</span><span class="p">:</span> <span class="n">reads</span><span class="p">,</span>
+                    <span class="s2">"write_count"</span><span class="p">:</span> <span class="n">writes</span><span class="p">,</span>
+                    <span class="s2">"keyword_match"</span><span class="p">:</span> <span class="n">keyword_match</span><span class="p">,</span>
                 <span class="p">})</span>
         <span class="k">return</span> <span class="n">matches</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">ProgramGraph</span><span class="p">,</span> <span class="n">match</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SemanticMapping</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">node_id</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;node_id&quot;</span><span class="p">]</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s2">"node_id"</span><span class="p">]</span>
         <span class="n">node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">confidence</span> <span class="o">=</span> <span class="mf">0.85</span> <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;keyword_match&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="mf">0.7</span>
+        <span class="n">confidence</span> <span class="o">=</span> <span class="mf">0.85</span> <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">"keyword_match"</span><span class="p">]</span> <span class="k">else</span> <span class="mf">0.7</span>
         <span class="k">return</span> <span class="n">SemanticMapping</span><span class="p">(</span>
-            <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;obs_</span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">"obs_</span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="n">kind</span><span class="o">=</span><span class="n">MappingKind</span><span class="o">.</span><span class="n">OBSERVATION</span><span class="p">,</span>
             <span class="n">graph_fragment_node_ids</span><span class="o">=</span><span class="p">[</span><span class="n">node_id</span><span class="p">],</span>
-            <span class="n">semantic_label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> - Observation&quot;</span><span class="p">,</span>
+            <span class="n">semantic_label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> - Observation"</span><span class="p">,</span>
             <span class="n">confidence_score</span><span class="o">=</span><span class="n">confidence</span><span class="p">,</span>
             <span class="n">confidence_tier</span><span class="o">=</span><span class="n">ConfidenceTier</span><span class="o">.</span><span class="n">STATIC_ONLY</span><span class="p">,</span>
             <span class="n">provenance</span><span class="o">=</span><span class="p">[</span>
                 <span class="n">ProvenanceRecord</span><span class="p">(</span>
-                    <span class="n">source</span><span class="o">=</span><span class="s2">&quot;static_analysis&quot;</span><span class="p">,</span>
+                    <span class="n">source</span><span class="o">=</span><span class="s2">"static_analysis"</span><span class="p">,</span>
                     <span class="n">confidence</span><span class="o">=</span><span class="n">confidence</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">],</span>
@@ -12704,7 +12704,7 @@ rule, copy the same shape into a new class and change the patterns.</p>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;observation&quot;</span>
+        <span class="k">return</span> <span class="s2">"observation"</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mapping_kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MappingKind</span><span class="p">:</span>
@@ -12735,7 +12735,7 @@ example, here is how the shipped <code>ObservationRule</code> is wired:</p>
 <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">register_default_rules</span><span class="p">(</span><span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TranslationEngine&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_default_rules</span><span class="p">(</span><span class="n">engine</span><span class="p">:</span> <span class="s2">"TranslationEngine"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">engine</span><span class="o">.</span><span class="n">register_rule</span><span class="p">(</span><span class="n">ObservationRule</span><span class="p">())</span>
     <span class="n">engine</span><span class="o">.</span><span class="n">register_rule</span><span class="p">(</span><span class="n">ActionRule</span><span class="p">())</span>
     <span class="n">engine</span><span class="o">.</span><span class="n">register_rule</span><span class="p">(</span><span class="n">PolicyRule</span><span class="p">())</span>
@@ -12758,28 +12758,28 @@ rule.</p>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_read_only_method_graph</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ProgramGraph</span><span class="p">:</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">ProgramGraph</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">GraphMetadata</span><span class="p">(</span><span class="n">repo_uri</span><span class="o">=</span><span class="s2">&quot;test://tutorial04&quot;</span><span class="p">))</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">ProgramGraph</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">GraphMetadata</span><span class="p">(</span><span class="n">repo_uri</span><span class="o">=</span><span class="s2">"test://tutorial04"</span><span class="p">))</span>
     <span class="bp">cls</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
-        <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;n:Cache&quot;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">CLASS</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Cache&quot;</span><span class="p">,</span> <span class="n">qualified_name</span><span class="o">=</span><span class="s2">&quot;Cache&quot;</span>
+        <span class="nb">id</span><span class="o">=</span><span class="s2">"n:Cache"</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">CLASS</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Cache"</span><span class="p">,</span> <span class="n">qualified_name</span><span class="o">=</span><span class="s2">"Cache"</span>
     <span class="p">)</span>
     <span class="n">method</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
-        <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;n:get_value&quot;</span><span class="p">,</span>
+        <span class="nb">id</span><span class="o">=</span><span class="s2">"n:get_value"</span><span class="p">,</span>
         <span class="n">kind</span><span class="o">=</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">METHOD</span><span class="p">,</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;get_value&quot;</span><span class="p">,</span>
-        <span class="n">qualified_name</span><span class="o">=</span><span class="s2">&quot;Cache.get_value&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"get_value"</span><span class="p">,</span>
+        <span class="n">qualified_name</span><span class="o">=</span><span class="s2">"Cache.get_value"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">attr</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
-        <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;n:store&quot;</span><span class="p">,</span>
+        <span class="nb">id</span><span class="o">=</span><span class="s2">"n:store"</span><span class="p">,</span>
         <span class="n">kind</span><span class="o">=</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">VARIABLE</span><span class="p">,</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span>
-        <span class="n">qualified_name</span><span class="o">=</span><span class="s2">&quot;Cache.store&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"store"</span><span class="p">,</span>
+        <span class="n">qualified_name</span><span class="o">=</span><span class="s2">"Cache.store"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
     <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
     <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
     <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span>
         <span class="n">Edge</span><span class="p">(</span>
-            <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;e:get_value-&gt;store&quot;</span><span class="p">,</span>
+            <span class="nb">id</span><span class="o">=</span><span class="s2">"e:get_value-&gt;store"</span><span class="p">,</span>
             <span class="n">source_id</span><span class="o">=</span><span class="n">method</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">target_id</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">kind</span><span class="o">=</span><span class="n">EdgeKind</span><span class="o">.</span><span class="n">READS</span><span class="p">,</span>
@@ -12793,14 +12793,14 @@ rule.</p>
     <span class="n">query</span> <span class="o">=</span> <span class="n">GraphQuery</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
     <span class="n">rule</span> <span class="o">=</span> <span class="n">ObservationRule</span><span class="p">()</span>
     <span class="n">matches</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
-    <span class="c1"># get_value matches the keyword branch (&quot;get&quot;) and/or the</span>
+    <span class="c1"># get_value matches the keyword branch ("get") and/or the</span>
     <span class="c1"># structural branch (reads &gt; 0, writes == 0)</span>
-    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s2">&quot;node_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;n:get_value&quot;</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s2">"node_id"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"n:get_value"</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">)</span>
 
-    <span class="n">match</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="n">m</span><span class="p">[</span><span class="s2">&quot;node_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;n:get_value&quot;</span><span class="p">)</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="n">m</span><span class="p">[</span><span class="s2">"node_id"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"n:get_value"</span><span class="p">)</span>
     <span class="n">mapping</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">match</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-    <span class="k">assert</span> <span class="n">mapping</span><span class="o">.</span><span class="n">kind</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;OBSERVATION&quot;</span>
+    <span class="k">assert</span> <span class="n">mapping</span><span class="o">.</span><span class="n">kind</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"OBSERVATION"</span>
 </code></pre></div>
 <p>Run the new test:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/unit/test_observation_rule_tutorial.py<span class="w"> </span>-v
@@ -12810,13 +12810,13 @@ rule.</p>
 (e.g. a class with <code>get_*</code> methods that only read state) and confirm the mapping shows up:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>cogant<span class="w"> </span>translate<span class="w"> </span>examples/control_positive/my_cache_fixture<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--output<span class="w"> </span>output/my_cache_fixture
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">data = json.load(open(&#39;output/my_cache_fixture/bundle.json&#39;))</span>
-<span class="s2">for m in data[&#39;stages&#39;][&#39;translate&#39;][&#39;mappings&#39;]:</span>
-<span class="s2">    if m[&#39;rule_id&#39;] == &#39;observation&#39;:</span>
+<span class="s2">data = json.load(open('output/my_cache_fixture/bundle.json'))</span>
+<span class="s2">for m in data['stages']['translate']['mappings']:</span>
+<span class="s2">    if m['rule_id'] == 'observation':</span>
 <span class="s2">        print(m)</span>
-<span class="s2">&quot;</span>
+<span class="s2">"</span>
 </code></pre></div>
 <h2 id="gotchas">Gotchas</h2>
 <ul>
@@ -12896,7 +12896,7 @@ uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </sp
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

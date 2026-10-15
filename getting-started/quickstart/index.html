@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11004,14 +11004,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12566,20 +12566,20 @@
 
 <span class="c1"># Option A: ergonomic path-based session</span>
 <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span>
-    <span class="n">workspace</span><span class="o">=</span><span class="s2">&quot;/tmp/cogant-workspace&quot;</span><span class="p">,</span>
-    <span class="n">repo_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;path/to/repo&quot;</span><span class="p">),</span>
+    <span class="n">workspace</span><span class="o">=</span><span class="s2">"/tmp/cogant-workspace"</span><span class="p">,</span>
+    <span class="n">repo_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"path/to/repo"</span><span class="p">),</span>
 <span class="p">)</span>
 <span class="n">session</span><span class="o">.</span><span class="n">build_graph</span><span class="p">()</span>
-<span class="n">session</span><span class="o">.</span><span class="n">export_all</span><span class="p">(</span><span class="s2">&quot;output/session&quot;</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">export_all</span><span class="p">(</span><span class="s2">"output/session"</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># Option B: full pipeline runner (same orchestration as the CLI)</span>
 <span class="n">runner</span> <span class="o">=</span> <span class="n">PipelineRunner</span><span class="p">()</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">PipelineConfig</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;output/pipeline&quot;</span><span class="p">,</span> <span class="n">layout_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">bundle</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;path/to/repo&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span> <span class="n">config</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">PipelineConfig</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="s2">"output/pipeline"</span><span class="p">,</span> <span class="n">layout_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">bundle</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"path/to/repo"</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span> <span class="n">config</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">repo_summary</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">program_graph</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;statistics&quot;</span><span class="p">,</span> <span class="p">{}))</span>
-<span class="n">bundle</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="s2">&quot;output/bundle.json&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">program_graph</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"statistics"</span><span class="p">,</span> <span class="p">{}))</span>
+<span class="n">bundle</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="s2">"output/bundle.json"</span><span class="p">)</span>
 </code></pre></div>
 <p>See the <a href="../../cli_reference/">CLI Reference</a> for every subcommand and the <a href="../../api/translate/">API Reference</a> for module-level docs.</p>
 
@@ -12640,7 +12640,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

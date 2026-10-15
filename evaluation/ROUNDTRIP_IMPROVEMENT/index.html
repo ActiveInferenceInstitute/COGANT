@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11015,14 +11015,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12564,11 +12564,11 @@
 <tbody>
 <tr>
 <td>Targets</td>
-<td style="text-align: right;">25</td>
+<td style="text-align: right;">24</td>
 </tr>
 <tr>
 <td>ROLE_PRESERVED</td>
-<td style="text-align: right;">25</td>
+<td style="text-align: right;">24</td>
 </tr>
 <tr>
 <td>DRIFT</td>
@@ -12580,11 +12580,11 @@
 </tr>
 <tr>
 <td>Strict structural isomorphism</td>
-<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 </tr>
 <tr>
 <td>Mean role-preservation score</td>
-<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.9819</td>
 </tr>
 <tr>
 <td>Median role-preservation score</td>
@@ -12592,12 +12592,10 @@
 </tr>
 </tbody>
 </table>
-<p>The reverse synthesizer preserves semantic-role populations for all shipped native
-fixtures. Only <code>roundtrip_strict_minimal</code> clears the stricter structural-
-isomorphism contract; it is a deliberately minimal reversible subset, not a
-representative application fixture. Release-facing language should therefore say
-<strong>role-preserved</strong> for the ledger as a whole and reserve <strong>strictly structurally
-isomorphic</strong> for that one row.</p>
+<p>The current native ledger meets the role-preservation threshold for all measured
+fixtures. Six rows score below 1.0, so this does not imply identical role counts.
+No current row clears the stricter structural-isomorphism contract. Release-facing
+language should report threshold acceptance and the remaining structural deltas.</p>
 <h2 id="current-reverse-synthesis-mechanism">Current Reverse-Synthesis Mechanism</h2>
 <p>The reverse path is:</p>
 <div class="highlight"><pre><span></span><code>parse_gnn -&gt; plan_package -&gt; synthesize_package -&gt; forward COGANT bundle
@@ -12637,8 +12635,8 @@ uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </sp
 <li>Add JS/TS targets to the native roundtrip ledger, or keep cross-language
   evidence separate from Python-front-end release claims.</li>
 <li>Add one more small permissively licensed held-out fixture to stress the now-saturated in-sample ledger.</li>
-<li>Expand strict structural fidelity beyond the deliberately minimal reversible
-  subset without weakening the invariant definition.</li>
+<li>Establish strict structural fidelity on the current fixtures without weakening
+  the invariant definition.</li>
 </ul>
 
 
@@ -12698,7 +12696,7 @@ uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </sp
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

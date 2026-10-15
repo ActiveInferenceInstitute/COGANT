@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11059,14 +11059,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12657,7 +12657,7 @@ Active Inference generative model: <strong>A</strong> (likelihood), <strong>B</s
 then on <code>flask_app</code>.</p>
 <h2 id="background">Background</h2>
 <p>Active Inference models the world as a generative process:</p>
-<div class="highlight"><pre><span></span><code>   p(o, s, a) = p(o | s) · p(s&#39; | s, a) · p(s_0) · softmax(-C)
+<div class="highlight"><pre><span></span><code>   p(o, s, a) = p(o | s) · p(s' | s, a) · p(s_0) · softmax(-C)
                   A            B             D
 </code></pre></div>
 <p>where:</p>
@@ -12713,17 +12713,17 @@ ls<span class="w"> </span>output/calculator/gnn_package/
 <span class="c1"># A.json  B.json  C.json  D.json  manifest.json  model.gnn.md  model.gnn.json  ...</span>
 </code></pre></div>
 <h2 id="step-2-read-the-a-matrix-likelihood">Step 2 — read the A matrix (likelihood)</h2>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">A = json.load(open(&#39;output/calculator/gnn_package/A.json&#39;))</span>
-<span class="s2">for row in A[&#39;matrix&#39;]:</span>
-<span class="s2">    print([&#39;{:.2f}&#39;.format(x) for x in row])</span>
-<span class="s2">&quot;</span>
+<span class="s2">A = json.load(open('output/calculator/gnn_package/A.json'))</span>
+<span class="s2">for row in A['matrix']:</span>
+<span class="s2">    print(['{:.2f}'.format(x) for x in row])</span>
+<span class="s2">"</span>
 </code></pre></div>
 <p>Expected for calculator (3 observations × 3 hidden states):</p>
-<div class="highlight"><pre><span></span><code>[&#39;0.90&#39;, &#39;0.05&#39;, &#39;0.05&#39;]     # P(get_display  | display, accumulator, history_len)
-[&#39;0.05&#39;, &#39;0.90&#39;, &#39;0.05&#39;]     # P(get_history  | display, accumulator, history_len)
-[&#39;0.05&#39;, &#39;0.05&#39;, &#39;0.90&#39;]     # P(assert_display | display, accumulator, history_len)
+<div class="highlight"><pre><span></span><code>['0.90', '0.05', '0.05']     # P(get_display  | display, accumulator, history_len)
+['0.05', '0.90', '0.05']     # P(get_history  | display, accumulator, history_len)
+['0.05', '0.05', '0.90']     # P(assert_display | display, accumulator, history_len)
 </code></pre></div>
 <p>Interpretation. Column 0 says: "when the hidden state <code>Calculator.display</code> is the true value,
 there is a 90% chance the <code>get_display()</code> observation reflects it accurately, and a 5% chance
@@ -12735,24 +12735,24 @@ edge from <code>Calculator.display</code> to <code>get_display</code>. That's th
 observations share the residual <code>0.10</code> mass uniformly. A is column-stochastic: each hidden-state
 column sums to one over observation outcomes.</p>
 <h2 id="step-3-read-the-b-matrix-transition">Step 3 — read the B matrix (transition)</h2>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">B = json.load(open(&#39;output/calculator/gnn_package/B.json&#39;))</span>
-<span class="s2">n_states = B[&#39;n_states&#39;]; n_actions = B[&#39;n_actions&#39;]</span>
-<span class="s2">print(f&#39;shape: [{n_states} x {n_states} x {n_actions}]&#39;)</span>
+<span class="s2">B = json.load(open('output/calculator/gnn_package/B.json'))</span>
+<span class="s2">n_states = B['n_states']; n_actions = B['n_actions']</span>
+<span class="s2">print(f'shape: [{n_states} x {n_states} x {n_actions}]')</span>
 <span class="s2">for a_idx in range(n_actions):</span>
-<span class="s2">    print(f&#39;\\naction {a_idx} ({B[\&quot;action_names\&quot;][a_idx]}):&#39;)</span>
-<span class="s2">    for row in B[&#39;matrix&#39;][a_idx]:</span>
-<span class="s2">        print([&#39;{:.2f}&#39;.format(x) for x in row])</span>
-<span class="s2">&quot;</span>
+<span class="s2">    print(f'\\naction {a_idx} ({B[\"action_names\"][a_idx]}):')</span>
+<span class="s2">    for row in B['matrix'][a_idx]:</span>
+<span class="s2">        print(['{:.2f}'.format(x) for x in row])</span>
+<span class="s2">"</span>
 </code></pre></div>
 <p>Expected for calculator:</p>
 <div class="highlight"><pre><span></span><code>shape: [3 x 3 x 1]
 
 action 0 (_execute_operation):
-[&#39;1.00&#39;, &#39;0.00&#39;, &#39;0.00&#39;]
-[&#39;0.00&#39;, &#39;1.00&#39;, &#39;0.00&#39;]
-[&#39;0.00&#39;, &#39;0.00&#39;, &#39;1.00&#39;]
+['1.00', '0.00', '0.00']
+['0.00', '1.00', '0.00']
+['0.00', '0.00', '1.00']
 </code></pre></div>
 <p>Interpretation. With only one <code>ACTION</code> node (<code>_execute_operation</code>) and <strong>no</strong> outgoing
 <code>WRITES</code> edges that target an individual hidden-state channel, the B builder falls back to
@@ -12762,12 +12762,12 @@ documented identity fallback in <code>compute_B()</code>.</p>
 that action slice would bias the diagonal toward <code>accumulator</code> (~0.9) and leave ~0.1 residual
 on the other diagonal entries. See the <code>event_pipeline</code> B matrix for a non-identity example.</p>
 <h2 id="step-4-read-the-c-vector-preferences">Step 4 — read the C vector (preferences)</h2>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">C = json.load(open(&#39;output/calculator/gnn_package/C.json&#39;))</span>
-<span class="s2">for name, c_val in zip(C[&#39;observation_names&#39;], C[&#39;vector&#39;]):</span>
-<span class="s2">    print(f&#39;{name:30s} C = {c_val:+.2f}&#39;)</span>
-<span class="s2">&quot;</span>
+<span class="s2">C = json.load(open('output/calculator/gnn_package/C.json'))</span>
+<span class="s2">for name, c_val in zip(C['observation_names'], C['vector']):</span>
+<span class="s2">    print(f'{name:30s} C = {c_val:+.2f}')</span>
+<span class="s2">"</span>
 </code></pre></div>
 <p>Expected:</p>
 <div class="highlight"><pre><span></span><code>get_display                    C = +0.00
@@ -12783,12 +12783,12 @@ sparse-but-populated example.</p>
 aversive. The softmax is taken over <code>-C</code> so higher C lowers the expected free energy of the
 corresponding observation.</p>
 <h2 id="step-5-read-the-d-vector-prior">Step 5 — read the D vector (prior)</h2>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">D = json.load(open(&#39;output/calculator/gnn_package/D.json&#39;))</span>
-<span class="s2">for name, d_val in zip(D[&#39;state_names&#39;], D[&#39;vector&#39;]):</span>
-<span class="s2">    print(f&#39;{name:30s} D = {d_val:.3f}&#39;)</span>
-<span class="s2">&quot;</span>
+<span class="s2">D = json.load(open('output/calculator/gnn_package/D.json'))</span>
+<span class="s2">for name, d_val in zip(D['state_names'], D['vector']):</span>
+<span class="s2">    print(f'{name:30s} D = {d_val:.3f}')</span>
+<span class="s2">"</span>
 </code></pre></div>
 <p>Expected:</p>
 <div class="highlight"><pre><span></span><code>Calculator.display             D = 0.333
@@ -12877,7 +12877,7 @@ for programmatic consumption.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

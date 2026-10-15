@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11048,14 +11048,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12648,23 +12648,23 @@ JavaScript / TypeScript (via <code>tree-sitter</code>). Adding a new language me
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">LanguagePlugin</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A language-specific parser plugin.</span>
+<span class="w">    </span><span class="sd">"""A language-specific parser plugin.</span>
 
 <span class="sd">    Plugins are stateless. The registry instantiates each plugin once and</span>
 <span class="sd">    dispatches files to it by extension + shebang match.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">extensions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
     <span class="n">shebang_patterns</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">parse_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ParseResult&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a single source file into nodes and edges.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ParseResult"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Parse a single source file into nodes and edges."""</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">parse_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ParseResult&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse in-memory source without touching the filesystem.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ParseResult"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Parse in-memory source without touching the filesystem."""</span>
 </code></pre></div>
 <p>A <code>ParseResult</code> bundles the nodes, edges, and a <code>diagnostics</code> list for warnings and errors.</p>
 <h2 id="2-pick-a-tree-sitter-grammar">2. Pick a tree-sitter grammar</h2>
@@ -12688,31 +12688,31 @@ JavaScript / TypeScript (via <code>tree-sitter</code>). Adding a new language me
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.schemas.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Edge</span><span class="p">,</span> <span class="n">NodeKind</span><span class="p">,</span> <span class="n">EdgeKind</span>
 
 
-<span class="n">_LANGUAGE</span> <span class="o">=</span> <span class="n">Language</span><span class="p">(</span><span class="n">tree_sitter_ruby</span><span class="o">.</span><span class="n">language</span><span class="p">(),</span> <span class="s2">&quot;ruby&quot;</span><span class="p">)</span>
+<span class="n">_LANGUAGE</span> <span class="o">=</span> <span class="n">Language</span><span class="p">(</span><span class="n">tree_sitter_ruby</span><span class="o">.</span><span class="n">language</span><span class="p">(),</span> <span class="s2">"ruby"</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">RubyPlugin</span><span class="p">(</span><span class="n">LanguagePlugin</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse Ruby source into COGANT program-graph nodes and edges.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Parse Ruby source into COGANT program-graph nodes and edges."""</span>
 
-    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ruby&quot;</span>
-    <span class="n">extensions</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;.rb&quot;</span><span class="p">,)</span>
-    <span class="n">shebang_patterns</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;ruby&quot;</span><span class="p">,)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">"ruby"</span>
+    <span class="n">extensions</span> <span class="o">=</span> <span class="p">(</span><span class="s2">".rb"</span><span class="p">,)</span>
+    <span class="n">shebang_patterns</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ruby"</span><span class="p">,)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span> <span class="o">=</span> <span class="n">Parser</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">set_language</span><span class="p">(</span><span class="n">_LANGUAGE</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">parse_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParseResult</span><span class="p">:</span>
-        <span class="n">source</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_source</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">parse_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParseResult</span><span class="p">:</span>
-        <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
         <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Edge</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">module_node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
-            <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">:module&quot;</span><span class="p">,</span>
+            <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">:module"</span><span class="p">,</span>
             <span class="n">kind</span><span class="o">=</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">MODULE</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
             <span class="n">file</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
@@ -12730,13 +12730,13 @@ JavaScript / TypeScript (via <code>tree-sitter</code>). Adding a new language me
         <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span>
         <span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Edge</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">ts_node</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;class&quot;</span><span class="p">:</span>
-            <span class="n">name_node</span> <span class="o">=</span> <span class="n">ts_node</span><span class="o">.</span><span class="n">child_by_field_name</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ts_node</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"class"</span><span class="p">:</span>
+            <span class="n">name_node</span> <span class="o">=</span> <span class="n">ts_node</span><span class="o">.</span><span class="n">child_by_field_name</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
             <span class="n">class_name</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">name_node</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">name_node</span> <span class="k">else</span> <span class="s2">&quot;&lt;anon&gt;&quot;</span>
+                <span class="n">name_node</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">if</span> <span class="n">name_node</span> <span class="k">else</span> <span class="s2">"&lt;anon&gt;"</span>
             <span class="p">)</span>
             <span class="n">class_node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
-                <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                 <span class="n">kind</span><span class="o">=</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">CLASS</span><span class="p">,</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">class_name</span><span class="p">,</span>
                 <span class="n">file</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
@@ -12749,13 +12749,13 @@ JavaScript / TypeScript (via <code>tree-sitter</code>). Adding a new language me
                      <span class="n">kind</span><span class="o">=</span><span class="n">EdgeKind</span><span class="o">.</span><span class="n">CONTAINS</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">parent</span> <span class="o">=</span> <span class="n">class_node</span>
-        <span class="k">elif</span> <span class="n">ts_node</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;method&quot;</span><span class="p">:</span>
-            <span class="n">name_node</span> <span class="o">=</span> <span class="n">ts_node</span><span class="o">.</span><span class="n">child_by_field_name</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ts_node</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"method"</span><span class="p">:</span>
+            <span class="n">name_node</span> <span class="o">=</span> <span class="n">ts_node</span><span class="o">.</span><span class="n">child_by_field_name</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
             <span class="n">method_name</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">name_node</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">name_node</span> <span class="k">else</span> <span class="s2">&quot;&lt;anon&gt;&quot;</span>
+                <span class="n">name_node</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">if</span> <span class="n">name_node</span> <span class="k">else</span> <span class="s2">"&lt;anon&gt;"</span>
             <span class="p">)</span>
             <span class="n">method_node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
-                <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">method_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">method_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                 <span class="n">kind</span><span class="o">=</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">METHOD</span><span class="p">,</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">method_name</span><span class="p">,</span>
                 <span class="n">file</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
@@ -12817,7 +12817,7 @@ JavaScript / TypeScript (via <code>tree-sitter</code>). Adding a new language me
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.schemas.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">NodeKind</span>
 
 
-<span class="n">FIXTURE</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;fixtures&quot;</span> <span class="o">/</span> <span class="s2">&quot;languages&quot;</span> <span class="o">/</span> <span class="s2">&quot;ruby&quot;</span> <span class="o">/</span> <span class="s2">&quot;calculator.rb&quot;</span>
+<span class="n">FIXTURE</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"fixtures"</span> <span class="o">/</span> <span class="s2">"languages"</span> <span class="o">/</span> <span class="s2">"ruby"</span> <span class="o">/</span> <span class="s2">"calculator.rb"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_parses_class_and_methods</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -12825,10 +12825,10 @@ JavaScript / TypeScript (via <code>tree-sitter</code>). Adding a new language me
     <span class="n">result</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="n">FIXTURE</span><span class="p">)</span>
 
     <span class="n">names</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">nodes</span><span class="p">}</span>
-    <span class="k">assert</span> <span class="s2">&quot;Calculator&quot;</span> <span class="ow">in</span> <span class="n">names</span>
-    <span class="k">assert</span> <span class="s2">&quot;get_display&quot;</span> <span class="ow">in</span> <span class="n">names</span>
-    <span class="k">assert</span> <span class="s2">&quot;add&quot;</span> <span class="ow">in</span> <span class="n">names</span>
-    <span class="k">assert</span> <span class="s2">&quot;initialize&quot;</span> <span class="ow">in</span> <span class="n">names</span>
+    <span class="k">assert</span> <span class="s2">"Calculator"</span> <span class="ow">in</span> <span class="n">names</span>
+    <span class="k">assert</span> <span class="s2">"get_display"</span> <span class="ow">in</span> <span class="n">names</span>
+    <span class="k">assert</span> <span class="s2">"add"</span> <span class="ow">in</span> <span class="n">names</span>
+    <span class="k">assert</span> <span class="s2">"initialize"</span> <span class="ow">in</span> <span class="n">names</span>
 
     <span class="n">kinds</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="o">.</span><span class="n">kind</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">nodes</span><span class="p">}</span>
     <span class="k">assert</span> <span class="n">NodeKind</span><span class="o">.</span><span class="n">CLASS</span> <span class="ow">in</span> <span class="n">kinds</span>
@@ -12836,7 +12836,7 @@ JavaScript / TypeScript (via <code>tree-sitter</code>). Adding a new language me
     <span class="k">assert</span> <span class="n">NodeKind</span><span class="o">.</span><span class="n">MODULE</span> <span class="ow">in</span> <span class="n">kinds</span>
 
     <span class="c1"># Exactly one CONTAINS edge per child.</span>
-    <span class="n">contains</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">edges</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">kind</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;CONTAINS&quot;</span><span class="p">]</span>
+    <span class="n">contains</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">edges</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">kind</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"CONTAINS"</span><span class="p">]</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">contains</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span>  <span class="c1"># module -&gt; class, class -&gt; 4 methods (initialize + 3)</span>
 </code></pre></div>
 <p>Run it:</p>
@@ -12932,7 +12932,7 @@ one. Any rules that match against English keywords (<code>get_*</code>, <code>se
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

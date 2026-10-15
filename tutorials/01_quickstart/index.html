@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11037,14 +11037,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12693,12 +12693,12 @@ u_f0 &gt; x_f0
 <p>The full format reference is <a href="../05_gnn_interpretation/">Tutorial 5: Reading A/B/C/D matrices</a>.</p>
 <h2 id="5-what-the-rules-decided">5. What the rules decided</h2>
 <p><code>bundle.json</code> contains every translation decision with evidence. A quick view:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">data = json.load(open(&#39;output/calculator/bundle.json&#39;))</span>
-<span class="s2">for m in data[&#39;stages&#39;][&#39;translate&#39;][&#39;mappings&#39;]:</span>
-<span class="s2">    print(f\&quot;{m[&#39;kind&#39;]:12s} {m[&#39;qualified_name&#39;]:40s} conf={m[&#39;confidence&#39;]:.2f}\&quot;)</span>
-<span class="s2">&quot;</span>
+<span class="s2">data = json.load(open('output/calculator/bundle.json'))</span>
+<span class="s2">for m in data['stages']['translate']['mappings']:</span>
+<span class="s2">    print(f\"{m['kind']:12s} {m['qualified_name']:40s} conf={m['confidence']:.2f}\")</span>
+<span class="s2">"</span>
 </code></pre></div>
 <p>Expected roles on the calculator fixture (six total semantic mappings):</p>
 <table>
@@ -12799,7 +12799,7 @@ u_f0 &gt; x_f0
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

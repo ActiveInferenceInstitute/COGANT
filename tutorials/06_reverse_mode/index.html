@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1839,10 +1839,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-state-v060" class="md-nav__link">
+  <a href="#current-state-v070" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current state (v0.6.0)
+        Current state (v0.7.0)
       
     </span>
   </a>
@@ -11037,14 +11037,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12509,10 +12509,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-state-v060" class="md-nav__link">
+  <a href="#current-state-v070" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current state (v0.6.0)
+        Current state (v0.7.0)
       
     </span>
   </a>
@@ -12600,7 +12600,7 @@
 <p><strong>Prerequisites:</strong> <a href="../05_gnn_interpretation/">Tutorial 5: Reading the A/B/C/D matrices</a> and <a href="../../concepts/roundtrip/">The forward-reverse cycle</a>.</p>
 <p><strong>Reading time:</strong> ~18 minutes</p>
 <p><strong>Next steps:</strong> <a href="../../api/reverse/">Reverse API reference</a> · <a href="../07_plugin_authoring/">Tutorial 7: Plugin authoring</a> · <a href="../../concepts/gnn/">What is a GNN?</a></p>
-<p><strong>Status.</strong> Reverse synthesis is available in v0.6.0. <code>cogant reverse</code> and <code>cogant roundtrip</code> are CLI subcommands. Roundtrip output now reports <code>roundtrip_status</code>, <code>role_preservation_score</code>, and explicit invariant booleans.</p>
+<p><strong>Status.</strong> Reverse synthesis is available in v0.7.0. <code>cogant reverse</code> and <code>cogant roundtrip</code> are CLI subcommands. Roundtrip output now reports <code>roundtrip_status</code>, <code>role_preservation_score</code>, and explicit invariant booleans.</p>
 <p><strong>Theory background:</strong> "Forward → reverse → forward" is the COGANT
 <a href="../../concepts/roundtrip/">roundtrip</a> construction, and the role-preservation / invariant ledger reported by
 <code>cogant roundtrip</code> is defined there. The synthesis API surface used in the programmatic
@@ -12612,7 +12612,7 @@ want the categorical / Galois framing behind the score.</p>
 model?"</em> The reverse direction answers: <em>"given this generative model, what is the minimum
 Python package that implements it?"</em></p>
 <p>The two together close the loop:</p>
-<div class="highlight"><pre><span></span><code>code ──forward──► GNN ──reverse──► code&#39;
+<div class="highlight"><pre><span></span><code>code ──forward──► GNN ──reverse──► code'
 </code></pre></div>
 <p>where <code>code'</code> is a new Python package with:</p>
 <ul>
@@ -12627,7 +12627,7 @@ invariant ledger rather than assumed to be a lossless inverse. The categorical
 sketch is in
 <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/docs/evaluation/ISOMORPHISM_THEOREM.md"><code>../evaluation/ISOMORPHISM_THEOREM.md</code></a>,
 but the current operational contract is <a href="../../concepts/roundtrip/">the roundtrip concept page</a>.</p>
-<h2 id="current-state-v060">Current state (v0.6.0)</h2>
+<h2 id="current-state-v070">Current state (v0.7.0)</h2>
 <p>What <strong>does</strong> work:</p>
 <ul>
 <li><code>cogant reverse &lt;gnn_package_dir&gt; --output &lt;out_dir&gt;</code> synthesizes a Python package.</li>
@@ -12653,24 +12653,24 @@ but the current operational contract is <a href="../../concepts/roundtrip/">the 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.gnn.runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_gnn_package</span>  <span class="c1"># load bundle + matrices</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.simulate.runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationRunner</span>
 
-<span class="n">package_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;output/calculator/gnn_package&quot;</span><span class="p">)</span>
+<span class="n">package_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"output/calculator/gnn_package"</span><span class="p">)</span>
 <span class="n">gnn</span> <span class="o">=</span> <span class="n">load_gnn_package</span><span class="p">(</span><span class="n">package_dir</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hidden states:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Observations:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actions:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Hidden states:"</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Observations:"</span><span class="p">,</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Actions:"</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
 </code></pre></div>
 <p>Expected output on the calculator bundle:</p>
-<div class="highlight"><pre><span></span><code>Hidden states: [&#39;display&#39;, &#39;accumulator&#39;, &#39;history_len&#39;]
-Observations: [&#39;get_display&#39;, &#39;get_history&#39;, &#39;assert_display&#39;]
-Actions: [&#39;_execute_operation&#39;]
+<div class="highlight"><pre><span></span><code>Hidden states: ['display', 'accumulator', 'history_len']
+Observations: ['get_display', 'get_history', 'assert_display']
+Actions: ['_execute_operation']
 </code></pre></div>
 <p>Run a simulation to confirm the matrices describe a valid Active Inference model:</p>
 <div class="highlight"><pre><span></span><code><span class="n">runner</span> <span class="o">=</span> <span class="n">SimulationRunner</span><span class="p">(</span><span class="n">gnn</span><span class="o">.</span><span class="n">matrices</span><span class="p">)</span>
 <span class="n">trace</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">n_steps</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">trace</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: s=</span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">hidden_state</span><span class="si">}</span><span class="s2">, o=</span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">observation</span><span class="si">}</span><span class="s2">, a=</span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">action</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: s=</span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">hidden_state</span><span class="si">}</span><span class="s2">, o=</span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">observation</span><span class="si">}</span><span class="s2">, a=</span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">action</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <p>Expected: ten steps with hidden states sampled from <code>D</code>, observations sampled from <code>A</code>, and
 actions selected by the identity-B fallback.</p>
@@ -12683,7 +12683,7 @@ written. Current API:</p>
 <span class="n">plan</span><span class="p">:</span> <span class="n">PackagePlan</span> <span class="o">=</span> <span class="n">plan_package</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>  <span class="c1"># model is a ReverseGNNModel</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">plan</span><span class="p">)</span>
-<span class="c1"># PackagePlan(package_name=&quot;calculator_synth&quot;, nodes=[...])</span>
+<span class="c1"># PackagePlan(package_name="calculator_synth", nodes=[...])</span>
 <span class="c1">#   calculator_synth/</span>
 <span class="c1">#     __init__.py</span>
 <span class="c1">#     hidden_state.py    # class Display, Accumulator, HistoryLen</span>
@@ -12818,7 +12818,7 @@ layout. Earlier drafts of this tutorial referenced <code>build_package_plan</cod
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11226,14 +11226,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -13046,19 +13046,20 @@ cogant<span class="w"> </span>translate<span class="w"> </span>./my_repo<span cl
 <p><strong>Arguments:</strong>
 - <code>target</code>: Path to repository (default: current directory)</p>
 <p><strong>Options:</strong>
-- <code>--config, -c</code>: YAML or JSON pipeline config file with stage / plugin overrides.
+- <code>--config, -c</code>: YAML or JSON project config file (<code>pipeline</code>, <code>export</code>, <code>validation</code>, ... sections; see <code>configuration_file.md</code>). Values sit below <code>COGANT_&lt;SECTION&gt;__&lt;FIELD&gt;</code> environment variables and CLI flags. The per-stage <code>pipeline.ingest</code> / <code>graph</code> / <code>translate</code> / <code>statespace</code> / <code>gnn</code> / <code>reverse</code> sections are reserved and only emit a <code>ReservedConfigWarning</code>.
 - <code>--skip</code>: Comma-separated list of stages to skip (e.g. <code>'dynamic,validate'</code>). Whitespace around names is trimmed.
-- <code>--output, -o</code>: Directory where <code>bundle.json</code> and derived artifacts are written. Default: <code>output</code>.
-- <code>--layout-output</code>: After export, move artifacts into <code>data/</code>, <code>diagrams/</code>, <code>site/</code>, <code>reports/</code>, <code>figures/</code> subdirectories.
+- <code>--output, -o</code>: Directory where <code>bundle.json</code> and derived artifacts are written. Default: <code>pipeline.output_dir</code> from <code>--config</code> / <code>COGANT_PIPELINE__OUTPUT_DIR</code>, else <code>output</code>. A relative path containing <code>..</code> is resolved to an absolute path.
+- <code>--layout-output</code>: After export, move artifacts into <code>data/</code>, <code>diagrams/</code>, <code>site/</code>, <code>reports/</code>, <code>figures/</code> subdirectories. Default: <code>pipeline.layout_output</code> from <code>--config</code> / the environment, else off.
 - <code>--no-dynamic</code>: Skip the dynamic-analysis enrichment stage (coverage + trace). Faster but less accurate.
 - <code>--coverage</code>: Path to a coverage database (<code>.coverage</code>) or Cobertura <code>coverage.xml</code>.
 - <code>--trace</code>: Path to a Chrome DevTools trace JSON file for dynamic analysis.
 - <code>--incremental</code>: Git ref (e.g. <code>HEAD~1</code>, a commit hash, or a tag) to use as the incremental baseline. Only files that changed between this ref and HEAD are re-parsed; unchanged results are served from <code>~/.cache/cogant</code> when available.
 - <code>--cache-dir</code>: Override the incremental cache directory. Defaults to <code>~/.cache/cogant</code>. Useful for tests and benchmarks that need an isolated cache state.</p>
 <p><strong>Artifacts:</strong> Writes <strong><code>bundle.json</code></strong> in the output directory (full pipeline <code>Bundle</code> snapshot for <code>cogant render</code> / <code>cogant validate</code>) plus stage exports from the <code>export</code> stage when run.</p>
+<p><strong>Exit status:</strong> The results table shows each stage's recorded outcome (success, partial, skipped, unavailable, failed). The command exits <code>1</code> when any stage failed or errors were recorded; the bundle is still written for inspection.</p>
 <p><strong>Stages:</strong> ingest, static, normalize, graph, translate, statespace, process, export, validate</p>
 <h3 id="analyze">analyze</h3>
-<p>Canonical entry point for running the COGANT pipeline on a codebase, with first-class incremental support. In its default form it is equivalent to <code>cogant translate</code>. With <code>--incremental &lt;commit&gt;</code> it switches to the fast path: resolves <code>git diff --name-only &lt;commit&gt; HEAD</code>, looks up a cached bundle in <code>~/.cache/cogant</code>, and re-parses only changed files, patching cached stage results via <code>cogant.ingest.incremental.apply_incremental_patch</code>. On cache miss it falls back to a full cold run and populates the cache.</p>
+<p>Canonical entry point for running the COGANT pipeline on a codebase, with first-class incremental support. In its default form it is equivalent to <code>cogant translate</code>. With <code>--incremental &lt;commit&gt;</code> it resolves <code>git diff --name-only &lt;commit&gt; HEAD</code> and looks up a cached run in <code>~/.cache/cogant</code>. When nothing changed and the cached run's exported outputs exist in the current output directory, the cached bundle is returned without re-parsing (the fast path). Any source change, cache miss, or stale cached output re-analyses the full snapshot and refreshes the cache; per-file patching of cached graphs is not implemented, so a changed-files-only run never drops unchanged files.</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>analyze<span class="w"> </span>&lt;target&gt;
 cogant<span class="w"> </span>analyze<span class="w"> </span>./my_repo
 cogant<span class="w"> </span>analyze<span class="w"> </span>./my_repo<span class="w"> </span>--incremental<span class="w"> </span>HEAD~1<span class="w"> </span>--no-dynamic
@@ -13286,23 +13287,23 @@ cogant<span class="w"> </span>migrate<span class="w"> </span>migrate<span class=
 - <code>--dry-run</code>: Print diff without modifying the file.
 - <code>--target</code>: Target schema version. Default: <code>1.1</code>.</p>
 <h3 id="upstream-gnn">upstream-gnn</h3>
-<p>Drive the upstream GNN 25-step pipeline (<code>generalized-notation-notation</code>) against an existing COGANT-emitted <code>gnn_package/</code>. Network- and LLM-bound steps (12 LLM, 14 ML integration, 18 audio, 23 website) are skipped by default to keep CI offline-safe.</p>
+<p>Drive the upstream GNN 25-step pipeline (<code>generalized-notation-notation</code>, optional <code>upstream</code> extra, GNN 4.1.0 release line) against an existing COGANT-emitted <code>gnn_package/</code>. The selected steps run as one <code>python -m gnn.main --only-steps …</code> invocation; only <code>*.gnn.md</code> files are staged as upstream input. Steps 1 (<code>setup</code>), 2 (<code>tests</code>), 11 (<code>render</code>), and 12 (<code>execute</code>) are skipped by default; upstream may still run 11 and 12 as hard prerequisites of selected steps such as <code>16_analysis</code> and <code>18_security</code>.</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package
 cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package<span class="w"> </span>--output-dir<span class="w"> </span>output/upstream
-cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package<span class="w"> </span>--only-steps<span class="w"> </span><span class="m">1</span>,3,8<span class="w"> </span>--frameworks<span class="w"> </span>pymdp,rxinfer
-cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package<span class="w"> </span>--skip-steps<span class="w"> </span><span class="m">12</span>,14,18,23<span class="w"> </span>--verbose
+cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package<span class="w"> </span>--only-steps<span class="w"> </span><span class="m">3</span>,5,6<span class="w"> </span>--frameworks<span class="w"> </span>pymdp,rxinfer
+cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package<span class="w"> </span>--skip-steps<span class="w"> </span><span class="m">1</span>,2,11,12,13<span class="w"> </span>--verbose
 </code></pre></div>
 <p><strong>Arguments:</strong>
-- <code>package_dir</code>: Path to a <code>gnn_package/</code> directory (typically produced by <code>cogant translate</code>). Required.</p>
+- <code>package_dir</code>: Path to a <code>gnn_package/</code> directory (typically produced by <code>cogant translate</code>), or a parent directory containing one. Required.</p>
 <p><strong>Options:</strong>
-- <code>--output-dir, -o</code>: Where upstream artifacts are written. Default: <code>&lt;package_dir&gt;/upstream_gnn/</code>.
-- <code>--only-steps</code>: Comma-separated 1-based step numbers to run (subset of the 25-step catalog).
-- <code>--skip-steps</code>: Comma-separated 1-based step numbers to skip. Defaults to network-bound steps when neither <code>--only-steps</code> nor <code>--skip-steps</code> is given.
-- <code>--frameworks</code>: Comma-separated render targets for upstream step 11 (e.g. <code>pymdp,rxinfer</code>).
-- <code>--llm-model</code>: Model identifier passed to upstream step 13 (only used when step 13 is enabled).
-- <code>--verbose, -v</code>: Forward <code>-v</code> to the upstream subprocess.</p>
+- <code>--output-dir, -o</code>: Where upstream artifacts are written (per-step <code>&lt;step&gt;_output/</code>, <code>00_pipeline_summary/</code>, <code>upstream_pipeline.log</code>, <code>upstream_pipeline_summary.json</code>). Default: <code>output/upstream_pipeline</code>.
+- <code>--only-steps</code>: Comma-separated step indices <code>0</code>–<code>24</code> to run (the numeric prefix of each upstream script).
+- <code>--skip-steps</code>: Comma-separated step indices to skip. Default <code>1,2,11,12</code>; pass an empty string to skip nothing and run all 25 steps.
+- <code>--frameworks</code>: Render/execute targets forwarded to upstream (default <code>lite</code>; e.g. <code>all</code>, <code>pymdp,rxinfer</code>).
+- <code>--llm-model</code>: <code>OLLAMA_MODEL</code> for upstream step 13, set only in the upstream child environment.
+- <code>--verbose, -v</code>: Forward <code>--verbose</code> to the upstream invocation.</p>
 <p>The same wiring is also exposed as opt-in flags on <code>cogant translate</code>, <code>cogant analyze</code>, and <code>cogant validate</code> via <code>--upstream-gnn-pipeline</code> (and the matching <code>--upstream-gnn-only-steps</code> / <code>--upstream-gnn-skip-steps</code> / <code>--upstream-gnn-frameworks</code> / <code>--upstream-gnn-llm-model</code> knobs); see <code>cogant translate --help</code> for the full surface.</p>
-<p><strong>Exit codes:</strong> <code>0</code> on success; <code>1</code> if the upstream subprocess exits non-zero on any executed step.</p>
+<p><strong>Exit codes:</strong> <code>0</code> on success; <code>1</code> if upstream is unavailable or any requested step is not successful (including <code>NOT_RUN</code> steps upstream never planned); <code>2</code> if the package directory or <code>model.gnn.md</code> is missing.</p>
 
 
 
@@ -13361,7 +13362,7 @@ cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_pac
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

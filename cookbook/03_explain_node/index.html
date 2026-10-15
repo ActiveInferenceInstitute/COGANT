@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11060,14 +11060,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12650,7 +12650,7 @@
 </ul>
 <h2 id="steps">Steps</h2>
 <h3 id="1-scan-first-to-discover-node-names">1. Scan first to discover node names</h3>
-<div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>scan<span class="w"> </span>./my-project<span class="w"> </span>--format<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.modules[].name&#39;</span>
+<div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>scan<span class="w"> </span>./my-project<span class="w"> </span>--format<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.modules[].name'</span>
 </code></pre></div>
 <p>Pick a module or symbol name from the output.</p>
 <h3 id="2-explain-the-node">2. Explain the node</h3>
@@ -12678,7 +12678,7 @@ Confidence: 0.87
 </code></pre></div>
 <h3 id="4-explain-with-a-substring-match">4. Explain with a substring match</h3>
 <p>You do not need the full node name. A substring works:</p>
-<div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>explain<span class="w"> </span>./my-project<span class="w"> </span><span class="s2">&quot;User&quot;</span>
+<div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>explain<span class="w"> </span>./my-project<span class="w"> </span><span class="s2">"User"</span>
 </code></pre></div>
 <p>COGANT resolves the closest matching node.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
@@ -12762,7 +12762,7 @@ Confidence: 0.87
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

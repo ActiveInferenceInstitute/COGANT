@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11048,14 +11048,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12685,9 +12685,9 @@ ls<span class="w"> </span>output/pomdp_minimal/gnn_package/
 <h2 id="step-2-read-the-a-matrix-likelihood">Step 2 — read the A matrix (likelihood)</h2>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
-<span class="n">A</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;output/pomdp_minimal/gnn_package/A.json&quot;</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">A</span><span class="p">[</span><span class="s2">&quot;matrix&quot;</span><span class="p">]:</span>
-    <span class="nb">print</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">row</span><span class="p">])</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"output/pomdp_minimal/gnn_package/A.json"</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">A</span><span class="p">[</span><span class="s2">"matrix"</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">([</span><span class="s2">"</span><span class="si">{:.2f}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">row</span><span class="p">])</span>
 </code></pre></div>
 <p>Each <strong>row</strong> is an observation modality; each <strong>column</strong> is a hidden-state
 factor. A <code>1.0</code> means this exported observation receives all of the normalized
@@ -12696,16 +12696,16 @@ structural edge-evidence statement, not proof that the observation is
 empirically fully informative about runtime behavior. Rows are
 softmax-normalized.</p>
 <h2 id="step-3-read-the-b-matrix-transition">Step 3 — read the B matrix (transition)</h2>
-<div class="highlight"><pre><span></span><code><span class="n">B</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;output/pomdp_minimal/gnn_package/B.json&quot;</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;shape:&quot;</span><span class="p">,</span> <span class="n">B</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>  <span class="c1"># [n_states, n_states, n_actions]</span>
+<div class="highlight"><pre><span></span><code><span class="n">B</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"output/pomdp_minimal/gnn_package/B.json"</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"shape:"</span><span class="p">,</span> <span class="n">B</span><span class="p">[</span><span class="s2">"shape"</span><span class="p">])</span>  <span class="c1"># [n_states, n_states, n_actions]</span>
 </code></pre></div>
 <p><code>B[s', s, a]</code> is the probability of transitioning from <code>s</code> to <code>s'</code> under
 action <code>a</code>. Each <code>B[:, :, a]</code> slice is a column-stochastic matrix.</p>
 <h2 id="step-4-read-c-and-d">Step 4 — read C and D</h2>
-<div class="highlight"><pre><span></span><code><span class="n">C</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;output/pomdp_minimal/gnn_package/C.json&quot;</span><span class="p">))</span>  <span class="c1"># log-preferences over observations</span>
-<span class="n">D</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;output/pomdp_minimal/gnn_package/D.json&quot;</span><span class="p">))</span>  <span class="c1"># prior over initial hidden states</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;C:&quot;</span><span class="p">,</span> <span class="n">C</span><span class="p">[</span><span class="s2">&quot;vector&quot;</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;D:&quot;</span><span class="p">,</span> <span class="n">D</span><span class="p">[</span><span class="s2">&quot;vector&quot;</span><span class="p">])</span>
+<div class="highlight"><pre><span></span><code><span class="n">C</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"output/pomdp_minimal/gnn_package/C.json"</span><span class="p">))</span>  <span class="c1"># log-preferences over observations</span>
+<span class="n">D</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"output/pomdp_minimal/gnn_package/D.json"</span><span class="p">))</span>  <span class="c1"># prior over initial hidden states</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"C:"</span><span class="p">,</span> <span class="n">C</span><span class="p">[</span><span class="s2">"vector"</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"D:"</span><span class="p">,</span> <span class="n">D</span><span class="p">[</span><span class="s2">"vector"</span><span class="p">])</span>
 </code></pre></div>
 <p><code>C</code> is in log-space — apply <code>softmax(-C)</code> to get the preferred-observation
 distribution. <code>D</code> is already a probability vector.</p>
@@ -12791,7 +12791,7 @@ distribution. <code>D</code> is already a probability vector.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

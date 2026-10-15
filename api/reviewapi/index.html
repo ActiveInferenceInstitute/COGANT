@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11017,14 +11017,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12565,37 +12565,37 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.api.review</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReviewAPI</span>
 
 <span class="n">review</span> <span class="o">=</span> <span class="n">ReviewAPI</span><span class="p">()</span>
-<span class="n">review</span><span class="o">.</span><span class="n">load_bundle</span><span class="p">(</span><span class="s2">&quot;bundle.json&quot;</span><span class="p">)</span>
+<span class="n">review</span><span class="o">.</span><span class="n">load_bundle</span><span class="p">(</span><span class="s2">"bundle.json"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="reviewing-mappings">Reviewing Mappings</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get review summary</span>
 <span class="n">summary</span> <span class="o">=</span> <span class="n">review</span><span class="o">.</span><span class="n">get_review_summary</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;total&quot;: 100,</span>
-<span class="c1">#   &quot;pending&quot;: 85,</span>
-<span class="c1">#   &quot;accepted&quot;: 10,</span>
-<span class="c1">#   &quot;rejected&quot;: 5,</span>
-<span class="c1">#   &quot;edited&quot;: 0</span>
+<span class="c1">#   "total": 100,</span>
+<span class="c1">#   "pending": 85,</span>
+<span class="c1">#   "accepted": 10,</span>
+<span class="c1">#   "rejected": 5,</span>
+<span class="c1">#   "edited": 0</span>
 <span class="c1"># }</span>
 
 <span class="c1"># Get pending mappings</span>
 <span class="n">pending</span> <span class="o">=</span> <span class="n">review</span><span class="o">.</span><span class="n">get_pending_mappings</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">mapping</span> <span class="ow">in</span> <span class="n">pending</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mapping</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">mapping</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mapping</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">mapping</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="acceptingrejecting-mappings">Accepting/Rejecting Mappings</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Accept a mapping</span>
-<span class="n">review</span><span class="o">.</span><span class="n">accept_mapping</span><span class="p">(</span><span class="s2">&quot;mapping_123&quot;</span><span class="p">,</span> <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Looks correct&quot;</span><span class="p">)</span>
+<span class="n">review</span><span class="o">.</span><span class="n">accept_mapping</span><span class="p">(</span><span class="s2">"mapping_123"</span><span class="p">,</span> <span class="n">notes</span><span class="o">=</span><span class="s2">"Looks correct"</span><span class="p">)</span>
 
 <span class="c1"># Reject a mapping</span>
-<span class="n">review</span><span class="o">.</span><span class="n">reject_mapping</span><span class="p">(</span><span class="s2">&quot;mapping_456&quot;</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;Incorrect mapping&quot;</span><span class="p">)</span>
+<span class="n">review</span><span class="o">.</span><span class="n">reject_mapping</span><span class="p">(</span><span class="s2">"mapping_456"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"Incorrect mapping"</span><span class="p">)</span>
 
 <span class="c1"># Edit a mapping</span>
-<span class="n">review</span><span class="o">.</span><span class="n">edit_mapping</span><span class="p">(</span><span class="s2">&quot;mapping_789&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;new_target&quot;</span><span class="p">,</span> <span class="n">confidence</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+<span class="n">review</span><span class="o">.</span><span class="n">edit_mapping</span><span class="p">(</span><span class="s2">"mapping_789"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"new_target"</span><span class="p">,</span> <span class="n">confidence</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="saving-curated-results">Saving Curated Results</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Save curated bundle with review decisions</span>
-<span class="n">review</span><span class="o">.</span><span class="n">save_curated_bundle</span><span class="p">(</span><span class="s2">&quot;curated_bundle.json&quot;</span><span class="p">)</span>
+<span class="n">review</span><span class="o">.</span><span class="n">save_curated_bundle</span><span class="p">(</span><span class="s2">"curated_bundle.json"</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -12655,7 +12655,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11048,14 +11048,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12624,7 +12624,7 @@
 <p><strong>Next steps:</strong> <a href="../../tutorials/06_reverse_mode/">Tutorial: Reverse mode — GNN to code</a> · <a href="../markov_blanket/">Markov blankets in codebases</a> · <a href="../active_inference/">Active Inference for programmers</a></p>
 </blockquote>
 <p>COGANT's most ambitious claim is that the mapping between source code and Active Inference models is not one-way. The forward pipeline translates code into a <a href="../gnn/">GNN</a>. The reverse pipeline synthesizes code back from a GNN. Together they form a cycle:</p>
-<div class="highlight"><pre><span></span><code>code --forward--&gt; GNN --reverse--&gt; code&#39;
+<div class="highlight"><pre><span></span><code>code --forward--&gt; GNN --reverse--&gt; code'
 </code></pre></div>
 <p>This page explains both directions, the role-preservation score, and the stricter invariant
 ledger that determines the current v0.6 roundtrip status.</p>
@@ -12644,7 +12644,7 @@ ledger that determines the current v0.6 roundtrip status.</p>
 <p><strong>State space to A/B/C/D matrices.</strong> The <a href="../active_inference/">matrix builder</a> counts evidence edges and normalizes to produce well-formed probability distributions. The result is a complete Active Inference model.</p>
 </li>
 <li>
-<p><strong>Matrices to GNN markdown.</strong> The <code>GNNMarkdownFormatter</code> emits a valid upstream GNN v2.0.0-engine file with the required <code>StateSpaceBlock</code>, <code>Connections</code>, <code>InitialParameterization</code>, <code>Equations</code>, <code>Time</code>, <code>ActInfOntologyAnnotation</code>, <code>ModelParameters</code>, <code>Footer</code>, and <code>Signature</code> sections.</p>
+<p><strong>Matrices to GNN markdown.</strong> The <code>GNNMarkdownFormatter</code> emits a GNN file (COGANT schema <code>GNN v2.0.0</code>, checked against the pinned upstream 4.1.0 validator) with the required <code>StateSpaceBlock</code>, <code>Connections</code>, <code>InitialParameterization</code>, <code>Equations</code>, <code>Time</code>, <code>ActInfOntologyAnnotation</code>, <code>ModelParameters</code>, <code>Footer</code>, and <code>Signature</code> sections.</p>
 </li>
 <li>
 <p><strong>GNN package.</strong> The <code>GNNPackageBuilder</code> writes <code>model.gnn.md</code>, <code>model.gnn.json</code>, satellite matrix files, the <a href="../markov_blanket/">Markov blanket</a> partition, and provenance metadata into a self-contained directory.</p>
@@ -12662,17 +12662,17 @@ program graph, semantic mappings, state-space model, and matrix defaults.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.simulate.runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationRunner</span>
 
 <span class="c1"># Load a forward-produced GNN package</span>
-<span class="n">gnn</span> <span class="o">=</span> <span class="n">load_gnn_package</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;output/calculator/gnn_package&quot;</span><span class="p">))</span>
+<span class="n">gnn</span> <span class="o">=</span> <span class="n">load_gnn_package</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"output/calculator/gnn_package"</span><span class="p">))</span>
 
-<span class="c1"># The matrices define the synthesized package&#39;s behavior</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hidden states:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
-<span class="c1"># [&#39;display&#39;, &#39;accumulator&#39;, &#39;history_len&#39;]</span>
+<span class="c1"># The matrices define the synthesized package's behavior</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Hidden states:"</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+<span class="c1"># ['display', 'accumulator', 'history_len']</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Observations:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
-<span class="c1"># [&#39;get_display&#39;, &#39;get_history&#39;, &#39;assert_display&#39;]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Observations:"</span><span class="p">,</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+<span class="c1"># ['get_display', 'get_history', 'assert_display']</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actions:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
-<span class="c1"># [&#39;_execute_operation&#39;]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Actions:"</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+<span class="c1"># ['_execute_operation']</span>
 </code></pre></div>
 <p>The synthesized <code>code'</code> has:</p>
 <ul>
@@ -12735,24 +12735,24 @@ R(F(R(gnn)))  = R(gnn)      -- reverse is idempotent after one roundtrip
 </code></pre></div>
 <p>Reverse synthesis produces a Python package with:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CalculatorModel</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Synthesized from GNN StateSpaceBlock.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Synthesized from GNN StateSpaceBlock."""</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>         <span class="c1"># s_f0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">accumulator</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># s_f1</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_display</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Observation modality for display.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Observation modality for display."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">execute_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Action: transitions display and accumulator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Action: transitions display and accumulator."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">accumulator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulator</span>  <span class="c1"># B matrix placeholder</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span>          <span class="c1"># B matrix placeholder</span>
 </code></pre></div>
 <p>Running <code>cogant translate</code> on this synthesized code produces a GNN whose <code>StateSpaceBlock</code> dimensions, A matrix non-zero pattern, and blanket partition can be inspected by the roundtrip invariant ledger.</p>
 <h2 id="current-limitations">Current limitations</h2>
 <ul>
-<li><code>cogant reverse</code> and <code>cogant roundtrip</code> are available CLI subcommands in v0.6.0.</li>
+<li><code>cogant reverse</code> and <code>cogant roundtrip</code> are available CLI subcommands in v0.7.0.</li>
 <li>Only Python synthesis output is supported.</li>
 <li>The B matrix placeholder code does not implement real transition logic -- it preserves the structural skeleton.</li>
 <li>Complex control flow (loops, conditionals, exception handling) is not synthesized.</li>
@@ -12910,7 +12910,7 @@ R(F(R(gnn)))  = R(gnn)      -- reverse is idempotent after one roundtrip
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

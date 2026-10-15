@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11037,14 +11037,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12625,7 +12625,7 @@ ties. Pick a slot that does not collide with the built-ins (see
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyRule</span><span class="p">(</span><span class="n">TranslationRule</span><span class="p">):</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;MyRule&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">"MyRule"</span>
     <span class="n">priority</span> <span class="o">=</span> <span class="mi">55</span>  <span class="c1"># see step 1</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">ProgramGraph</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">GraphQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -12641,7 +12641,7 @@ ties. Pick a slot that does not collide with the built-ins (see
         <span class="k">return</span> <span class="n">RuleExplanation</span><span class="p">(</span>
             <span class="n">rule_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="n">evidence</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span>
-            <span class="n">confidence_reason</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+            <span class="n">confidence_reason</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span>
         <span class="p">)</span>
 </code></pre></div>
 <h2 id="step-3-register">Step 3 — register</h2>
@@ -12655,12 +12655,12 @@ useful as a public example) and write a real-data assertion:</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_my_rule_fires_on_fixture</span><span class="p">():</span>
-    <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">from_target</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/my_rule_target&quot;</span><span class="p">))</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">from_target</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"tests/fixtures/my_rule_target"</span><span class="p">))</span>
     <span class="n">session</span><span class="o">.</span><span class="n">extract_static</span><span class="p">()</span>
     <span class="n">session</span><span class="o">.</span><span class="n">build_graph</span><span class="p">()</span>
     <span class="n">session</span><span class="o">.</span><span class="n">translate_to_gnn</span><span class="p">()</span>
     <span class="n">mappings</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">semantic_mappings</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">rule_name</span> <span class="o">==</span> <span class="s2">&quot;MyRule&quot;</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mappings</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">rule_name</span> <span class="o">==</span> <span class="s2">"MyRule"</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mappings</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="step-5-ship">Step 5 — ship</h2>
 <p>If the rule is project-internal: commit it under <code>py/cogant/translate/rules/</code>.
@@ -12731,7 +12731,7 @@ entry point documented in <a href="../../api/plugin_api/"><code>plugin_api.md</c
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

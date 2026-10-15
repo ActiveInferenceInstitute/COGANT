@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11054,14 +11054,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12643,38 +12643,38 @@
 </code></pre></div>
 <p>Commit the baseline so it is available for comparison:</p>
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.cogant/baseline/
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;chore: add COGANT baseline&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"chore: add COGANT baseline"</span>
 </code></pre></div>
 <h3 id="2-create-the-pre-commit-hook">2. Create the pre-commit hook</h3>
-<div class="highlight"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>.git/hooks/pre-commit<span class="w"> </span><span class="s">&lt;&lt; &#39;HOOK&#39;</span>
+<div class="highlight"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>.git/hooks/pre-commit<span class="w"> </span><span class="s">&lt;&lt; 'HOOK'</span>
 <span class="s">#!/usr/bin/env bash</span>
 <span class="s">set -e</span>
 
 <span class="s"># Only run if Python/JS/TS files changed</span>
 <span class="s">changed=$(cogant changed . --source-only 2&gt;/dev/null)</span>
-<span class="s">if [ -z &quot;$changed&quot; ]; then</span>
+<span class="s">if [ -z "$changed" ]; then</span>
 <span class="s">  exit 0</span>
 <span class="s">fi</span>
 
-<span class="s">echo &quot;[cogant] Source files changed -- checking for GNN drift...&quot;</span>
+<span class="s">echo "[cogant] Source files changed -- checking for GNN drift..."</span>
 
 <span class="s"># Translate the working tree</span>
 <span class="s">cogant translate . --output .cogant/current --no-dynamic 2&gt;/dev/null</span>
 
 <span class="s"># Compare against baseline</span>
 <span class="s">drift_output=$(cogant diff .cogant/baseline .cogant/current 2&gt;&amp;1)</span>
-<span class="s">echo &quot;$drift_output&quot;</span>
+<span class="s">echo "$drift_output"</span>
 
 <span class="s"># Clean up</span>
 <span class="s">rm -rf .cogant/current</span>
 
 <span class="s"># Fail if drift report contains errors</span>
-<span class="s">if echo &quot;$drift_output&quot; | grep -q &quot;INVALID&quot;; then</span>
-<span class="s">  echo &quot;[cogant] GNN drift detected -- review the diff above&quot;</span>
+<span class="s">if echo "$drift_output" | grep -q "INVALID"; then</span>
+<span class="s">  echo "[cogant] GNN drift detected -- review the diff above"</span>
 <span class="s">  exit 1</span>
 <span class="s">fi</span>
 
-<span class="s">echo &quot;[cogant] No significant drift detected&quot;</span>
+<span class="s">echo "[cogant] No significant drift detected"</span>
 <span class="s">HOOK</span>
 
 chmod<span class="w"> </span>+x<span class="w"> </span>.git/hooks/pre-commit
@@ -12686,15 +12686,15 @@ chmod<span class="w"> </span>+x<span class="w"> </span>.git/hooks/pre-commit
 <span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cogant-drift</span>
 <span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">COGANT drift check</span>
-<span class="w">        </span><span class="nt">entry</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bash -c &#39;cogant translate . --output /tmp/cogant-check --no-dynamic &amp;&amp; cogant validate /tmp/cogant-check &amp;&amp; rm -rf /tmp/cogant-check&#39;</span>
+<span class="w">        </span><span class="nt">entry</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bash -c 'cogant translate . --output /tmp/cogant-check --no-dynamic &amp;&amp; cogant validate /tmp/cogant-check &amp;&amp; rm -rf /tmp/cogant-check'</span>
 <span class="w">        </span><span class="nt">language</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">system</span>
 <span class="w">        </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">python</span><span class="p p-Indicator">]</span>
 <span class="w">        </span><span class="nt">pass_filenames</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 </code></pre></div>
 <h3 id="4-test-the-hook">4. Test the hook</h3>
-<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;# test change&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>some_module.py
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">"# test change"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>some_module.py
 git<span class="w"> </span>add<span class="w"> </span>some_module.py
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;test: trigger drift check&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"test: trigger drift check"</span>
 </code></pre></div>
 <h2 id="expected-output">Expected output</h2>
 <div class="highlight"><pre><span></span><code>[cogant] Source files changed -- checking for GNN drift...
@@ -12782,7 +12782,7 @@ Diff complete
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

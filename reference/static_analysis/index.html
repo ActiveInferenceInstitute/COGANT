@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11279,14 +11279,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -13099,14 +13099,14 @@
 <h3 id="methods">Methods</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ComplexityAnalyzer</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize analyzer.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Initialize analyzer."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexityReport</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Analyze source code for complexity metrics.</span>
 
 <span class="sd">        Args:</span>
@@ -13118,13 +13118,13 @@
 
 <span class="sd">        Raises:</span>
 <span class="sd">            None (errors captured in report.errors)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">analyze_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexityReport</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Analyze a Python file.</span>
 
 <span class="sd">        Args:</span>
@@ -13135,34 +13135,34 @@
 
 <span class="sd">        Raises:</span>
 <span class="sd">            None (file I/O errors captured in report.errors)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 </code></pre></div>
 <h3 id="complexityreport">ComplexityReport</h3>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ComplexityReport</span><span class="p">:</span>
     <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Source file path.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Source file path."""</span>
 
     <span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ComplexityEntry</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-function complexity entries.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Per-function complexity entries."""</span>
 
     <span class="n">average_cyclomatic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Average cyclomatic complexity across all functions.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Average cyclomatic complexity across all functions."""</span>
 
     <span class="n">average_cognitive</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Average cognitive complexity across all functions.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Average cognitive complexity across all functions."""</span>
 
     <span class="n">max_cyclomatic</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum cyclomatic complexity in module.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Maximum cyclomatic complexity in module."""</span>
 
     <span class="n">max_cognitive</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum cognitive complexity in module.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Maximum cognitive complexity in module."""</span>
 
     <span class="n">errors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Syntax errors or analysis errors.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Syntax errors or analysis errors."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_hotspots</span><span class="p">(</span><span class="n">threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ComplexityEntry</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get functions exceeding complexity threshold.</span>
 
 <span class="sd">        Args:</span>
@@ -13170,37 +13170,37 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Sorted list of ComplexityEntry (highest first)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 </code></pre></div>
 <h3 id="complexityentry">ComplexityEntry</h3>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ComplexityEntry</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function/method name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Function/method name."""</span>
 
     <span class="n">qualified_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fully qualified name (e.g., &#39;MyClass.my_method&#39;).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Fully qualified name (e.g., 'MyClass.my_method')."""</span>
 
     <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;&#39;function&#39; or &#39;method&#39;.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""'function' or 'method'."""</span>
 
     <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Source file path.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Source file path."""</span>
 
     <span class="n">line_start</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Starting line number (1-indexed).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Starting line number (1-indexed)."""</span>
 
     <span class="n">line_end</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ending line number (1-indexed).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Ending line number (1-indexed)."""</span>
 
     <span class="n">cyclomatic_complexity</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cyclomatic complexity score (&gt;= 1).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cyclomatic complexity score (&gt;= 1)."""</span>
 
     <span class="n">cognitive_complexity</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cognitive complexity score (&gt;= 0).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cognitive complexity score (&gt;= 0)."""</span>
 
     <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Additional metadata (e.g., {&#39;is_async&#39;: True}).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Additional metadata (e.g., {'is_async': True})."""</span>
 </code></pre></div>
 <h2 id="couplinganalyzer">CouplingAnalyzer</h2>
 <p>Analyzes module coupling and stability using Martin metrics.</p>
@@ -13228,16 +13228,16 @@
 <h3 id="methods_1">Methods</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CouplingAnalyzer</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize analyzer.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Initialize analyzer."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">import_graph</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
         <span class="n">abstract_classes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">concrete_classes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">package_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+        <span class="n">package_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"unknown"</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CouplingReport</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Analyze module coupling metrics.</span>
 
 <span class="sd">        Args:</span>
@@ -13248,31 +13248,31 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            CouplingReport with per-module metrics</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 </code></pre></div>
 <h3 id="couplingreport">CouplingReport</h3>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CouplingReport</span><span class="p">:</span>
     <span class="n">package_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Package name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Package name."""</span>
 
     <span class="n">modules</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ModuleCouplingMetrics</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-module coupling metrics.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Per-module coupling metrics."""</span>
 
     <span class="n">average_instability</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Average instability across all modules.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Average instability across all modules."""</span>
 
     <span class="n">average_abstractness</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Average abstractness across all modules.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Average abstractness across all modules."""</span>
 
     <span class="n">average_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Average distance from main sequence.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Average distance from main sequence."""</span>
 
     <span class="n">errors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Analysis errors.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Analysis errors."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_unstable_modules</span><span class="p">(</span><span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ModuleCouplingMetrics</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get modules with high instability.</span>
 
 <span class="sd">        Args:</span>
@@ -13280,62 +13280,62 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Sorted list of unstable modules (highest first)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_zone_of_pain</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ModuleCouplingMetrics</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get modules in zone of pain (high concrete + high instability).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Modules where D &gt; 0.3 and I &gt; 0.8</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_zone_of_uselessness</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ModuleCouplingMetrics</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get modules in zone of uselessness (high abstract + low instability).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Modules where D &gt; 0.3 and I &lt; 0.2</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 </code></pre></div>
 <h3 id="modulecouplingmetrics">ModuleCouplingMetrics</h3>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModuleCouplingMetrics</span><span class="p">:</span>
     <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Module name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Module name."""</span>
 
     <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Source file path.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Source file path."""</span>
 
     <span class="n">afferent_coupling</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ca: count of modules depending on this one.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Ca: count of modules depending on this one."""</span>
 
     <span class="n">efferent_coupling</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ce: count of modules this one depends on.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Ce: count of modules this one depends on."""</span>
 
     <span class="n">instability</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;I = Ce / (Ca + Ce); range [0, 1].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""I = Ce / (Ca + Ce); range [0, 1]."""</span>
 
     <span class="n">abstractness</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A = abstract_classes / total_classes; range [0, 1].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A = abstract_classes / total_classes; range [0, 1]."""</span>
 
     <span class="n">distance_from_main_sequence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;D = |A + I - 1|; ideal is 0.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""D = |A + I - 1|; ideal is 0."""</span>
 
     <span class="n">abstract_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count of abstract classes/interfaces.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Count of abstract classes/interfaces."""</span>
 
     <span class="n">concrete_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count of concrete classes.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Count of concrete classes."""</span>
 
     <span class="n">dependencies</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">set</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set of modules this module imports.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Set of modules this module imports."""</span>
 
     <span class="n">dependents</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">set</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set of modules that import this module.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Set of modules that import this module."""</span>
 
     <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Additional metadata.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Additional metadata."""</span>
 </code></pre></div>
 <h2 id="deadcodeanalyzer">DeadCodeAnalyzer</h2>
 <p>Detects unused imports, functions, variables, and unreachable code blocks.</p>
@@ -13355,14 +13355,14 @@
 <h3 id="methods_2">Methods</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DeadCodeAnalyzer</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize analyzer.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Initialize analyzer."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeadCodeReport</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Analyze source for dead code.</span>
 
 <span class="sd">        Args:</span>
@@ -13371,13 +13371,13 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            DeadCodeReport with findings</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">analyze_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeadCodeReport</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Analyze a Python file for dead code.</span>
 
 <span class="sd">        Args:</span>
@@ -13385,63 +13385,63 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            DeadCodeReport with findings</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 </code></pre></div>
 <h3 id="deadcodereport">DeadCodeReport</h3>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">DeadCodeReport</span><span class="p">:</span>
     <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Source file path.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Source file path."""</span>
 
     <span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DeadCodeEntry</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dead code findings.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Dead code findings."""</span>
 
     <span class="n">unused_imports</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count of unused imports.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Count of unused imports."""</span>
 
     <span class="n">unused_functions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count of unused functions.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Count of unused functions."""</span>
 
     <span class="n">unused_variables</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count of unused variables.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Count of unused variables."""</span>
 
     <span class="n">unreachable_statements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count of unreachable code blocks.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Count of unreachable code blocks."""</span>
 
     <span class="n">errors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Analysis errors.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Analysis errors."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_certain_entries</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">DeadCodeEntry</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get entries with high confidence (&gt;= 0.9).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            List of high-confidence dead code entries</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 </code></pre></div>
 <h3 id="deadcodeentry">DeadCodeEntry</h3>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">DeadCodeEntry</span><span class="p">:</span>
     <span class="n">symbol_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of unused/unreachable symbol.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name of unused/unreachable symbol."""</span>
 
     <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Source file path.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Source file path."""</span>
 
     <span class="n">line_num</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Line number where symbol is defined (1-indexed).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Line number where symbol is defined (1-indexed)."""</span>
 
     <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Kind: UNUSED_IMPORT, UNUSED_FUNCTION, UNUSED_VARIABLE, UNREACHABLE.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Kind: UNUSED_IMPORT, UNUSED_FUNCTION, UNUSED_VARIABLE, UNREACHABLE."""</span>
 
-    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;module&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scope context: module, class_name, function_name.&quot;&quot;&quot;</span>
+    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"module"</span>
+<span class="w">    </span><span class="sd">"""Scope context: module, class_name, function_name."""</span>
 
     <span class="n">confidence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Confidence score [0.0, 1.0]; 1.0 = certain.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Confidence score [0.0, 1.0]; 1.0 = certain."""</span>
 
     <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Additional metadata.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Additional metadata."""</span>
 </code></pre></div>
 <h2 id="metricsanalyzer">MetricsAnalyzer</h2>
 <p>Computes code metrics and Halstead complexity metrics.</p>
@@ -13468,13 +13468,13 @@
 <h3 id="methods_3">Methods</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MetricsAnalyzer</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize analyzer.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Initialize analyzer."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CodeMetrics</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Compute code metrics from source.</span>
 
 <span class="sd">        Args:</span>
@@ -13482,13 +13482,13 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            CodeMetrics instance</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">halstead</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HalsteadMetrics</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Compute Halstead metrics from source.</span>
 
 <span class="sd">        Args:</span>
@@ -13496,13 +13496,13 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            HalsteadMetrics instance</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">analyze_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">CodeMetrics</span><span class="p">,</span> <span class="n">HalsteadMetrics</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Analyze a Python file for all metrics.</span>
 
 <span class="sd">        Args:</span>
@@ -13510,65 +13510,65 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Tuple of (CodeMetrics, HalsteadMetrics)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 </code></pre></div>
 <h3 id="codemetrics">CodeMetrics</h3>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CodeMetrics</span><span class="p">:</span>
     <span class="n">lines_of_code</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Total lines of code (excluding blank and comments).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Total lines of code (excluding blank and comments)."""</span>
 
     <span class="n">logical_lines</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Logical lines of code (AST statements).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Logical lines of code (AST statements)."""</span>
 
     <span class="n">comment_lines</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lines containing comments.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Lines containing comments."""</span>
 
     <span class="n">blank_lines</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Blank lines.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Blank lines."""</span>
 
     <span class="n">docstring_coverage</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Percentage of public symbols with docstrings [0.0, 1.0].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Percentage of public symbols with docstrings [0.0, 1.0]."""</span>
 
     <span class="n">public_symbols</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count of public symbols.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Count of public symbols."""</span>
 
     <span class="n">documented_symbols</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count of documented public symbols.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Count of documented public symbols."""</span>
 </code></pre></div>
 <h3 id="halsteadmetrics">HalsteadMetrics</h3>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">HalsteadMetrics</span><span class="p">:</span>
     <span class="n">unique_operators</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;n1: count of unique operators.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""n1: count of unique operators."""</span>
 
     <span class="n">unique_operands</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;n2: count of unique operands.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""n2: count of unique operands."""</span>
 
     <span class="n">total_operators</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;N1: total count of operators.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""N1: total count of operators."""</span>
 
     <span class="n">total_operands</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;N2: total count of operands.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""N2: total count of operands."""</span>
 
     <span class="n">vocabulary</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;n = n1 + n2: vocabulary size.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""n = n1 + n2: vocabulary size."""</span>
 
     <span class="n">length</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;N = N1 + N2: program length.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""N = N1 + N2: program length."""</span>
 
     <span class="n">volume</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;V = N * log2(n): program volume.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""V = N * log2(n): program volume."""</span>
 
     <span class="n">difficulty</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;D = (n1/2) * (N2/n2): difficulty.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""D = (n1/2) * (N2/n2): difficulty."""</span>
 
     <span class="n">effort</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;E = D * V: effort to implement.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""E = D * V: effort to implement."""</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;HalsteadMetrics&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"HalsteadMetrics"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Compute Halstead metrics from source code.</span>
 
 <span class="sd">        Args:</span>
@@ -13576,7 +13576,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            HalsteadMetrics instance</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 </code></pre></div>
 <h2 id="error-handling">Error Handling</h2>
 <p>All analyzers follow consistent error handling:</p>
@@ -13585,7 +13585,7 @@
 <span class="c1"># Check for errors</span>
 <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analysis error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Analysis error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="c1"># Results are still usable even with partial errors</span>
 <span class="c1"># (e.g., syntax error in one file, but metrics computed for rest)</span>
@@ -13657,7 +13657,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

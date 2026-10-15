@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11032,14 +11032,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12585,7 +12585,7 @@ patterns, detects each file's language from its extension, and marks test files.
 example below enumerates all source files without test files and without checksums:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">cogant.ingest</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileEnumerator</span>
 
-<span class="n">enumerator</span> <span class="o">=</span> <span class="n">FileEnumerator</span><span class="p">(</span><span class="n">repo_root</span><span class="o">=</span><span class="s2">&quot;path/to/repo&quot;</span><span class="p">)</span>
+<span class="n">enumerator</span> <span class="o">=</span> <span class="n">FileEnumerator</span><span class="p">(</span><span class="n">repo_root</span><span class="o">=</span><span class="s2">"path/to/repo"</span><span class="p">)</span>
 
 <span class="n">files</span> <span class="o">=</span> <span class="n">enumerator</span><span class="o">.</span><span class="n">enumerate</span><span class="p">(</span>
     <span class="n">include_test_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -12593,10 +12593,10 @@ example below enumerates all source files without test files and without checksu
 <span class="p">)</span>
 
 <span class="k">for</span> <span class="n">file_info</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_info</span><span class="o">.</span><span class="n">relative_path</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">file_info</span><span class="o">.</span><span class="n">language</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Size: </span><span class="si">{</span><span class="n">file_info</span><span class="o">.</span><span class="n">size_bytes</span><span class="si">}</span><span class="s2"> bytes&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file_info</span><span class="o">.</span><span class="n">relative_path</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">file_info</span><span class="o">.</span><span class="n">language</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Size: </span><span class="si">{</span><span class="n">file_info</span><span class="o">.</span><span class="n">size_bytes</span><span class="si">}</span><span class="s2"> bytes"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">file_info</span><span class="o">.</span><span class="n">checksum</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Checksum: </span><span class="si">{</span><span class="n">file_info</span><span class="o">.</span><span class="n">checksum</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Checksum: </span><span class="si">{</span><span class="n">file_info</span><span class="o">.</span><span class="n">checksum</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <h5 id="extension-recognition">Extension recognition:</h5>
 <p><code>LANGUAGE_EXTENSIONS</code> in <code>cogant.ingest.files</code> maps the following extensions to
@@ -12630,7 +12630,7 @@ classified but not parsed into the program graph.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">ManifestParser</span><span class="p">()</span>
-<span class="n">metadata</span><span class="p">,</span> <span class="n">dependencies</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_repo</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;path/to/repo&quot;</span><span class="p">))</span>
+<span class="n">metadata</span><span class="p">,</span> <span class="n">dependencies</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_repo</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"path/to/repo"</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">dependencies</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
 </code></pre></div>
@@ -12692,7 +12692,7 @@ classified but not parsed into the program graph.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11065,14 +11065,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12671,21 +12671,21 @@
 </code></pre></div>
 <h3 id="2-initialize-each-package">2. Initialize each package</h3>
 <div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span>pkg<span class="w"> </span><span class="k">in</span><span class="w"> </span>./monorepo/packages/*/<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span>cogant<span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$pkg</span><span class="s2">&quot;</span><span class="w"> </span>--quiet
+<span class="w">  </span>cogant<span class="w"> </span>init<span class="w"> </span><span class="s2">"</span><span class="nv">$pkg</span><span class="s2">"</span><span class="w"> </span>--quiet
 <span class="k">done</span>
 </code></pre></div>
 <h3 id="3-translate-each-package-independently">3. Translate each package independently</h3>
 <div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span>pkg<span class="w"> </span><span class="k">in</span><span class="w"> </span>./monorepo/packages/*/<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$pkg</span><span class="s2">&quot;</span><span class="k">)</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;--- Translating </span><span class="nv">$name</span><span class="s2"> ---&quot;</span>
-<span class="w">  </span>cogant<span class="w"> </span>translate<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$pkg</span><span class="s2">&quot;</span><span class="w"> </span>--output<span class="w"> </span><span class="s2">&quot;./output/</span><span class="nv">$name</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">"</span><span class="nv">$pkg</span><span class="s2">"</span><span class="k">)</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"--- Translating </span><span class="nv">$name</span><span class="s2"> ---"</span>
+<span class="w">  </span>cogant<span class="w"> </span>translate<span class="w"> </span><span class="s2">"</span><span class="nv">$pkg</span><span class="s2">"</span><span class="w"> </span>--output<span class="w"> </span><span class="s2">"./output/</span><span class="nv">$name</span><span class="s2">"</span>
 <span class="k">done</span>
 </code></pre></div>
 <p>Each package gets its own output directory with a separate <code>bundle.json</code>.</p>
 <h3 id="4-validate-all-outputs">4. Validate all outputs</h3>
 <div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span>dir<span class="w"> </span><span class="k">in</span><span class="w"> </span>./output/*/<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;--- Validating </span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dir</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2"> ---&quot;</span>
-<span class="w">  </span>cogant<span class="w"> </span>validate<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dir</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"--- Validating </span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">"</span><span class="nv">$dir</span><span class="s2">"</span><span class="k">)</span><span class="s2"> ---"</span>
+<span class="w">  </span>cogant<span class="w"> </span>validate<span class="w"> </span><span class="s2">"</span><span class="nv">$dir</span><span class="s2">"</span>
 <span class="k">done</span>
 </code></pre></div>
 <h3 id="5-compare-packages-pairwise-optional">5. Compare packages pairwise (optional)</h3>
@@ -12776,7 +12776,7 @@ which is useful for detecting shared patterns or drift across services.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11026,14 +11026,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12617,11 +12617,11 @@ preserved GNN sections, and generated-code success.</p>
 <tbody>
 <tr>
 <td>Targets</td>
-<td style="text-align: right;">25</td>
+<td style="text-align: right;">24</td>
 </tr>
 <tr>
 <td>ROLE_PRESERVED</td>
-<td style="text-align: right;">25</td>
+<td style="text-align: right;">24</td>
 </tr>
 <tr>
 <td>DRIFT</td>
@@ -12633,18 +12633,17 @@ preserved GNN sections, and generated-code success.</p>
 </tr>
 <tr>
 <td>Strict structural isomorphism</td>
-<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 </tr>
 <tr>
 <td>Mean role-preservation score</td>
-<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.9819</td>
 </tr>
 </tbody>
 </table>
-<p>The single strict row is <code>roundtrip_strict_minimal</code>, a deliberately tiny
-hand-authored reversible subset with one state carrier, one observation reader,
-and one action mutator. It demonstrates the invariant bar; ordinary application
-fixtures remain role-preserved but not strictly structurally isomorphic.</p>
+<p>No current ledger row meets the strict structural-isomorphism contract.
+Role-preservation scores below 1.0 reflect differences in role counts even when
+the public threshold is met.</p>
 <h2 id="validation-procedure">Validation Procedure</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>cogant
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>../tools/regenerate_roundtrip_ledger.py
@@ -12666,7 +12665,7 @@ and fails if <code>METRICS.yaml</code> reports incompatible values.</p>
 <p>Roundtrip validation is evidence for role-population preservation on the measured
 fixtures. It is not evidence for arbitrary-program semantic equivalence,
 reference-device runtime behavior, calibrated probabilities, or strict graph
-identity outside the explicitly strict minimal fixture.</p>
+identity on the current fixture set.</p>
 <h2 id="required-extensions">Required Extensions</h2>
 <ul>
 <li>Promote the existing held-out pilot into a frozen metrics/claim pipeline selected before any further rule changes.</li>
@@ -12733,7 +12732,7 @@ identity outside the explicitly strict minimal fixture.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

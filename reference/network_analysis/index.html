@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11196,14 +11196,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12918,42 +12918,42 @@
 <h4 id="compute_metrics">compute_metrics()</h4>
 <p>Compute overall graph metrics.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphMetrics</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Compute overall graph metrics.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        GraphMetrics with computed values</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div>
 <p><strong>GraphMetrics:</strong>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">GraphMetrics</span><span class="p">:</span>
     <span class="n">node_count</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of nodes in the graph.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of nodes in the graph."""</span>
 
     <span class="n">edge_count</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of edges in the graph.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of edges in the graph."""</span>
 
     <span class="n">density</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Graph density: actual_edges / possible_edges. Range [0, 1].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Graph density: actual_edges / possible_edges. Range [0, 1]."""</span>
 
     <span class="n">avg_degree</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Average degree (in + out) per node.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Average degree (in + out) per node."""</span>
 
     <span class="n">max_degree</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum degree of any node.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Maximum degree of any node."""</span>
 
     <span class="n">connected_components</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of connected components.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of connected components."""</span>
 
     <span class="n">is_dag</span><span class="p">:</span> <span class="nb">bool</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;True if the graph is acyclic (directed acyclic graph).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""True if the graph is acyclic (directed acyclic graph)."""</span>
 
     <span class="n">diameter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diameter of graph if connected, None if disconnected.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Diameter of graph if connected, None if disconnected."""</span>
 
     <span class="n">clustering_coefficient</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Average clustering coefficient. Range [0, 1].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Average clustering coefficient. Range [0, 1]."""</span>
 </code></pre></div></p>
 <p><strong>Interpretation:</strong>
 - <strong>Density</strong> [0, 1]: Higher = more interconnected
@@ -12968,41 +12968,41 @@
 <h4 id="compute_centrality">compute_centrality()</h4>
 <p>Compute per-node centrality scores using multiple algorithms.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compute_centrality</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CentralityScores</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Compute centrality scores for all nodes.</span>
 
 <span class="sd">    Uses betweenness, degree, PageRank, and closeness algorithms.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        CentralityScores with per-node scores</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div>
 <p><strong>CentralityScores:</strong>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CentralityScores</span><span class="p">:</span>
     <span class="n">betweenness_centrality</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;How often a node lies on shortest paths. Range [0, 1].</span>
+<span class="w">    </span><span class="sd">"""How often a node lies on shortest paths. Range [0, 1].</span>
 
 <span class="sd">    High score = node is a critical bridge/bottleneck.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">degree_centrality</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Degree normalized by max possible. Range [0, 1].</span>
+<span class="w">    </span><span class="sd">"""Degree normalized by max possible. Range [0, 1].</span>
 
 <span class="sd">    High score = node is a hub (many connections).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">pagerank</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;PageRank score (importance based on incoming edges). Range [0, 1].</span>
+<span class="w">    </span><span class="sd">"""PageRank score (importance based on incoming edges). Range [0, 1].</span>
 
 <span class="sd">    High score = node is important in the graph structure.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">closeness_centrality</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inverse of average distance to all other nodes. Range [0, 1].</span>
+<span class="w">    </span><span class="sd">"""Inverse of average distance to all other nodes. Range [0, 1].</span>
 
 <span class="sd">    High score = node is central (few hops to reach others).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div></p>
 <p><strong>Centrality Interpretation:</strong>
 | Metric | High Score Means | Low Score Means |
@@ -13014,32 +13014,32 @@
 <h4 id="detect_cycles">detect_cycles()</h4>
 <p>Detect cycles using Tarjan's strongly connected components algorithm.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">detect_cycles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CycleDetection</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Detect cycles in the graph.</span>
 
-<span class="sd">    Uses Tarjan&#39;s algorithm for strongly connected components (O(V+E)).</span>
+<span class="sd">    Uses Tarjan's algorithm for strongly connected components (O(V+E)).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        CycleDetection with cycles and SCCs</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div>
 <p><strong>CycleDetection:</strong>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CycleDetection</span><span class="p">:</span>
     <span class="n">has_cycles</span><span class="p">:</span> <span class="nb">bool</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;True if any cycle exists in the graph.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""True if any cycle exists in the graph."""</span>
 
     <span class="n">cycles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;List of cycles (each cycle is a list of node IDs).</span>
+<span class="w">    </span><span class="sd">"""List of cycles (each cycle is a list of node IDs).</span>
 
-<span class="sd">    Example: [[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;A&#39;], [&#39;D&#39;, &#39;E&#39;, &#39;D&#39;]]</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    Example: [['A', 'B', 'C', 'A'], ['D', 'E', 'D']]</span>
+<span class="sd">    """</span>
 
     <span class="n">strongly_connected_components</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Strongly connected components (Tarjan&#39;s algorithm).</span>
+<span class="w">    </span><span class="sd">"""Strongly connected components (Tarjan's algorithm).</span>
 
 <span class="sd">    Each component is a set of nodes reachable from each other.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div></p>
 <p><strong>Interpretation:</strong>
 - <strong>has_cycles = True</strong>: Graph contains one or more cycles (not a DAG)
@@ -13052,7 +13052,7 @@
 <h4 id="detect_communities">detect_communities()</h4>
 <p>Detect communities (clusters) in the graph using Louvain algorithm (if NetworkX available).</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">detect_communities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Detect communities in the graph.</span>
 
 <span class="sd">    Uses Louvain algorithm (if NetworkX available).</span>
@@ -13063,7 +13063,7 @@
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ImportError: If NetworkX unavailable and no fallback available</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div>
 <p><strong>Interpretation:</strong>
 - Communities are clusters of densely-connected nodes
@@ -13077,7 +13077,7 @@
     <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PathAnalysis</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Analyze paths from source to target node.</span>
 
 <span class="sd">    Args:</span>
@@ -13087,28 +13087,28 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        PathAnalysis with shortest path, all paths, critical path</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div>
 <p><strong>PathAnalysis:</strong>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">PathAnalysis</span><span class="p">:</span>
     <span class="n">shortest_path</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shortest path from source to target, or None if no path.</span>
+<span class="w">    </span><span class="sd">"""Shortest path from source to target, or None if no path.</span>
 
-<span class="sd">    Example: [&#39;main&#39;, &#39;process&#39;, &#39;validate&#39;, &#39;error_handler&#39;]</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    Example: ['main', 'process', 'validate', 'error_handler']</span>
+<span class="sd">    """</span>
 
     <span class="n">all_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;All paths from source to target (up to max_depth).</span>
+<span class="w">    </span><span class="sd">"""All paths from source to target (up to max_depth).</span>
 
 <span class="sd">    Limited to prevent exponential blowup.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">critical_path</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Longest path in a DAG (if graph is acyclic).</span>
+<span class="w">    </span><span class="sd">"""Longest path in a DAG (if graph is acyclic).</span>
 
 <span class="sd">    Indicates critical path in project (longest chain of dependencies).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div></p>
 <p><strong>Interpretation:</strong>
 - <strong>shortest_path</strong>: Minimum hops from A to B (e.g., coupling strength)
@@ -13117,7 +13117,7 @@
 <h4 id="find_hotspots">find_hotspots()</h4>
 <p>Identify hotspots: hubs, bottlenecks, sources, sinks.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">find_hotspots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HotspotAnalysis</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Identify hotspots in the graph.</span>
 
 <span class="sd">    Hubs = high-degree nodes (many connections)</span>
@@ -13127,34 +13127,34 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        HotspotAnalysis with hotspots</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div>
 <p><strong>HotspotAnalysis:</strong>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">HotspotAnalysis</span><span class="p">:</span>
     <span class="n">hubs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Highest-degree nodes: (node_id, degree).</span>
+<span class="w">    </span><span class="sd">"""Highest-degree nodes: (node_id, degree).</span>
 
 <span class="sd">    Hubs are central coordination points; changes here affect many others.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">bottlenecks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Highest betweenness nodes: (node_id, centrality).</span>
+<span class="w">    </span><span class="sd">"""Highest betweenness nodes: (node_id, centrality).</span>
 
 <span class="sd">    Bottlenecks are critical paths; many dependencies flow through.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">sinks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Nodes with no outgoing edges.</span>
+<span class="w">    </span><span class="sd">"""Nodes with no outgoing edges.</span>
 
 <span class="sd">    Sinks are leaf modules; low-level utilities or endpoints.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">sources</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Nodes with no incoming edges.</span>
+<span class="w">    </span><span class="sd">"""Nodes with no incoming edges.</span>
 
 <span class="sd">    Sources are entry points; top-level drivers or main functions.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 </code></pre></div></p>
 <p><strong>Interpretation:</strong>
 - <strong>Hubs</strong>: High-priority for refactoring/testing (changes affect many)
@@ -13172,62 +13172,62 @@
     <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)[:</span><span class="mi">5</span><span class="p">]</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Top 5 important nodes:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Top 5 important nodes:"</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">top_nodes</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="find-bottleneck-nodes">Find Bottleneck Nodes</h3>
 <div class="highlight"><pre><span></span><code><span class="n">hotspots</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">find_hotspots</span><span class="p">()</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bottleneck nodes (high betweenness):&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Bottleneck nodes (high betweenness):"</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">hotspots</span><span class="o">.</span><span class="n">bottlenecks</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="analyze-circular-dependencies">Analyze Circular Dependencies</h3>
 <div class="highlight"><pre><span></span><code><span class="n">cycles</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">detect_cycles</span><span class="p">()</span>
 
 <span class="k">if</span> <span class="n">cycles</span><span class="o">.</span><span class="n">has_cycles</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cycles</span><span class="o">.</span><span class="n">cycles</span><span class="p">)</span><span class="si">}</span><span class="s2"> cycles:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cycles</span><span class="o">.</span><span class="n">cycles</span><span class="p">)</span><span class="si">}</span><span class="s2"> cycles:"</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">cycle</span> <span class="ow">in</span> <span class="n">cycles</span><span class="o">.</span><span class="n">cycles</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="s1">&#39; → &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">cycle</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">' → '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">cycle</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Graph is acyclic (DAG)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Graph is acyclic (DAG)"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="find-path-between-two-modules">Find Path Between Two Modules</h3>
-<div class="highlight"><pre><span></span><code><span class="n">paths</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_paths</span><span class="p">(</span><span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="s2">&quot;database.query&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">paths</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_paths</span><span class="p">(</span><span class="s2">"main"</span><span class="p">,</span> <span class="s2">"database.query"</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="n">paths</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shortest path (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">)</span><span class="si">}</span><span class="s2"> hops):&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="s1">&#39; → &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Shortest path (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">)</span><span class="si">}</span><span class="s2"> hops):"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">' → '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No path found&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"No path found"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="find-communities-subsystems">Find Communities (Subsystems)</h3>
 <div class="highlight"><pre><span></span><code><span class="n">communities</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">detect_communities</span><span class="p">()</span>
 
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">community</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">communities</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Community </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Community </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes"</span><span class="p">)</span>
     <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">nid</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">community</span> <span class="k">if</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="identify-critical-subsystems">Identify Critical Subsystems</h3>
 <div class="highlight"><pre><span></span><code><span class="n">metrics</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">()</span>
 <span class="n">centrality</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">compute_centrality</span><span class="p">()</span>
 <span class="n">hotspots</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">find_hotspots</span><span class="p">()</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Graph density: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">density</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (sparse=</span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">density</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.1</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of components: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">connected_components</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Is acyclic: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">is_dag</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Graph density: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">density</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (sparse=</span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">density</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.1</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Number of components: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">connected_components</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Is acyclic: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">is_dag</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Critical hubs (high degree):&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Critical hubs (high degree):"</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">degree</span> <span class="ow">in</span> <span class="n">hotspots</span><span class="o">.</span><span class="n">hubs</span><span class="p">[:</span><span class="mi">3</span><span class="p">]:</span>
     <span class="n">node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">degree</span><span class="si">}</span><span class="s2"> connections&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">degree</span><span class="si">}</span><span class="s2"> connections"</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Critical bottlenecks (high betweenness):&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Critical bottlenecks (high betweenness):"</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">hotspots</span><span class="o">.</span><span class="n">bottlenecks</span><span class="p">[:</span><span class="mi">3</span><span class="p">]:</span>
     <span class="n">node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="performance-notes">Performance Notes</h2>
 <table>
@@ -13342,7 +13342,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

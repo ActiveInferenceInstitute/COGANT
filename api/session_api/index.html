@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11039,14 +11039,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12614,65 +12614,65 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">cogant</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
 
 <span class="c1"># From local path</span>
-<span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">from_target</span><span class="p">(</span><span class="s2">&quot;./my_repo&quot;</span><span class="p">)</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">from_target</span><span class="p">(</span><span class="s2">"./my_repo"</span><span class="p">)</span>
 
 <span class="c1"># From URL</span>
-<span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">from_target</span><span class="p">(</span><span class="s2">&quot;https://github.com/user/repo&quot;</span><span class="p">)</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">from_target</span><span class="p">(</span><span class="s2">"https://github.com/user/repo"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="extracting-analysis">Extracting Analysis</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Static analysis: ingest summary + per-module parse stats</span>
 <span class="n">syntax_tree</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">extract_static</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;syntax_tree&quot;,</span>
-<span class="c1">#   &quot;target&quot;: &quot;...&quot;,</span>
-<span class="c1">#   &quot;ingest&quot;: {&quot;file_count&quot;: ..., &quot;language_distribution&quot;: {...}, ...},</span>
-<span class="c1">#   &quot;modules&quot;: [...],</span>
-<span class="c1">#   &quot;symbols&quot;: {&quot;python_modules_parsed&quot;: N},</span>
-<span class="c1">#   &quot;nodes&quot;: [], &quot;edges&quot;: []  # reserved; graph lives on build_graph()</span>
+<span class="c1">#   "type": "syntax_tree",</span>
+<span class="c1">#   "target": "...",</span>
+<span class="c1">#   "ingest": {"file_count": ..., "language_distribution": {...}, ...},</span>
+<span class="c1">#   "modules": [...],</span>
+<span class="c1">#   "symbols": {"python_modules_parsed": N},</span>
+<span class="c1">#   "nodes": [], "edges": []  # reserved; graph lives on build_graph()</span>
 <span class="c1"># }</span>
 
 <span class="c1"># Dynamic analysis: traces, coverage</span>
 <span class="n">trace_bundle</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">extract_dynamic</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;trace_bundle&quot;,</span>
-<span class="c1">#   &quot;traces&quot;: [...],</span>
-<span class="c1">#   &quot;coverage&quot;: {...}</span>
+<span class="c1">#   "type": "trace_bundle",</span>
+<span class="c1">#   "traces": [...],</span>
+<span class="c1">#   "coverage": {...}</span>
 <span class="c1"># }</span>
 </code></pre></div>
 <h3 id="building-program-graph">Building Program Graph</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Build from static analysis</span>
 <span class="n">program_graph</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">build_graph</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;program_graph&quot;,</span>
-<span class="c1">#   &quot;nodes&quot;: [...],</span>
-<span class="c1">#   &quot;edges&quot;: [...],</span>
-<span class="c1">#   &quot;metadata&quot;: {...}</span>
+<span class="c1">#   "type": "program_graph",</span>
+<span class="c1">#   "nodes": [...],</span>
+<span class="c1">#   "edges": [...],</span>
+<span class="c1">#   "metadata": {...}</span>
 <span class="c1"># }</span>
 </code></pre></div>
 <h3 id="translating-to-gnn">Translating to GNN</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Convert to GNN representation</span>
 <span class="n">gnn_model</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">translate_to_gnn</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;gnn_model&quot;,</span>
-<span class="c1">#   &quot;nodes&quot;: [...],</span>
-<span class="c1">#   &quot;edges&quot;: [...],</span>
-<span class="c1">#   &quot;features&quot;: {...}</span>
+<span class="c1">#   "type": "gnn_model",</span>
+<span class="c1">#   "nodes": [...],</span>
+<span class="c1">#   "edges": [...],</span>
+<span class="c1">#   "features": {...}</span>
 <span class="c1"># }</span>
 </code></pre></div>
 <h3 id="compiling-state-space">Compiling State Space</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Extract semantic state space</span>
 <span class="n">state_space</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">compile_state_space</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;state_space_model&quot;,</span>
-<span class="c1">#   &quot;states&quot;: [...],</span>
-<span class="c1">#   &quot;observations&quot;: [...],</span>
-<span class="c1">#   &quot;actions&quot;: [...],</span>
-<span class="c1">#   &quot;policies&quot;: [...]</span>
+<span class="c1">#   "type": "state_space_model",</span>
+<span class="c1">#   "states": [...],</span>
+<span class="c1">#   "observations": [...],</span>
+<span class="c1">#   "actions": [...],</span>
+<span class="c1">#   "policies": [...]</span>
 <span class="c1"># }</span>
 </code></pre></div>
 <h3 id="exporting-results">Exporting Results</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Export all artifacts to directory</span>
-<span class="n">session</span><span class="o">.</span><span class="n">export_all</span><span class="p">(</span><span class="s2">&quot;output/&quot;</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">export_all</span><span class="p">(</span><span class="s2">"output/"</span><span class="p">)</span>
 
 <span class="c1"># Results are written as JSON:</span>
 <span class="c1"># - output/syntax_tree.json</span>
@@ -12738,7 +12738,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

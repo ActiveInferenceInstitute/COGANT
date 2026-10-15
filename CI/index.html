@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10908,14 +10908,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12525,12 +12525,14 @@ anchor checker separately when editing documentation:</p>
 <h2 id="github-pages-deployment">GitHub Pages deployment</h2>
 <p>On pushes to <code>main</code>, after a successful <code>CI</code> workflow, or through manual dispatch,
 <code>.github/workflows/docs.yml</code> installs the dev dependencies, runs <code>uv run mkdocs build</code>,
-and deploys <code>site/</code> with <code>peaceiris/actions-gh-pages@v4</code>. The job uses
-<code>actions/checkout@v5</code>, <code>actions/setup-python@v6</code>, and <code>astral-sh/setup-uv@v8.1.0</code>.
-It grants <code>contents: write</code> because the action publishes the generated site to the
-<code>gh-pages</code> branch. The workflow also sets
-<code>FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true</code> while the deployment action has not yet
-published a Node 24 release.</p>
+and deploys <code>site/</code> with <code>peaceiris/actions-gh-pages@v4</code> (which resolves to a
+Node 24 release, so no runtime override is needed). The job uses
+<code>actions/checkout@v7</code>, <code>actions/setup-python@v7</code>, and <code>astral-sh/setup-uv@v10.3.0</code>.
+The workflow defaults to <code>contents: read</code>; only the deploy job grants
+<code>contents: write</code>, because the action publishes the generated site to the
+<code>gh-pages</code> branch. Deploys are serialized with a job-level
+<code>concurrency: docs-deploy</code> group so overlapping <code>push</code> and post-CI
+<code>workflow_run</code> runs never race each other.</p>
 <p>For the exact triggers, paths, permissions, and deployment settings, treat the
 workflow file as authoritative rather than copying an independent workflow snippet.</p>
 
@@ -12591,7 +12593,7 @@ workflow file as authoritative rather than copying an independent workflow snipp
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

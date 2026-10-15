@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11109,14 +11109,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12748,11 +12748,11 @@
 <p>GNN stands for <strong>Generalized Notation Notation</strong> -- a structured markdown format created by the Active Inference Institute for describing Active Inference state-space models. It is not "graph neural networks." This distinction matters because the entire COGANT pipeline produces GNN files as its primary output, and reading them correctly is the key to understanding what COGANT has learned about your codebase.</p>
 <h2 id="the-purpose-of-gnn">The purpose of GNN</h2>
 <p>A GNN file is a self-contained description of a generative model. It tells you: what hidden states exist, what observations the system can make, what actions it can take, how states transition given actions, how observations relate to hidden states, and what the system prefers. In COGANT's case, the "system" is your codebase and the generative model is derived from static analysis of your source code.</p>
-<p>The format is a markdown file with specific <code>##</code> section headers that parsers and type-checkers recognize. COGANT now targets the upstream GNN v2.0.0 engine carried by the pinned GeneralizedNotationNotation v2.0.0 release bundle while also appending extended sections for provenance, Markov blankets, and confidence metrics.</p>
+<p>The format is a markdown file with specific <code>##</code> section headers that parsers and type-checkers recognize. COGANT emits the upstream-required header sections, checked against the optional, commit-pinned <code>generalized-notation-notation</code> reference implementation (GNN 4.1.0 release line; <code>validate_gnn_syntax</code> at the <code>standard</code> and <code>strict</code> levels), while also appending extended sections for provenance, Markov blankets, and confidence metrics.</p>
 <h2 id="anatomy-of-a-gnn-file">Anatomy of a GNN file</h2>
 <p>A GNN file emitted by COGANT contains these sections in canonical order:</p>
 <h3 id="gnnsection-and-gnnversionandflags">GNNSection and GNNVersionAndFlags</h3>
-<p>The header block that identifies the file as a GNN model and declares the version. COGANT emits <code>GNN v2.0.0</code> with a bundle provenance comment so the upstream checker and COGANT's own validator agree on the required header surface.</p>
+<p>The header block that identifies the file as a GNN model and declares the version. COGANT emits <code>GNN v2.0.0</code> — COGANT's own schema identifier (<code>cogant.schema.versions.CURRENT_GNN_VERSION</code>), independent of the upstream package release — so the upstream checker and COGANT's own validator agree on the required header surface.</p>
 <h3 id="modelname-and-modelannotation">ModelName and ModelAnnotation</h3>
 <p>Human-readable name and description. COGANT fills these from the repository name and commit hash.</p>
 <h3 id="statespaceblock">StateSpaceBlock</h3>
@@ -12832,18 +12832,18 @@ connection evidence or explanatory provenance.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.gnn.runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_gnn_package</span>
 
-<span class="n">package_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;output/my_project/gnn_package&quot;</span><span class="p">)</span>
+<span class="n">package_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"output/my_project/gnn_package"</span><span class="p">)</span>
 <span class="n">gnn</span> <span class="o">=</span> <span class="n">load_gnn_package</span><span class="p">(</span><span class="n">package_dir</span><span class="p">)</span>
 
-<span class="c1"># Enumerate the model&#39;s variables</span>
+<span class="c1"># Enumerate the model's variables</span>
 <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hidden state: </span><span class="si">{</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">var</span><span class="o">.</span><span class="n">var_type</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Hidden state: </span><span class="si">{</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">var</span><span class="o">.</span><span class="n">var_type</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Observation: </span><span class="si">{</span><span class="n">obs</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Observation: </span><span class="si">{</span><span class="n">obs</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">act</span> <span class="ow">in</span> <span class="n">gnn</span><span class="o">.</span><span class="n">state_space</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Action: </span><span class="si">{</span><span class="n">act</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Action: </span><span class="si">{</span><span class="n">act</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <p>The package directory contains <code>model.gnn.md</code> (the human-readable GNN), <code>model.gnn.json</code> (the machine-readable version), and satellite files for matrices, provenance, and the <a href="../markov_blanket/">Markov blanket</a> partition.</p>
 <h2 id="a-concrete-example">A concrete example</h2>
@@ -12891,7 +12891,7 @@ connection evidence or explanatory provenance.</p>
 <td><code>load_gnn_package</code></td>
 </tr>
 <tr>
-<td>GNN v2.0.0-engine conformance + 0–100 score</td>
+<td>GNN v2.0.0 schema conformance + 0–100 score</td>
 <td><code>gnn/validator.py</code></td>
 <td><a href="../../api/gnn/#validator"><code>cogant.gnn</code> → Validator</a></td>
 <td><code>GNNValidator</code></td>
@@ -12977,7 +12977,7 @@ connection evidence or explanatory provenance.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

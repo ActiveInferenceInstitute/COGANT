@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11037,14 +11037,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12636,17 +12636,17 @@ smallest fixture that exercises the behavioral and resilience rule families.</p>
 </code></pre></div>
 <p>This runs only up through the graph stage (skipping translation, state-space, and export). Peek
 at the shape of the graph:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">g = json.load(open(&#39;output/event_pipeline_graph.json&#39;))</span>
-<span class="s2">stats = g[&#39;statistics&#39;]</span>
-<span class="s2">print(f\&quot;nodes: {stats[&#39;total_nodes&#39;]}\&quot;)</span>
-<span class="s2">print(f\&quot;edges: {stats[&#39;total_edges&#39;]}\&quot;)</span>
-<span class="s2">for k, v in stats[&#39;node_kinds&#39;].items():</span>
-<span class="s2">    print(f\&quot;  {k}: {v}\&quot;)</span>
-<span class="s2">for k, v in stats[&#39;edge_kinds&#39;].items():</span>
-<span class="s2">    print(f\&quot;  {k}: {v}\&quot;)</span>
-<span class="s2">&quot;</span>
+<span class="s2">g = json.load(open('output/event_pipeline_graph.json'))</span>
+<span class="s2">stats = g['statistics']</span>
+<span class="s2">print(f\"nodes: {stats['total_nodes']}\")</span>
+<span class="s2">print(f\"edges: {stats['total_edges']}\")</span>
+<span class="s2">for k, v in stats['node_kinds'].items():</span>
+<span class="s2">    print(f\"  {k}: {v}\")</span>
+<span class="s2">for k, v in stats['edge_kinds'].items():</span>
+<span class="s2">    print(f\"  {k}: {v}\")</span>
+<span class="s2">"</span>
 </code></pre></div>
 <p>You should see something close to:</p>
 <div class="highlight"><pre><span></span><code>nodes: 23
@@ -12668,12 +12668,12 @@ edges: 52
 </code></pre></div>
 <p>The <code>bundle.json</code> exposes a <code>stages</code> dict with one entry per stage. Each stage has a <code>status</code>,
 a <code>duration_ms</code>, and stage-specific artifacts. Print the stage summary:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">data = json.load(open(&#39;output/event_pipeline/bundle.json&#39;))</span>
-<span class="s2">for name, stage in data[&#39;stages&#39;].items():</span>
-<span class="s2">    print(f\&quot;{name:12s} {stage[&#39;status&#39;]:8s} {stage[&#39;duration_ms&#39;]:&gt;6d} ms\&quot;)</span>
-<span class="s2">&quot;</span>
+<span class="s2">data = json.load(open('output/event_pipeline/bundle.json'))</span>
+<span class="s2">for name, stage in data['stages'].items():</span>
+<span class="s2">    print(f\"{name:12s} {stage['status']:8s} {stage['duration_ms']:&gt;6d} ms\")</span>
+<span class="s2">"</span>
 </code></pre></div>
 <p>Expected shape:</p>
 <div class="highlight"><pre><span></span><code>ingest       ok             25 ms
@@ -12688,13 +12688,13 @@ validate     ok             30 ms
 </code></pre></div>
 <h2 id="4-tie-each-mapping-back-to-its-rule">4. Tie each mapping back to its rule</h2>
 <p>The <code>translate</code> stage records which rule fired on each node:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <span class="s2">import json</span>
-<span class="s2">data = json.load(open(&#39;output/event_pipeline/bundle.json&#39;))</span>
-<span class="s2">mappings = data[&#39;stages&#39;][&#39;translate&#39;][&#39;mappings&#39;]</span>
+<span class="s2">data = json.load(open('output/event_pipeline/bundle.json'))</span>
+<span class="s2">mappings = data['stages']['translate']['mappings']</span>
 <span class="s2">for m in mappings:</span>
-<span class="s2">    print(f\&quot;{m[&#39;rule_id&#39;]:28s} {m[&#39;kind&#39;]:12s} {m[&#39;qualified_name&#39;]}\&quot;)</span>
-<span class="s2">&quot;</span>
+<span class="s2">    print(f\"{m['rule_id']:28s} {m['kind']:12s} {m['qualified_name']}\")</span>
+<span class="s2">"</span>
 </code></pre></div>
 <p>Expected role distribution on <code>event_pipeline</code> (from
 <code>../evaluation/figures/metrics.json</code>, 2026-04-09 run):</p>
@@ -12858,7 +12858,7 @@ whole graph — exactly the counter-intuitive but correct behavior explained in
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

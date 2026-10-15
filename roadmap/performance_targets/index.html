@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10910,14 +10910,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -11621,10 +11621,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#test-coverage-targets" class="md-nav__link">
+  <a href="#historical-coverage-snapshot-and-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Test Coverage Targets
+        Historical Coverage Snapshot and Targets
       
     </span>
   </a>
@@ -12598,10 +12598,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#test-coverage-targets" class="md-nav__link">
+  <a href="#historical-coverage-snapshot-and-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Test Coverage Targets
+        Historical Coverage Snapshot and Targets
       
     </span>
   </a>
@@ -12629,8 +12629,8 @@
 
 
 <h1 id="performance-targets">Performance Targets</h1>
-<p>Last updated: 2026-06-06 (v0.6 current status). Measured values from <code>evaluation/METRICS.yaml</code>
-and the Flask benchmark (<code>cogant translate --incremental</code>).</p>
+<p>Last updated: 2026-10-15 (v0.7 current status). Current roundtrip values come from
+<code>evaluation/METRICS.yaml</code>; older performance measurements retain their stated limits.</p>
 <hr />
 <h2 id="measured-baselines">Measured Baselines</h2>
 <table>
@@ -12644,18 +12644,18 @@ and the Flask benchmark (<code>cogant translate --incremental</code>).</p>
 <tbody>
 <tr>
 <td>Flask app — no-change incremental</td>
-<td><strong>19.6× speedup</strong></td>
-<td>Re-uses previous ProgramGraph</td>
+<td>Cache reuse verified</td>
+<td>Historical speedup ratios are withdrawn pending a controlled benchmark</td>
 </tr>
 <tr>
 <td>Flask app — single-file change</td>
-<td><strong>5.6× speedup</strong></td>
-<td>Only changed paths re-analyzed</td>
+<td>Full snapshot re-analysed</td>
+<td>The former partial-analysis speedup dropped unchanged files and was withdrawn</td>
 </tr>
 <tr>
-<td>Roundtrip ledger classification (25 fixtures/reductions)</td>
-<td><strong>25 ROLE_PRESERVED / 0 DRIFT / 0 non-native rows</strong></td>
-<td>Current native ledger; strict structural isomorphism is 1/25 and confined to <code>roundtrip_strict_minimal</code></td>
+<td>Roundtrip ledger classification (24 fixtures/reductions)</td>
+<td><strong>24 ROLE_PRESERVED / 0 DRIFT / 0 non-native rows</strong></td>
+<td>Current native ledger; strict structural isomorphism is 0/24</td>
 </tr>
 <tr>
 <td>AII validator score (all fixtures)</td>
@@ -12862,12 +12862,14 @@ suite as a regression watch item.</p>
 <p><strong>Target fix:</strong> Streaming graph construction + alias analysis reduces e/n ratio (v0.6.x); parallel
 processing reduces wall clock (v1.0).</p>
 <hr />
-<h2 id="test-coverage-targets">Test Coverage Targets</h2>
+<h2 id="historical-coverage-snapshot-and-targets">Historical Coverage Snapshot and Targets</h2>
+<p>The component estimates below are historical planning values. Current aggregate
+coverage is <strong>94.54%</strong>; see <code>METRICS.yaml</code> and the generated coverage report.</p>
 <table>
 <thead>
 <tr>
 <th>Component</th>
-<th>current Actual</th>
+<th>Historical estimate</th>
 <th>v0.6.x Target</th>
 <th>v1.0 Target</th>
 </tr>
@@ -12982,7 +12984,7 @@ processing reduces wall clock (v1.0).</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

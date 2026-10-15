@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11196,14 +11196,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -13051,11 +13051,11 @@ ComplexityReport  CouplingReport        DeadCodeReport      CodeMetrics
 
 <span class="c1"># Node metadata includes complexity, coupling, metrics</span>
 <span class="n">node</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;cyclomatic_complexity&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-    <span class="s1">&#39;cognitive_complexity&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-    <span class="s1">&#39;instability&#39;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
-    <span class="s1">&#39;lines_of_code&#39;</span><span class="p">:</span> <span class="mi">45</span><span class="p">,</span>
-    <span class="s1">&#39;docstring_coverage&#39;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+    <span class="s1">'cyclomatic_complexity'</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="s1">'cognitive_complexity'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s1">'instability'</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+    <span class="s1">'lines_of_code'</span><span class="p">:</span> <span class="mi">45</span><span class="p">,</span>
+    <span class="s1">'docstring_coverage'</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
 <span class="p">}</span>
 </code></pre></div>
 <h2 id="error-handling">Error Handling</h2>
@@ -13063,7 +13063,7 @@ ComplexityReport  CouplingReport        DeadCodeReport      CodeMetrics
 <div class="highlight"><pre><span></span><code><span class="n">report</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analysis error in </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Analysis error in </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="c1"># Results are **still usable** (partial) even with errors</span>
 <span class="c1"># Example: syntax error prevents type inference, but complexity still computed</span>
@@ -13162,7 +13162,7 @@ ComplexityReport  CouplingReport        DeadCodeReport      CodeMetrics
 <span class="k">class</span><span class="w"> </span><span class="nc">SecurityFinding</span><span class="p">:</span>
     <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">location</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
-    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &#39;high&#39;, &#39;medium&#39;, &#39;low&#39;</span>
+    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># 'high', 'medium', 'low'</span>
     <span class="n">confidence</span><span class="p">:</span> <span class="nb">float</span>
 
 <span class="nd">@dataclass</span>
@@ -13260,7 +13260,7 @@ ComplexityReport  CouplingReport        DeadCodeReport      CodeMetrics
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

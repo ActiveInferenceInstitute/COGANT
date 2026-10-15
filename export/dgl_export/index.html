@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10995,14 +10995,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12527,16 +12527,16 @@
 <span class="n">g</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
 
 <span class="c1"># Node features</span>
-<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_kinds</span>
-<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_roles</span>
-<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">&#39;confidence&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">confidences</span>
-<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">&#39;features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_features</span>
-<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">&#39;names&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_names</span>
+<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_kinds</span>
+<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">'role'</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_roles</span>
+<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">'confidence'</span><span class="p">]</span> <span class="o">=</span> <span class="n">confidences</span>
+<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">'features'</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_features</span>
+<span class="n">g</span><span class="o">.</span><span class="n">ndata</span><span class="p">[</span><span class="s1">'names'</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_names</span>
 
 <span class="c1"># Edge features</span>
-<span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_kinds</span>
-<span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="s1">&#39;confidence&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_confidences</span>
-<span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="s1">&#39;features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_features</span>
+<span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_kinds</span>
+<span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="s1">'confidence'</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_confidences</span>
+<span class="n">g</span><span class="o">.</span><span class="n">edata</span><span class="p">[</span><span class="s1">'features'</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_features</span>
 </code></pre></div>
 <h3 id="export-example">Export Example</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># doctest: +SKIP  # example requires runtime context or external resources</span>
@@ -12544,14 +12544,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.api.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineConfig</span>
 
 <span class="n">runner</span> <span class="o">=</span> <span class="n">PipelineRunner</span><span class="p">()</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">PipelineConfig</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;output/&quot;</span><span class="p">)</span>
-<span class="n">bundle</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;./my_project&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">PipelineConfig</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="s2">"output/"</span><span class="p">)</span>
+<span class="n">bundle</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"./my_project"</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
 <span class="c1"># Export to DGL (planned)</span>
 <span class="n">dgl_graph</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">export_dgl</span><span class="p">()</span>  <span class="c1"># planned</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nodes: </span><span class="si">{</span><span class="n">dgl_graph</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Edges: </span><span class="si">{</span><span class="n">dgl_graph</span><span class="o">.</span><span class="n">num_edges</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Nodes: </span><span class="si">{</span><span class="n">dgl_graph</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Edges: </span><span class="si">{</span><span class="n">dgl_graph</span><span class="o">.</span><span class="n">num_edges</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -12611,7 +12611,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

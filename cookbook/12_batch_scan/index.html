@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11065,14 +11065,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12669,46 +12669,46 @@
 <div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env bash</span>
 <span class="nb">set</span><span class="w"> </span>-e
 
-<span class="nv">REPOS_DIR</span><span class="o">=</span><span class="s2">&quot;./repos&quot;</span>
-<span class="nv">OUTPUT_DIR</span><span class="o">=</span><span class="s2">&quot;./batch-output&quot;</span>
+<span class="nv">REPOS_DIR</span><span class="o">=</span><span class="s2">"./repos"</span>
+<span class="nv">OUTPUT_DIR</span><span class="o">=</span><span class="s2">"./batch-output"</span>
 <span class="nv">ERRORS</span><span class="o">=()</span>
 
-<span class="k">for</span><span class="w"> </span>repo<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$REPOS_DIR</span><span class="s2">&quot;</span>/*/<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$repo</span><span class="s2">&quot;</span><span class="k">)</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;=== Translating </span><span class="nv">$name</span><span class="s2"> ===&quot;</span>
+<span class="k">for</span><span class="w"> </span>repo<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">"</span><span class="nv">$REPOS_DIR</span><span class="s2">"</span>/*/<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">"</span><span class="nv">$repo</span><span class="s2">"</span><span class="k">)</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"=== Translating </span><span class="nv">$name</span><span class="s2"> ==="</span>
 
-<span class="w">  </span><span class="k">if</span><span class="w"> </span>cogant<span class="w"> </span>translate<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$repo</span><span class="s2">&quot;</span><span class="w"> </span>--output<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$OUTPUT_DIR</span><span class="s2">/</span><span class="nv">$name</span><span class="s2">&quot;</span><span class="w"> </span>--no-dynamic<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;  OK: </span><span class="nv">$name</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span>cogant<span class="w"> </span>translate<span class="w"> </span><span class="s2">"</span><span class="nv">$repo</span><span class="s2">"</span><span class="w"> </span>--output<span class="w"> </span><span class="s2">"</span><span class="nv">$OUTPUT_DIR</span><span class="s2">/</span><span class="nv">$name</span><span class="s2">"</span><span class="w"> </span>--no-dynamic<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"  OK: </span><span class="nv">$name</span><span class="s2">"</span>
 <span class="w">  </span><span class="k">else</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;  FAIL: </span><span class="nv">$name</span><span class="s2">&quot;</span>
-<span class="w">    </span><span class="nv">ERRORS</span><span class="o">+=(</span><span class="s2">&quot;</span><span class="nv">$name</span><span class="s2">&quot;</span><span class="o">)</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"  FAIL: </span><span class="nv">$name</span><span class="s2">"</span>
+<span class="w">    </span><span class="nv">ERRORS</span><span class="o">+=(</span><span class="s2">"</span><span class="nv">$name</span><span class="s2">"</span><span class="o">)</span>
 <span class="w">  </span><span class="k">fi</span>
 <span class="k">done</span>
 
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;=== Summary ===&quot;</span>
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Total: </span><span class="k">$(</span>ls<span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$REPOS_DIR</span><span class="s2">&quot;</span>/*/<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39; &#39;</span><span class="k">)</span><span class="s2">&quot;</span>
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Failed: </span><span class="si">${#</span><span class="nv">ERRORS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="k">for</span><span class="w"> </span>e<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ERRORS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;  - </span><span class="nv">$e</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">""</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"=== Summary ==="</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"Total: </span><span class="k">$(</span>ls<span class="w"> </span>-d<span class="w"> </span><span class="s2">"</span><span class="nv">$REPOS_DIR</span><span class="s2">"</span>/*/<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">' '</span><span class="k">)</span><span class="s2">"</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"Failed: </span><span class="si">${#</span><span class="nv">ERRORS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">for</span><span class="w"> </span>e<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">ERRORS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"  - </span><span class="nv">$e</span><span class="s2">"</span>
 <span class="k">done</span>
 </code></pre></div>
 <h3 id="3-validate-all-outputs">3. Validate all outputs</h3>
 <div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span>dir<span class="w"> </span><span class="k">in</span><span class="w"> </span>./batch-output/*/<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dir</span><span class="s2">&quot;</span><span class="k">)</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;--- </span><span class="nv">$name</span><span class="s2"> ---&quot;</span>
-<span class="w">  </span>cogant<span class="w"> </span>validate<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dir</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;  INVALID: </span><span class="nv">$name</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">"</span><span class="nv">$dir</span><span class="s2">"</span><span class="k">)</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"--- </span><span class="nv">$name</span><span class="s2"> ---"</span>
+<span class="w">  </span>cogant<span class="w"> </span>validate<span class="w"> </span><span class="s2">"</span><span class="nv">$dir</span><span class="s2">"</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"  INVALID: </span><span class="nv">$name</span><span class="s2">"</span>
 <span class="k">done</span>
 </code></pre></div>
 <h3 id="4-export-a-combined-summary">4. Export a combined summary</h3>
 <div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span>dir<span class="w"> </span><span class="k">in</span><span class="w"> </span>./batch-output/*/<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dir</span><span class="s2">&quot;</span><span class="k">)</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$name</span><span class="s2">: </span><span class="k">$(</span>jq<span class="w"> </span><span class="s1">&#39;.errors | length&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dir</span><span class="s2">/bundle.json&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;N/A&#39;</span><span class="k">)</span><span class="s2"> errors&quot;</span>
+<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">"</span><span class="nv">$dir</span><span class="s2">"</span><span class="k">)</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"</span><span class="nv">$name</span><span class="s2">: </span><span class="k">$(</span>jq<span class="w"> </span><span class="s1">'.errors | length'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$dir</span><span class="s2">/bundle.json"</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">'N/A'</span><span class="k">)</span><span class="s2"> errors"</span>
 <span class="k">done</span>
 </code></pre></div>
 <h3 id="5-run-in-parallel-gnu-parallel">5. Run in parallel (GNU parallel)</h3>
 <div class="highlight"><pre><span></span><code>ls<span class="w"> </span>-d<span class="w"> </span>./repos/*/<span class="w"> </span><span class="p">|</span><span class="w"> </span>parallel<span class="w"> </span>-j4<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span><span class="s1">&#39;name=$(basename {}); cogant translate {} --output ./batch-output/$name --no-dynamic&#39;</span>
+<span class="w">  </span><span class="s1">'name=$(basename {}); cogant translate {} --output ./batch-output/$name --no-dynamic'</span>
 </code></pre></div>
 <h2 id="expected-output">Expected output</h2>
 <p>Each repo produces its own output directory with <code>bundle.json</code> and
@@ -12794,7 +12794,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

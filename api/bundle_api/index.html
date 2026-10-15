@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11061,14 +11061,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12658,68 +12658,68 @@
 <div class="highlight"><pre><span></span><code><span class="c1"># Get repository summary</span>
 <span class="n">summary</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">repo_summary</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;target&quot;: &quot;...&quot;,</span>
-<span class="c1">#   &quot;file_count&quot;: 123,</span>
-<span class="c1">#   &quot;language_distribution&quot;: {&quot;python&quot;: 45, &quot;go&quot;: 30, ...},</span>
-<span class="c1">#   &quot;total_errors&quot;: 0</span>
+<span class="c1">#   "target": "...",</span>
+<span class="c1">#   "file_count": 123,</span>
+<span class="c1">#   "language_distribution": {"python": 45, "go": 30, ...},</span>
+<span class="c1">#   "total_errors": 0</span>
 <span class="c1"># }</span>
 </code></pre></div>
 <h3 id="program-graph">Program Graph</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get program graph</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">program_graph</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;program_graph&quot;,</span>
-<span class="c1">#   &quot;nodes&quot;: [...],</span>
-<span class="c1">#   &quot;edges&quot;: [...],</span>
-<span class="c1">#   &quot;statistics&quot;: {...}</span>
+<span class="c1">#   "type": "program_graph",</span>
+<span class="c1">#   "nodes": [...],</span>
+<span class="c1">#   "edges": [...],</span>
+<span class="c1">#   "statistics": {...}</span>
 <span class="c1"># }</span>
 
 <span class="c1"># Node count</span>
-<span class="n">num_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+<span class="n">num_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[]))</span>
 
 <span class="c1"># Edge types</span>
-<span class="n">edge_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;edges&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+<span class="n">edge_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"edges"</span><span class="p">,</span> <span class="p">[]))</span>
 </code></pre></div>
 <h3 id="state-space-model">State Space Model</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get semantic state space</span>
 <span class="n">state_space</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">state_space_model</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;state_space_model&quot;,</span>
-<span class="c1">#   &quot;states&quot;: [...],</span>
-<span class="c1">#   &quot;observations&quot;: [...],</span>
-<span class="c1">#   &quot;actions&quot;: [...],</span>
-<span class="c1">#   &quot;policies&quot;: [...]</span>
+<span class="c1">#   "type": "state_space_model",</span>
+<span class="c1">#   "states": [...],</span>
+<span class="c1">#   "observations": [...],</span>
+<span class="c1">#   "actions": [...],</span>
+<span class="c1">#   "policies": [...]</span>
 <span class="c1"># }</span>
 
 <span class="c1"># Access components</span>
-<span class="n">states</span> <span class="o">=</span> <span class="n">state_space</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;states&quot;</span><span class="p">,</span> <span class="p">[])</span>
-<span class="n">observations</span> <span class="o">=</span> <span class="n">state_space</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;observations&quot;</span><span class="p">,</span> <span class="p">[])</span>
-<span class="n">actions</span> <span class="o">=</span> <span class="n">state_space</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;actions&quot;</span><span class="p">,</span> <span class="p">[])</span>
-<span class="n">policies</span> <span class="o">=</span> <span class="n">state_space</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;policies&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="n">states</span> <span class="o">=</span> <span class="n">state_space</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"states"</span><span class="p">,</span> <span class="p">[])</span>
+<span class="n">observations</span> <span class="o">=</span> <span class="n">state_space</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"observations"</span><span class="p">,</span> <span class="p">[])</span>
+<span class="n">actions</span> <span class="o">=</span> <span class="n">state_space</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"actions"</span><span class="p">,</span> <span class="p">[])</span>
+<span class="n">policies</span> <span class="o">=</span> <span class="n">state_space</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"policies"</span><span class="p">,</span> <span class="p">[])</span>
 </code></pre></div>
 <h3 id="process-model">Process Model</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get process/execution model</span>
 <span class="n">process_model</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">process_model</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;process_model&quot;,</span>
-<span class="c1">#   &quot;stages&quot;: [...],</span>
-<span class="c1">#   &quot;dependencies&quot;: [...],</span>
-<span class="c1">#   &quot;timeline&quot;: [...]</span>
+<span class="c1">#   "type": "process_model",</span>
+<span class="c1">#   "stages": [...],</span>
+<span class="c1">#   "dependencies": [...],</span>
+<span class="c1">#   "timeline": [...]</span>
 <span class="c1"># }</span>
 </code></pre></div>
 <h3 id="validation-report">Validation Report</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get validation results</span>
 <span class="n">validation</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">validation_report</span><span class="p">()</span>
 <span class="c1"># Returns: {</span>
-<span class="c1">#   &quot;type&quot;: &quot;validation&quot;,</span>
-<span class="c1">#   &quot;passed&quot;: True,</span>
-<span class="c1">#   &quot;checks&quot;: {...},</span>
-<span class="c1">#   &quot;warnings&quot;: [...]</span>
+<span class="c1">#   "type": "validation",</span>
+<span class="c1">#   "passed": True,</span>
+<span class="c1">#   "checks": {...},</span>
+<span class="c1">#   "warnings": [...]</span>
 <span class="c1"># }</span>
 
 <span class="c1"># Check if validation passed</span>
-<span class="k">if</span> <span class="n">validation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;passed&quot;</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Validation successful&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">validation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"passed"</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Validation successful"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="gnn-markdown">GNN Markdown</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Generate markdown representation</span>
@@ -12727,12 +12727,12 @@
 <span class="c1"># Returns formatted markdown string describing the GNN</span>
 
 <span class="c1"># Save to file</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;gnn_report.md&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"gnn_report.md"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">markdown</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="rendering-html-site">Rendering HTML Site</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Generate full interactive HTML site</span>
-<span class="n">index_path</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">render_site</span><span class="p">(</span><span class="s2">&quot;html_site/&quot;</span><span class="p">)</span>
+<span class="n">index_path</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">render_site</span><span class="p">(</span><span class="s2">"html_site/"</span><span class="p">)</span>
 
 <span class="c1"># Creates:</span>
 <span class="c1"># - html_site/index.html</span>
@@ -12748,11 +12748,11 @@
 <span class="n">json_str</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
 
 <span class="c1"># Save to file</span>
-<span class="n">bundle</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="s2">&quot;bundle.json&quot;</span><span class="p">)</span>
+<span class="n">bundle</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="s2">"bundle.json"</span><span class="p">)</span>
 
 <span class="c1"># Load from file</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;bundle.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"bundle.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </code></pre></div>
 
@@ -12813,7 +12813,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

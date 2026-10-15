@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10995,14 +10995,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12523,10 +12523,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.graph.queries</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphQuery</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyTranslationRule</span><span class="p">(</span><span class="n">TranslationRule</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom translation rule.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Custom translation rule."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">ProgramGraph</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">GraphQuery</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find nodes matching this rule.</span>
+<span class="w">        </span><span class="sd">"""Find nodes matching this rule.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            graph: Program graph to search.</span>
@@ -12534,15 +12534,15 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            List of match dicts.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_nodes_by_kind</span><span class="p">(</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">):</span>
-            <span class="k">if</span> <span class="s2">&quot;special_&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
+            <span class="k">if</span> <span class="s2">"special_"</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">matches</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">ProgramGraph</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">GraphQuery</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply rule and return SemanticMapping.</span>
+<span class="w">        </span><span class="sd">"""Apply rule and return SemanticMapping.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            match: Match dict from matches().</span>
@@ -12551,10 +12551,10 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            SemanticMapping with target concept and confidence.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">SemanticMapping</span><span class="p">(</span>
-            <span class="n">source_id</span><span class="o">=</span><span class="n">match</span><span class="p">[</span><span class="s2">&quot;node_id&quot;</span><span class="p">],</span>
-            <span class="n">target_concept</span><span class="o">=</span><span class="s2">&quot;special_function&quot;</span><span class="p">,</span>
+            <span class="n">source_id</span><span class="o">=</span><span class="n">match</span><span class="p">[</span><span class="s2">"node_id"</span><span class="p">],</span>
+            <span class="n">target_concept</span><span class="o">=</span><span class="s2">"special_function"</span><span class="p">,</span>
             <span class="n">kind</span><span class="o">=</span><span class="n">MappingKind</span><span class="o">.</span><span class="n">STRUCTURAL</span><span class="p">,</span>
             <span class="n">confidence</span><span class="o">=</span><span class="n">ConfidenceTier</span><span class="o">.</span><span class="n">HIGH</span><span class="p">,</span>
             <span class="n">provenance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -12568,20 +12568,20 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">cogant.graph.queries</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphQuery</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">TestFunctionRule</span><span class="p">(</span><span class="n">TranslationRule</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Identifies test functions by naming convention.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Identifies test functions by naming convention."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">ProgramGraph</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">GraphQuery</span><span class="p">):</span>
         <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_nodes_by_kind</span><span class="p">(</span><span class="n">NodeKind</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;test_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Test&quot;</span><span class="p">):</span>
-                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"test_"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Test"</span><span class="p">):</span>
+                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">matches</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">ProgramGraph</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">GraphQuery</span><span class="p">):</span>
-        <span class="n">tier</span> <span class="o">=</span> <span class="n">ConfidenceTier</span><span class="o">.</span><span class="n">HIGH</span> <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;test_&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">ConfidenceTier</span><span class="o">.</span><span class="n">MEDIUM</span>
+        <span class="n">tier</span> <span class="o">=</span> <span class="n">ConfidenceTier</span><span class="o">.</span><span class="n">HIGH</span> <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"test_"</span><span class="p">)</span> <span class="k">else</span> <span class="n">ConfidenceTier</span><span class="o">.</span><span class="n">MEDIUM</span>
         <span class="k">return</span> <span class="n">SemanticMapping</span><span class="p">(</span>
-            <span class="n">source_id</span><span class="o">=</span><span class="n">match</span><span class="p">[</span><span class="s2">&quot;node_id&quot;</span><span class="p">],</span>
-            <span class="n">target_concept</span><span class="o">=</span><span class="s2">&quot;test_code&quot;</span><span class="p">,</span>
+            <span class="n">source_id</span><span class="o">=</span><span class="n">match</span><span class="p">[</span><span class="s2">"node_id"</span><span class="p">],</span>
+            <span class="n">target_concept</span><span class="o">=</span><span class="s2">"test_code"</span><span class="p">,</span>
             <span class="n">kind</span><span class="o">=</span><span class="n">MappingKind</span><span class="o">.</span><span class="n">STRUCTURAL</span><span class="p">,</span>
             <span class="n">confidence</span><span class="o">=</span><span class="n">tier</span><span class="p">,</span>
             <span class="n">provenance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -12645,7 +12645,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

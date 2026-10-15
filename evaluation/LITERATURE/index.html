@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10913,14 +10913,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -15437,9 +15437,9 @@
 <h2 id="4-gnn-tooling-and-notation-generalized-notation-notation">4. GNN Tooling and Notation (Generalized Notation Notation)</h2>
 <p><strong>Scope:</strong> The Active Inference Institute's Generalized Notation Notation (GNN) standard, which is the <em>output format</em> of COGANT. GNN here is a human-readable scientific notation, not graph neural networks.</p>
 <h3 id="smekal2023gnn-smekal-friedman-et-al-2023-generalized-notation-notation-a-text-based-format-for-active-inference-generative-models-details-need-verification">[smekal2023gnn] Smekal, Friedman et al. (2023) — "Generalized Notation Notation: A Text-Based Format for Active Inference Generative Models" (details need verification)</h3>
-<p><strong>Relevance</strong>: The specification lineage for the GNN v2.0.0.x family. COGANT currently targets the upstream GNN v2.0.0.6.0 engine carried by the pinned GeneralizedNotationNotation v2.0.0 release bundle. Every COGANT output is a GNN bundle validated against this required-section surface plus COGANT's own package invariants.
+<p><strong>Relevance</strong>: The specification lineage for the GNN format. COGANT's optional upstream check uses the <code>generalized-notation-notation</code> reference implementation pinned to its 4.1.0 release line (import package <code>gnn</code>); COGANT's own header value <code>GNN v2.0.0</code> is COGANT's schema identifier, not the upstream release. Every COGANT output is a GNN bundle validated against this required-section surface plus COGANT's own package invariants.
 <strong>Key contribution</strong>: A Markdown-structured, section-based syntax for declaring state variables, observations, actions, matrices (A/B/C/D), time horizons, and Markov blankets in a form that is both human-readable and machine-parseable.
-<strong>Connection</strong>: COGANT emits v2.0.0.0-engine-compatible GNN bundles with COGANT extension sections below the upstream header. The <code>GNNValidator</code> in <code>py/cogant/gnn/validator.py</code> checks the upstream section order, the COGANT package sidecars, matrix consistency, and upstream <code>src.gnn</code> results through the bridge; <code>GNN_VALIDATION_REPORT.md</code> tracks the current compliance boundary.</p>
+<strong>Connection</strong>: COGANT emits GNN bundles whose upstream header is checked against the pinned upstream validator, with COGANT extension sections below it. The <code>GNNValidator</code> in <code>py/cogant/gnn/validator.py</code> checks the upstream section order, the COGANT package sidecars, matrix consistency, and, when explicitly enabled, upstream <code>gnn.validate_gnn_syntax</code> results through the bridge; <code>GNN_VALIDATION_REPORT.md</code> tracks the current compliance boundary.</p>
 <h3 id="activeinferenceinstitute2022gnn-active-inference-institute-20222026-generalized-notation-notation-reference-implementation-and-examples">[activeInferenceInstitute2022gnn] Active Inference Institute (2022–2026) — "Generalized Notation Notation Reference Implementation and Examples"</h3>
 <p><strong>Relevance</strong>: The reference Python implementation and example gallery for GNN, which defines the de-facto conformance tests for any tool claiming to emit GNN.
 <strong>Key contribution</strong>: A living library of example GNN specifications (Rabbit-Hunting, Tmaze, Navigation, etc.) and the reference parser/validator, against which COGANT's output is diffed.
@@ -15858,7 +15858,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

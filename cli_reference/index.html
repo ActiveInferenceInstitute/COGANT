@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11081,14 +11081,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12770,15 +12770,15 @@
 </tr>
 <tr>
 <td><code>--upstream-gnn-only-steps</code></td>
-<td>Comma-separated 1-based step numbers to run (e.g. <code>1,3,4,8</code>); subset of the upstream catalog.</td>
+<td>Comma-separated step indices <code>0</code>–<code>24</code> to run (e.g. <code>3,5,6</code>); subset of the upstream catalog.</td>
 </tr>
 <tr>
 <td><code>--upstream-gnn-skip-steps</code></td>
-<td>Comma-separated 1-based step numbers to skip; default skips network-bound steps (LLM, audio, website).</td>
+<td>Comma-separated step indices to skip; default <code>1,2,11,12</code> (setup, tests, render, execute); <code>""</code> skips nothing.</td>
 </tr>
 <tr>
 <td><code>--upstream-gnn-frameworks</code></td>
-<td>Comma-separated render targets for upstream step 11 (e.g. <code>pymdp,rxinfer</code>).</td>
+<td>Render/execute targets forwarded to upstream (default <code>lite</code>; e.g. <code>pymdp,rxinfer</code>).</td>
 </tr>
 <tr>
 <td><code>--upstream-gnn-llm-model</code></td>
@@ -12933,9 +12933,9 @@
 </tbody>
 </table>
 <h2 id="upstream-gnn-25-step-pipeline">Upstream GNN 25-step pipeline</h2>
-<p><code>cogant upstream-gnn</code> invokes the <strong>git-pinned</strong> dependency <code>generalized-notation-notation</code> (declared in <code>pyproject.toml</code>; install with <code>uv sync</code> from the package root). The bridge imports <code>src.main.execute_pipeline_step</code> from that package — there is no <code>cogant/_extensions/...</code> checkout inside the COGANT repository. Network- and LLM-dependent steps are skipped by default (configurable via flags). The same wiring is exposed as opt-in flags on <code>cogant translate</code>, <code>cogant analyze</code>, and <code>cogant validate</code> (see <code>--upstream-gnn-pipeline</code> above).</p>
+<p><code>cogant upstream-gnn</code> drives the <strong>optional</strong>, commit-pinned dependency <code>generalized-notation-notation</code> (GNN 4.1.0 release line, import package <code>gnn</code>; install with <code>uv sync --extra upstream</code> from the package root — it is not part of <code>all</code>). The bridge runs the selected steps as one <code>python -m gnn.main --only-steps …</code> invocation on the active interpreter and reads per-step results from upstream's <code>00_pipeline_summary/pipeline_execution_summary.json</code> — there is no <code>cogant/_extensions/...</code> checkout inside the COGANT repository. Steps 1 (<code>setup</code>), 2 (<code>tests</code>), 11 (<code>render</code>), and 12 (<code>execute</code>) are skipped by default (<code>--skip-steps ""</code> runs all 25); upstream may still run 11 and 12 as hard prerequisites of selected steps such as <code>16_analysis</code> and <code>18_security</code>. The command exits 1 when upstream is unavailable or any requested step fails. The same wiring is exposed as opt-in flags on <code>cogant translate</code>, <code>cogant analyze</code>, and <code>cogant validate</code> (see <code>--upstream-gnn-pipeline</code> above).</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package
-cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package<span class="w"> </span>--only-steps<span class="w"> </span><span class="m">1</span>,3,8<span class="w"> </span>--output-dir<span class="w"> </span>output/upstream
+cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package<span class="w"> </span>--only-steps<span class="w"> </span><span class="m">3</span>,5,6<span class="w"> </span>--output-dir<span class="w"> </span>output/upstream
 cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_package<span class="w"> </span>--frameworks<span class="w"> </span>pymdp,rxinfer<span class="w"> </span>--verbose
 </code></pre></div>
 <h2 id="exit-codes">Exit codes</h2>
@@ -13025,7 +13025,7 @@ cogant<span class="w"> </span>upstream-gnn<span class="w"> </span>output/gnn_pac
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

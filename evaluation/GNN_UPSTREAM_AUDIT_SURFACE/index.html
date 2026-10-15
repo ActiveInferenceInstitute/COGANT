@@ -23,15 +23,15 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>GNN v2 Audit Surface - COGANT — Codebase-to-GNN Translation Engine</title>
+        <title>GNN Upstream Audit Surface - COGANT — Codebase-to-GNN Translation Engine</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#gnn-v2-audit-surface" class="md-skip">
+        <a href="#gnn-upstream-audit-surface" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              GNN v2 Audit Surface
+              GNN Upstream Audit Surface
             
           </span>
         </div>
@@ -10929,7 +10929,7 @@
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -10947,7 +10947,7 @@
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -10973,6 +10973,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#pinned-upstream-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pinned Upstream Release
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#claims-kept-separate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claims Kept Separate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#audit-helper" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10988,6 +11010,28 @@
     <span class="md-ellipsis">
       
         Reading The SVG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-result-2026-10-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Result (2026-10-15)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historical-result-2026-10-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Result (2026-10-14)
       
     </span>
   </a>
@@ -12454,6 +12498,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#pinned-upstream-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pinned Upstream Release
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#claims-kept-separate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claims Kept Separate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#audit-helper" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12469,6 +12535,28 @@
     <span class="md-ellipsis">
       
         Reading The SVG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-result-2026-10-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Result (2026-10-15)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historical-result-2026-10-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Result (2026-10-14)
       
     </span>
   </a>
@@ -12506,30 +12594,121 @@
   
 
 
-<h1 id="gnn-v2-audit-surface">GNN v2 Audit Surface</h1>
-<p>This page records the verifier boundary for COGANT's current upstream
-Generalized Notation Notation integration.</p>
-<p>COGANT intentionally separates four claims:</p>
+<h1 id="gnn-upstream-audit-surface">GNN Upstream Audit Surface</h1>
+<p>This page records the verifier boundary for COGANT's optional integration with
+the Active Inference Institute <code>generalized-notation-notation</code> package, and the
+results recorded against the currently pinned upstream release.</p>
+<h2 id="pinned-upstream-release">Pinned Upstream Release</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Distribution</td>
+<td><code>generalized-notation-notation</code> (optional <code>cogant[upstream]</code> extra; not part of <code>all</code>)</td>
+</tr>
+<tr>
+<td>Pin (<code>cogant/pyproject.toml</code>, mirrored in <code>cogant/uv.lock</code>)</td>
+<td><code>46459949944e3217f8a6a804d4ff8c52829ef275</code> (upstream <code>main</code> on 2026-10-15)</td>
+</tr>
+<tr>
+<td>Distribution version / <code>gnn.__version__</code></td>
+<td><code>4.1.0</code> / <code>4.1.0</code></td>
+</tr>
+<tr>
+<td>Release tag</td>
+<td><code>v4.1.0</code> at <code>9255e19f951d4c9c1461514464d420bd3fc8b912</code>; the pin is 13 commits past the tag</td>
+</tr>
+<tr>
+<td>Import package</td>
+<td>top-level <code>gnn</code> (GNN &gt;= 4.0; the GNN 2.x <code>src.gnn</code> surface no longer exists)</td>
+</tr>
+<tr>
+<td>License</td>
+<td>CC-BY-NC-SA-4.0 (see <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/LICENSES.md"><code>LICENSES.md</code></a>)</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>GNN v2.0.0</code> value under <code>## GNNVersionAndFlags</code> in every COGANT
+<code>model.gnn.md</code> is COGANT's own schema identifier
+(<code>cogant.schema.versions.CURRENT_GNN_VERSION</code>). It is independent of the
+upstream package release above.</p>
+<h2 id="claims-kept-separate">Claims Kept Separate</h2>
 <ol>
-<li><strong>Version currentness.</strong> The active environment resolves the pinned
-   <code>generalized-notation-notation</code> v2.0.0 release bundle, whose engine reports
-   GNN v2.0.0.</li>
-<li><strong>Bridge usability.</strong> COGANT imports upstream only through
-   <code>cogant.gnn.upstream_bridge</code>, because raw <code>src.gnn</code> import remains sensitive
-   to upstream's repository-style layout.</li>
-<li><strong>COGANT-owned method health.</strong> Package build, validator, type-check,
-   matrix export, reverse, roundtrip, runner, CLI, and pipeline tests can pass
-   against the pinned upstream bundle.</li>
+<li><strong>Version currentness.</strong> The installed upstream commit (PEP 610
+   <code>direct_url.json</code>) equals the commit pinned by the <code>upstream</code> extra, the
+   <code>uv.lock</code> entry for that commit records the same commit, and both the
+   distribution version and <code>gnn.__version__</code> equal the locked version. The
+   expected commit and version are read from <code>cogant/pyproject.toml</code> and
+   <code>cogant/uv.lock</code>; the helper hard-codes no release.</li>
+<li><strong>Bridge usability.</strong> <code>cogant.gnn.upstream_bridge</code> imports upstream and
+   reports the same version (it refuses GNN &lt; 4.0 and a <code>gnn</code> package owned by
+   another distribution). The negative control requires a clean
+   (<code>python -I</code>, empty working directory) <code>import src.gnn</code> to fail: a passing
+   import would mean a GNN 2.x install or an unrelated <code>src</code> package is
+   shadowing the reference.</li>
+<li><strong>COGANT-owned method health.</strong> COGANT's package validator plus upstream
+   <code>validate_gnn_syntax</code> (<code>standard</code> and <code>strict</code>) on a freshly translated
+   control-positive model.</li>
 <li><strong>Selected upstream all-step execution.</strong> The optional upstream pipeline is
    a stricter compatibility surface. Product code treats selected upstream-step
    failures as advisory; audit mode promotes them to fatal so a report cannot
-   quietly convert partial compatibility into a full execution claim.</li>
+   quietly convert partial compatibility into a full execution claim. The
+   helper also reconciles the bridge selection against upstream's own run
+   summary, because GNN 4.x adds hard prerequisite steps and drops steps it is
+   told to skip.</li>
 </ol>
 <h2 id="audit-helper">Audit Helper</h2>
-<p>Use the project-root helper after producing an audit directory:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/gnn_v2_audit_surface.py<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--audit-dir<span class="w"> </span>/tmp/cogant_gnn_v2_audit<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--output-dir<span class="w"> </span>/tmp/cogant_gnn_v2_audit/published_surface
+<p>The project-root helper <code>tools/gnn_upstream_audit_surface.py</code> either builds an
+audit directory (<code>--collect</code>) or reads an existing one, then writes the
+surface. Collection needs an interpreter that imports <code>cogant</code> with the
+<code>upstream</code> extra installed; from the COGANT project root:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--directory<span class="w"> </span>cogant<span class="w"> </span>--extra<span class="w"> </span>upstream<span class="w"> </span>python<span class="w"> </span>../tools/gnn_upstream_audit_surface.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--collect<span class="w"> </span>--audit-dir<span class="w"> </span>output/gnn_upstream_audit
+</code></pre></div>
+<p><code>--collect</code> writes, in order:</p>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>version_probe.txt</code></td>
+<td>Distribution version, <code>gnn.__version__</code>, installed commit, bridge availability and version, clean-interpreter <code>import src.gnn</code> (negative control) and <code>import gnn</code> results, the pin and lock values, and, when the network allows, <code>git ls-remote</code> of upstream <code>HEAD</code> and the <code>v&lt;version&gt;</code> tag.</td>
+</tr>
+<tr>
+<td><code>gnn_package/</code></td>
+<td>COGANT translation of <code>cogant/examples/control_positive/calculator</code> (built in a temporary directory, then copied).</td>
+</tr>
+<tr>
+<td><code>single_file_validation.json</code></td>
+<td>COGANT <code>GNNValidator</code> verdict and upstream <code>validate_gnn_syntax</code> at <code>standard</code> and <code>strict</code>.</td>
+</tr>
+<tr>
+<td><code>upstream_full/</code></td>
+<td><code>run_upstream_pipeline</code> with the bridge's default selection (<code>DEFAULT_SKIP_STEPS == {1, 2, 11, 12}</code>) and <code>skip_llm=True</code>: bridge summary <code>upstream_pipeline_summary.json</code>, console log <code>upstream_pipeline.log</code>, upstream run summary <code>00_pipeline_summary/</code>, and per-step outputs.</td>
+</tr>
+<tr>
+<td><code>pip_audit_path.json</code></td>
+<td><code>uvx pip-audit --format json --path &lt;site-packages&gt;</code> over the probing interpreter (skipped when neither <code>uvx</code> nor <code>pip-audit</code> is on <code>PATH</code>; <code>--no-pip-audit</code> disables it).</td>
+</tr>
+<tr>
+<td><code>collect_manifest.json</code></td>
+<td>Phase timings and the expectation used.</td>
+</tr>
+</tbody>
+</table>
+<p>Summarize an existing audit directory without re-collecting:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/gnn_upstream_audit_surface.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--audit-dir<span class="w"> </span>output/gnn_upstream_audit<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-dir<span class="w"> </span>output/gnn_upstream_audit/published_surface
 </code></pre></div>
 <p>The helper writes:</p>
 <table>
@@ -12541,43 +12720,275 @@ Generalized Notation Notation integration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>gnn_v2_audit_surface.json</code></td>
+<td><code>gnn_upstream_audit_surface.json</code></td>
 <td>Machine-readable claim classification.</td>
 </tr>
 <tr>
-<td><code>gnn_v2_audit_surface.md</code></td>
+<td><code>gnn_upstream_audit_surface.md</code></td>
 <td>Human-readable report for reviews and release notes.</td>
 </tr>
 <tr>
-<td><code>gnn_v2_audit_surface.svg</code></td>
+<td><code>gnn_upstream_audit_surface.svg</code></td>
 <td>Compact visualization of version, upstream-step, and supply-chain lanes.</td>
 </tr>
 </tbody>
 </table>
-<p>Run strict mode when an audit should fail on any selected upstream step failure:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/gnn_v2_audit_surface.py<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--audit-dir<span class="w"> </span>/tmp/cogant_gnn_v2_audit<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--strict-upstream
-</code></pre></div>
-<p>Strict supply-chain mode is separate:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/gnn_v2_audit_surface.py<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--audit-dir<span class="w"> </span>/tmp/cogant_gnn_v2_audit<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--strict-supply-chain
-</code></pre></div>
+<p>Strict flags are independent: <code>--strict-version</code> fails when the version/bridge
+claim fails, <code>--strict-upstream</code> fails on any selected upstream step failure,
+and <code>--strict-supply-chain</code> fails on pip-audit findings or an absent/incomplete scan.
+Collection requires a new or empty audit directory and preserves previous runs.
+<code>--pyproject</code> and
+<code>--lock</code> point the expectation at other pin sources, and <code>--no-ls-remote</code>
+skips the network probe.</p>
 <h2 id="reading-the-svg">Reading The SVG</h2>
 <p>The SVG has three lanes: version/bridge, selected upstream all-step gate, and
-supply-chain scan. The upstream lane then shows one block per selected upstream
-step. Green means success; red means a selected step failed. This is a visual
-claim ledger, not a decorative figure: if the all-step lane is red, the docs
-must not say that COGANT's package fully executes through every selected
-upstream step.</p>
+supply-chain scan. Below them is one cell per upstream step index. Green means
+a selected step succeeded; red means a selected step failed; pale green or
+pale red marks a step upstream ran outside the bridge selection (a hard
+prerequisite); grey marks a step that did not run. This is a visual claim
+ledger, not a decorative figure: if the all-step lane is red, the docs must not
+say that COGANT's package fully executes through every selected upstream step.</p>
+<h2 id="current-result-2026-10-15">Current Result (2026-10-15)</h2>
+<p>The pinned commit <code>46459949944e3217f8a6a804d4ff8c52829ef275</code> was verified on
+CPython 3.12 with the locked <code>all</code> and <code>upstream</code> extras. Strict version,
+selected-upstream, and supply-chain gates passed; all 20 selected steps
+succeeded. COGANT package validation and both upstream single-file validation
+levels passed. The clean-interpreter <code>src.gnn</code> import failed as expected.
+The machine-generated <a href="../../evaluation/gnn_upstream_audit_surface.json">audit JSON</a>
+and <a href="../../evaluation/gnn_upstream_audit_surface.md">audit report</a> preserve the
+per-step statuses and the exact pin/lock/installed commit identity.</p>
+<h2 id="historical-result-2026-10-14">Historical Result (2026-10-14)</h2>
+<p>Historical result collected on 2026-10-14 with Python 3.13 against
+<code>b4a583a5851021612a9a5df94e428f78aa6f76a0</code>, using the
+default selection and <code>skip_llm=True</code>, in an environment synced from the
+committed <code>cogant/uv.lock</code> (<code>uv sync --frozen --extra upstream --extra dev</code>):</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--directory<span class="w"> </span>cogant<span class="w"> </span>--frozen<span class="w"> </span>--extra<span class="w"> </span>upstream<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>python<span class="w"> </span>../tools/gnn_upstream_audit_surface.py<span class="w"> </span>--collect<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--audit-dir<span class="w"> </span>/tmp/cogant_gnn_upstream_audit
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Version and bridge currentness</td>
+<td><strong>PASS</strong>: installed commit <code>b4a583a5…</code> equals the pin and the lock; distribution <code>4.1.0</code>; <code>gnn.__version__</code> <code>4.1.0</code>; upstream <code>HEAD</code> was the pinned commit at collection time; <code>v4.1.0</code> resolves to <code>9255e19f…</code>.</td>
+</tr>
+<tr>
+<td>Bridge and negative control</td>
+<td><strong>PASS</strong>: the bridge reports <code>4.1.0</code>; a clean <code>import src.gnn</code> fails with <code>ModuleNotFoundError: No module named 'src'</code>; a clean <code>import gnn</code> reports <code>4.1.0</code>.</td>
+</tr>
+<tr>
+<td>Single-file validation</td>
+<td><strong>PASS</strong>: COGANT <code>GNNValidator</code> 100.0/100 with 0 errors; upstream <code>validate_gnn_syntax</code> 0 errors at both <code>standard</code> and <code>strict</code>.</td>
+</tr>
+<tr>
+<td>Selected upstream steps</td>
+<td><strong>20/20 succeeded</strong>; upstream overall status <code>SUCCESS_WITH_WARNINGS</code>; one bridge invocation of about 78 s wall time.</td>
+</tr>
+<tr>
+<td>Supply-chain scan</td>
+<td><strong>PASS</strong>: <code>pip-audit</code> over the environment's 137 installed distributions reported no known vulnerabilities.</td>
+</tr>
+</tbody>
+</table>
+<p>Per-step outcomes for the bridge selection (steps 0, 3–10, 14–24; step 13 is
+excluded by <code>skip_llm=True</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Script</th>
+<th>Status</th>
+<th>Duration (s)</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>0_template.py</code></td>
+<td>SUCCESS</td>
+<td>0.3</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>3_gnn.py</code></td>
+<td>SUCCESS</td>
+<td>0.4</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>4_model_registry.py</code></td>
+<td>SUCCESS</td>
+<td>0.3</td>
+<td></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>5_type_checker.py</code></td>
+<td>SUCCESS_WITH_WARNINGS</td>
+<td>4.1</td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>6_validation.py</code></td>
+<td>SUCCESS</td>
+<td>1.2</td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>7_export.py</code></td>
+<td>SUCCESS</td>
+<td>0.6</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>8_visualization.py</code></td>
+<td>SUCCESS</td>
+<td>40.8</td>
+<td></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>9_advanced_viz.py</code></td>
+<td>SUCCESS</td>
+<td>13.2</td>
+<td></td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>10_ontology.py</code></td>
+<td>SUCCESS</td>
+<td>0.3</td>
+<td></td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>14_ml_integration.py</code></td>
+<td>SUCCESS</td>
+<td>0.5</td>
+<td></td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>15_audio.py</code></td>
+<td>SUCCESS</td>
+<td>1.3</td>
+<td></td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>16_analysis.py</code></td>
+<td>SUCCESS_WITH_WARNINGS</td>
+<td>3.1</td>
+<td></td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>17_integration.py</code></td>
+<td>SUCCESS</td>
+<td>1.5</td>
+<td></td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>18_security.py</code></td>
+<td>SUCCESS_WITH_WARNINGS</td>
+<td>0.3</td>
+<td></td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>19_research.py</code></td>
+<td>SUCCESS</td>
+<td>0.3</td>
+<td></td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>20_website.py</code></td>
+<td>SUCCESS</td>
+<td>0.5</td>
+<td></td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>21_mcp.py</code></td>
+<td>SUCCESS</td>
+<td>4.3</td>
+<td></td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>22_gui.py</code></td>
+<td>SUCCESS</td>
+<td>0.4</td>
+<td></td>
+</tr>
+<tr>
+<td>23</td>
+<td><code>23_report.py</code></td>
+<td>SUCCESS</td>
+<td>0.6</td>
+<td></td>
+</tr>
+<tr>
+<td>24</td>
+<td><code>24_intelligent_analysis.py</code></td>
+<td>SUCCESS</td>
+<td>0.7</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Selection notes:</p>
+<ul>
+<li><strong>Explicit skips hold.</strong> The bridge passes its skip set (<code>1, 2, 11, 12</code>
+  plus <code>13</code> under <code>skip_llm</code>) to upstream as <code>--skip-steps</code>. Upstream applies
+  skips after resolving declared prerequisites, so <code>11_render</code> and
+  <code>12_execute</code> did not run even though <code>16_analysis</code> declares <code>3, 7, 12</code> and
+  <code>18_security</code> declares <code>11</code>; both dependents finished
+  <code>SUCCESS_WITH_WARNINGS</code> with upstream prerequisite warnings about the
+  missing render/execute outputs.</li>
+<li><strong>Auto-included prerequisites are reported.</strong> When a requested step's
+  prerequisite is not skipped, upstream runs it; the bridge lists such steps in
+  <code>UpstreamPipelineResult.auto_included</code> and includes their step records.
+  None were auto-included in this run.</li>
+<li><strong>Optional extras.</strong> Several steps degrade gracefully without optional
+  upstream extras (D2 CLI for <code>9_advanced_viz</code>, scikit-learn for
+  <code>14_ml_integration</code>, Gradio for <code>22_gui</code>); they still report <code>SUCCESS</code>.</li>
+<li><strong>Earlier same-day run.</strong> A run made before the bridge passed explicit
+  skips recorded 20/21: upstream auto-included and ran <code>11_render</code> (4/4
+  framework renderings) and <code>12_execute</code> (<code>SUCCESS_WITH_WARNINGS</code>; DisCoPy,
+  JAX and PyMDP scripts executed without a sandbox, upstream default
+  <code>GNN_SANDBOX=off</code>), and the requested step 13 was reported <code>NOT_RUN</code>
+  because <code>--skip-llm</code> removes it upstream. Its <code>pip-audit</code> findings
+  (anyio 4.13.0, fsspec 2026.3.0, idna 3.11, mkdocs-material 9.7.6, multidict
+  6.7.1, pillow 12.2.0, pymdown-extensions 10.21.2, starlette 1.0.0, urllib3
+  2.6.3) came from an environment built from the pre-refresh lock; the
+  refreshed lock resolves newer releases of every one of them.</li>
+</ul>
 <h2 id="current-boundary">Current Boundary</h2>
-<p>The current bridge supports COGANT's validation, type-check, export,
-visualization, roundtrip, and runner paths against the pinned v2.0.0 bundle.
-The optional upstream executable render/execute path is stricter and remains a
-separate compatibility target. Treat a 100/100 COGANT package score as a
-structural-validation statement, not as proof that every upstream executable
-framework backend can render and run the package.</p>
+<p>Against the pinned 4.1.0 release line, COGANT's validation, type-check,
+export, visualization, roundtrip, and runner paths pass, the generated
+calculator model passes upstream validation at <code>standard</code> and <code>strict</code>, and
+every selected upstream step succeeds. Render and execute (<code>11</code>/<code>12</code>) are off
+by default and were not exercised in this run; opt in with <code>skip_steps=[]</code>
+(they ran successfully for the calculator package in the earlier run).
+Optional upstream extras (D2, scikit-learn, Gradio, bnlearn, an LLM backend)
+change what several steps can exercise. Treat a 100/100 COGANT package score
+as a structural-validation statement, not as proof that every upstream
+framework backend can render and run every COGANT package.</p>
 
 
 
@@ -12636,7 +13047,7 @@ framework backend can render and run the package.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

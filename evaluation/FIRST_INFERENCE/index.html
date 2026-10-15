@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11037,14 +11037,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12645,9 +12645,9 @@
 <h2 id="the-galois-connection">The Galois Connection</h2>
 <p>The COGANT pipeline establishes a Galois connection between code and generative models:</p>
 <div class="highlight"><pre><span></span><code>forward(code)  ~=  gnn          # analysis: code -&gt; GNN specification
-reverse(gnn)   ~=  code&#39;        # synthesis: GNN -&gt; executable package
-forward(code&#39;) ~=  gnn          # round-trip: re-analysis recovers the GNN
-run(code&#39;)     =   working agent # execution: the package runs Active Inference
+reverse(gnn)   ~=  code'        # synthesis: GNN -&gt; executable package
+forward(code') ~=  gnn          # round-trip: re-analysis recovers the GNN
+run(code')     =   working agent # execution: the package runs Active Inference
 </code></pre></div>
 <p>The roundtrip is not byte-identical and should not be described as strict structural isomorphism under the current taxonomy. The supported claim is narrower: the same hidden-state, observation, and action roles survive the cycle, and the synthesized code runs, infers, and acts.</p>
 <h2 id="the-no-exec-path">The No-Exec Path</h2>
@@ -12713,7 +12713,7 @@ run(code&#39;)     =   working agent # execution: the package runs Active Infere
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

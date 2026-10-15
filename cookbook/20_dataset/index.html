@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11087,14 +11087,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12712,7 +12712,7 @@
 </code></pre></div>
 <h3 id="3-extract-node-features">3. Extract node features</h3>
 <p>Create a node-level dataset with features and labels:</p>
-<div class="highlight"><pre><span></span><code>jq<span class="w"> </span><span class="s1">&#39;[</span>
+<div class="highlight"><pre><span></span><code>jq<span class="w"> </span><span class="s1">'[</span>
 <span class="s1">  .stage_results.translate.nodes[]</span>
 <span class="s1">  | {</span>
 <span class="s1">      name: .name,</span>
@@ -12724,17 +12724,17 @@
 <span class="s1">      method_count: (.methods // [] | length),</span>
 <span class="s1">      has_state: (.has_state // false)</span>
 <span class="s1">    }</span>
-<span class="s1">]&#39;</span><span class="w"> </span>./output/bundle.json<span class="w"> </span>&gt;<span class="w"> </span>nodes_dataset.json
+<span class="s1">]'</span><span class="w"> </span>./output/bundle.json<span class="w"> </span>&gt;<span class="w"> </span>nodes_dataset.json
 </code></pre></div>
 <h3 id="4-convert-to-csv">4. Convert to CSV</h3>
-<div class="highlight"><pre><span></span><code>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;</span>
-<span class="s1">  [&quot;name&quot;,&quot;kind&quot;,&quot;role&quot;,&quot;confidence&quot;,&quot;in_degree&quot;,&quot;out_degree&quot;,&quot;method_count&quot;,&quot;has_state&quot;],</span>
+<div class="highlight"><pre><span></span><code>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">'</span>
+<span class="s1">  ["name","kind","role","confidence","in_degree","out_degree","method_count","has_state"],</span>
 <span class="s1">  (.[] | [.name, .kind, .role, .confidence, .in_degree, .out_degree, .method_count, .has_state])</span>
 <span class="s1">  | @csv</span>
-<span class="s1">&#39;</span><span class="w"> </span>nodes_dataset.json<span class="w"> </span>&gt;<span class="w"> </span>nodes_dataset.csv
+<span class="s1">'</span><span class="w"> </span>nodes_dataset.json<span class="w"> </span>&gt;<span class="w"> </span>nodes_dataset.csv
 </code></pre></div>
 <h3 id="5-extract-edge-features">5. Extract edge features</h3>
-<div class="highlight"><pre><span></span><code>jq<span class="w"> </span><span class="s1">&#39;[</span>
+<div class="highlight"><pre><span></span><code>jq<span class="w"> </span><span class="s1">'[</span>
 <span class="s1">  .stage_results.graph.edges[]</span>
 <span class="s1">  | {</span>
 <span class="s1">      source: .source,</span>
@@ -12742,34 +12742,34 @@
 <span class="s1">      kind: .kind,</span>
 <span class="s1">      weight: (.weight // 1.0)</span>
 <span class="s1">    }</span>
-<span class="s1">]&#39;</span><span class="w"> </span>./output/bundle.json<span class="w"> </span>&gt;<span class="w"> </span>edges_dataset.json
+<span class="s1">]'</span><span class="w"> </span>./output/bundle.json<span class="w"> </span>&gt;<span class="w"> </span>edges_dataset.json
 </code></pre></div>
 <h3 id="6-batch-export-from-multiple-repos">6. Batch-export from multiple repos</h3>
 <div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span>repo<span class="w"> </span><span class="k">in</span><span class="w"> </span>./repos/*/<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$repo</span><span class="s2">&quot;</span><span class="k">)</span>
-<span class="w">  </span>cogant<span class="w"> </span>translate<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$repo</span><span class="s2">&quot;</span><span class="w"> </span>--output<span class="w"> </span><span class="s2">&quot;./batch/</span><span class="nv">$name</span><span class="s2">&quot;</span><span class="w"> </span>--no-dynamic<span class="w"> </span><span class="m">2</span>&gt;/dev/null
+<span class="w">  </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">"</span><span class="nv">$repo</span><span class="s2">"</span><span class="k">)</span>
+<span class="w">  </span>cogant<span class="w"> </span>translate<span class="w"> </span><span class="s2">"</span><span class="nv">$repo</span><span class="s2">"</span><span class="w"> </span>--output<span class="w"> </span><span class="s2">"./batch/</span><span class="nv">$name</span><span class="s2">"</span><span class="w"> </span>--no-dynamic<span class="w"> </span><span class="m">2</span>&gt;/dev/null
 
-<span class="w">  </span>jq<span class="w"> </span>--arg<span class="w"> </span>repo<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$name</span><span class="s2">&quot;</span><span class="w"> </span><span class="s1">&#39;[</span>
+<span class="w">  </span>jq<span class="w"> </span>--arg<span class="w"> </span>repo<span class="w"> </span><span class="s2">"</span><span class="nv">$name</span><span class="s2">"</span><span class="w"> </span><span class="s1">'[</span>
 <span class="s1">    .stage_results.translate.nodes[]</span>
 <span class="s1">    | . + {repo: $repo}</span>
-<span class="s1">  ]&#39;</span><span class="w"> </span><span class="s2">&quot;./batch/</span><span class="nv">$name</span><span class="s2">/bundle.json&quot;</span>
-<span class="k">done</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-s<span class="w"> </span><span class="s1">&#39;add&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>combined_nodes.json
+<span class="s1">  ]'</span><span class="w"> </span><span class="s2">"./batch/</span><span class="nv">$name</span><span class="s2">/bundle.json"</span>
+<span class="k">done</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-s<span class="w"> </span><span class="s1">'add'</span><span class="w"> </span>&gt;<span class="w"> </span>combined_nodes.json
 </code></pre></div>
 <h3 id="7-generate-adjacency-matrices">7. Generate adjacency matrices</h3>
-<div class="highlight"><pre><span></span><code>jq<span class="w"> </span><span class="s1">&#39;{</span>
+<div class="highlight"><pre><span></span><code>jq<span class="w"> </span><span class="s1">'{</span>
 <span class="s1">  nodes: [.stage_results.graph.nodes | keys[]],</span>
 <span class="s1">  edges: [</span>
 <span class="s1">    .stage_results.graph.edges[]</span>
 <span class="s1">    | [.source, .target, (.weight // 1.0)]</span>
 <span class="s1">  ]</span>
-<span class="s1">}&#39;</span><span class="w"> </span>./output/bundle.json<span class="w"> </span>&gt;<span class="w"> </span>adjacency.json
+<span class="s1">}'</span><span class="w"> </span>./output/bundle.json<span class="w"> </span>&gt;<span class="w"> </span>adjacency.json
 </code></pre></div>
 <h2 id="expected-output">Expected output</h2>
 <p><code>nodes_dataset.csv</code>:</p>
-<div class="highlight"><pre><span></span><code>&quot;name&quot;,&quot;kind&quot;,&quot;role&quot;,&quot;confidence&quot;,&quot;in_degree&quot;,&quot;out_degree&quot;,&quot;method_count&quot;,&quot;has_state&quot;
-&quot;UserService&quot;,&quot;class&quot;,&quot;mu&quot;,0.87,3,5,4,true
-&quot;auth_handler&quot;,&quot;function&quot;,&quot;a&quot;,0.72,1,2,0,false
-&quot;db_connection&quot;,&quot;module&quot;,&quot;eta&quot;,0.91,0,3,0,false
+<div class="highlight"><pre><span></span><code>"name","kind","role","confidence","in_degree","out_degree","method_count","has_state"
+"UserService","class","mu",0.87,3,5,4,true
+"auth_handler","function","a",0.72,1,2,0,false
+"db_connection","module","eta",0.91,0,3,0,false
 </code></pre></div>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <table>
@@ -12856,7 +12856,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

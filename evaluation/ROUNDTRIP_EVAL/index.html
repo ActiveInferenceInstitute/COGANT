@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11015,14 +11015,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12551,7 +12551,7 @@
 
 
 <h1 id="cogant-roundtrip-evaluation">COGANT Roundtrip Evaluation</h1>
-<p>Generated from current native ledger: 2026-06-14
+<p>Generated from current native ledger: 2026-10-15
 Tooling: <code>tools/regenerate_roundtrip_ledger.py</code> plus <code>tools/regenerate_metrics.py</code>
 Public threshold: <code>role_preservation_score &gt;= 0.5</code> = <code>ROLE_PRESERVED</code></p>
 <blockquote>
@@ -12572,11 +12572,11 @@ file/LOC, and generated-code status.</p>
 <tbody>
 <tr>
 <td>Targets</td>
-<td style="text-align: right;">25</td>
+<td style="text-align: right;">24</td>
 </tr>
 <tr>
 <td>ROLE_PRESERVED</td>
-<td style="text-align: right;">25</td>
+<td style="text-align: right;">24</td>
 </tr>
 <tr>
 <td>DRIFT</td>
@@ -12592,11 +12592,11 @@ file/LOC, and generated-code status.</p>
 </tr>
 <tr>
 <td>Strict structural isomorphism</td>
-<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 </tr>
 <tr>
 <td>Mean role-preservation score</td>
-<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.9819</td>
 </tr>
 <tr>
 <td>Median role-preservation score</td>
@@ -12604,7 +12604,7 @@ file/LOC, and generated-code status.</p>
 </tr>
 <tr>
 <td>Min / max role-preservation score</td>
-<td style="text-align: right;">1.0000 / 1.0000</td>
+<td style="text-align: right;">0.8667 / 1.0000</td>
 </tr>
 <tr>
 <td>Score source</td>
@@ -12615,12 +12615,13 @@ file/LOC, and generated-code status.</p>
 <p>Interpretation: the current benchmark is strong in-sample evidence for
 role-population preservation on the shipped Python fixtures and reductions, but it is not a
 strict graph-isomorphism result. <code>ROLE_PRESERVED</code> means the semantic-role
-multiset survives the forward -&gt; reverse -&gt; forward loop at the public threshold.
+overlap score meets the public threshold in the forward -&gt; reverse -&gt; forward loop.
+Scores below 1.0 can include extra synthesized roles or dropped source roles.
 Strict structural success additionally requires zero node/edge deltas, preserved
 edge-kind counts, matrix value preservation, GNN-section preservation, and
-generated-code success. <code>roundtrip_strict_minimal</code> clears that stricter bar
-because it is a deliberately minimal reversible subset; ordinary application
-fixtures remain role-preserved but not strictly graph-isomorphic.</p>
+generated-code success. No current ledger row clears that stricter bar.
+The former <code>roundtrip_strict_minimal</code> row is not present in the current shipped
+fixture set and is excluded from the refreshed ledger.</p>
 <p>The previous <code>DRIFT</code> rows (<code>cli_tool</code>, <code>notebook_module</code>) now carry source
 HIDDEN_STATE, OBSERVATION, and ACTION roles and roundtrip as <code>ROLE_PRESERVED</code>.
 The freshness gate still rejects zero-origin control-positive rows, so generated
@@ -12646,9 +12647,9 @@ scaffolding cannot by itself launder a row into role-preserved evidence.</p>
 <td><code>async_service</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
-<td style="text-align: right;">1 / 1 / 2</td>
-<td style="text-align: right;">1 / 1 / 2</td>
-<td style="text-align: right;">0.082</td>
+<td style="text-align: right;">1 / 2 / 2</td>
+<td style="text-align: right;">1 / 2 / 2</td>
+<td style="text-align: right;">0.094</td>
 </tr>
 <tr>
 <td style="text-align: right;">2</td>
@@ -12658,7 +12659,7 @@ scaffolding cannot by itself launder a row into role-preserved evidence.</p>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 3 / 6</td>
 <td style="text-align: right;">1 / 3 / 6</td>
-<td style="text-align: right;">0.105</td>
+<td style="text-align: right;">0.103</td>
 </tr>
 <tr>
 <td style="text-align: right;">3</td>
@@ -12668,7 +12669,7 @@ scaffolding cannot by itself launder a row into role-preserved evidence.</p>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 2 / 1</td>
 <td style="text-align: right;">1 / 2 / 1</td>
-<td style="text-align: right;">0.099</td>
+<td style="text-align: right;">0.086</td>
 </tr>
 <tr>
 <td style="text-align: right;">4</td>
@@ -12678,217 +12679,207 @@ scaffolding cannot by itself launder a row into role-preserved evidence.</p>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">0 / 0 / 2</td>
 <td style="text-align: right;">0 / 0 / 2</td>
-<td style="text-align: right;">0.125</td>
+<td style="text-align: right;">0.079</td>
 </tr>
 <tr>
 <td style="text-align: right;">5</td>
-<td>control_positive</td>
-<td><code>event_pipeline</code></td>
-<td style="text-align: right;">1.0000</td>
-<td>ROLE_PRESERVED</td>
-<td style="text-align: right;">1 / 9 / 7</td>
-<td style="text-align: right;">1 / 9 / 7</td>
-<td style="text-align: right;">0.094</td>
-</tr>
-<tr>
-<td style="text-align: right;">6</td>
-<td>control_positive</td>
-<td><code>flask_mini</code></td>
-<td style="text-align: right;">1.0000</td>
-<td>ROLE_PRESERVED</td>
-<td style="text-align: right;">6 / 1 / 13</td>
-<td style="text-align: right;">6 / 1 / 13</td>
-<td style="text-align: right;">0.125</td>
-</tr>
-<tr>
-<td style="text-align: right;">7</td>
 <td>control_positive</td>
 <td><code>multi_package_workspace</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">0 / 0 / 1</td>
 <td style="text-align: right;">0 / 0 / 1</td>
-<td style="text-align: right;">0.080</td>
+<td style="text-align: right;">0.094</td>
 </tr>
 <tr>
-<td style="text-align: right;">8</td>
+<td style="text-align: right;">6</td>
 <td>control_positive</td>
 <td><code>notebook_module</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 2 / 1</td>
 <td style="text-align: right;">1 / 2 / 1</td>
-<td style="text-align: right;">0.082</td>
+<td style="text-align: right;">0.095</td>
 </tr>
 <tr>
-<td style="text-align: right;">9</td>
+<td style="text-align: right;">7</td>
 <td>control_positive</td>
 <td><code>plugin_architecture</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
-<td style="text-align: right;">0 / 2 / 3</td>
-<td style="text-align: right;">0 / 2 / 3</td>
-<td style="text-align: right;">0.083</td>
+<td style="text-align: right;">0 / 3 / 3</td>
+<td style="text-align: right;">0 / 3 / 3</td>
+<td style="text-align: right;">0.103</td>
 </tr>
 <tr>
-<td style="text-align: right;">10</td>
-<td>control_positive</td>
-<td><code>roundtrip_strict_minimal</code></td>
-<td style="text-align: right;">1.0000</td>
-<td>STRUCTURALLY_ISOMORPHIC</td>
-<td style="text-align: right;">1 / 1 / 2</td>
-<td style="text-align: right;">1 / 1 / 2</td>
-<td style="text-align: right;">0.092</td>
-</tr>
-<tr>
-<td style="text-align: right;">11</td>
-<td>real_world</td>
-<td><code>flask_app</code></td>
-<td style="text-align: right;">1.0000</td>
-<td>ROLE_PRESERVED</td>
-<td style="text-align: right;">13 / 24 / 26</td>
-<td style="text-align: right;">13 / 24 / 26</td>
-<td style="text-align: right;">0.253</td>
-</tr>
-<tr>
-<td style="text-align: right;">12</td>
+<td style="text-align: right;">8</td>
 <td>real_world</td>
 <td><code>json_stdlib</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">3 / 2 / 11</td>
 <td style="text-align: right;">3 / 2 / 11</td>
-<td style="text-align: right;">0.114</td>
+<td style="text-align: right;">0.124</td>
 </tr>
 <tr>
-<td style="text-align: right;">13</td>
-<td>real_world</td>
-<td><code>requests_lib</code></td>
-<td style="text-align: right;">1.0000</td>
-<td>ROLE_PRESERVED</td>
-<td style="text-align: right;">8 / 37 / 15</td>
-<td style="text-align: right;">8 / 37 / 15</td>
-<td style="text-align: right;">0.171</td>
-</tr>
-<tr>
-<td style="text-align: right;">14</td>
+<td style="text-align: right;">9</td>
 <td>zoo</td>
 <td><code>01_simple_state</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 1 / 2</td>
 <td style="text-align: right;">1 / 1 / 2</td>
-<td style="text-align: right;">0.081</td>
+<td style="text-align: right;">0.109</td>
 </tr>
 <tr>
-<td style="text-align: right;">15</td>
+<td style="text-align: right;">10</td>
 <td>zoo</td>
 <td><code>02_observer</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 3 / 1</td>
 <td style="text-align: right;">1 / 3 / 1</td>
-<td style="text-align: right;">0.086</td>
+<td style="text-align: right;">0.094</td>
 </tr>
 <tr>
-<td style="text-align: right;">16</td>
+<td style="text-align: right;">11</td>
 <td>zoo</td>
 <td><code>03_actor</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 0 / 4</td>
 <td style="text-align: right;">1 / 0 / 4</td>
-<td style="text-align: right;">0.111</td>
+<td style="text-align: right;">0.094</td>
 </tr>
 <tr>
-<td style="text-align: right;">17</td>
+<td style="text-align: right;">12</td>
 <td>zoo</td>
 <td><code>04_pomdp_minimal</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 2 / 3</td>
 <td style="text-align: right;">1 / 2 / 3</td>
-<td style="text-align: right;">0.093</td>
+<td style="text-align: right;">0.096</td>
 </tr>
 <tr>
-<td style="text-align: right;">18</td>
+<td style="text-align: right;">13</td>
 <td>zoo</td>
 <td><code>05_multi_factor</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 2 / 3</td>
 <td style="text-align: right;">1 / 2 / 3</td>
-<td style="text-align: right;">0.091</td>
+<td style="text-align: right;">0.101</td>
 </tr>
 <tr>
-<td style="text-align: right;">19</td>
+<td style="text-align: right;">14</td>
 <td>zoo</td>
 <td><code>06_hierarchical</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">2 / 2 / 4</td>
 <td style="text-align: right;">2 / 2 / 4</td>
-<td style="text-align: right;">0.086</td>
+<td style="text-align: right;">0.101</td>
 </tr>
 <tr>
-<td style="text-align: right;">20</td>
-<td>zoo</td>
-<td><code>07_event_driven</code></td>
-<td style="text-align: right;">1.0000</td>
-<td>ROLE_PRESERVED</td>
-<td style="text-align: right;">0 / 4 / 3</td>
-<td style="text-align: right;">0 / 4 / 3</td>
-<td style="text-align: right;">0.086</td>
-</tr>
-<tr>
-<td style="text-align: right;">21</td>
+<td style="text-align: right;">15</td>
 <td>zoo</td>
 <td><code>08_preferences</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 1 / 1</td>
 <td style="text-align: right;">1 / 1 / 1</td>
-<td style="text-align: right;">0.084</td>
+<td style="text-align: right;">0.094</td>
 </tr>
 <tr>
-<td style="text-align: right;">22</td>
-<td>zoo</td>
-<td><code>09_policy</code></td>
-<td style="text-align: right;">1.0000</td>
-<td>ROLE_PRESERVED</td>
-<td style="text-align: right;">1 / 1 / 3</td>
-<td style="text-align: right;">1 / 1 / 3</td>
-<td style="text-align: right;">0.082</td>
-</tr>
-<tr>
-<td style="text-align: right;">23</td>
+<td style="text-align: right;">16</td>
 <td>zoo</td>
 <td><code>10_constraint</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">1 / 1 / 1</td>
 <td style="text-align: right;">1 / 1 / 1</td>
-<td style="text-align: right;">0.101</td>
+<td style="text-align: right;">0.095</td>
 </tr>
 <tr>
-<td style="text-align: right;">24</td>
+<td style="text-align: right;">17</td>
 <td>zoo</td>
 <td><code>11_sensor_fusion</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">3 / 3 / 6</td>
 <td style="text-align: right;">3 / 3 / 6</td>
-<td style="text-align: right;">0.102</td>
+<td style="text-align: right;">0.099</td>
 </tr>
 <tr>
-<td style="text-align: right;">25</td>
+<td style="text-align: right;">18</td>
 <td>zoo</td>
 <td><code>12_full_pomdp</code></td>
 <td style="text-align: right;">1.0000</td>
 <td>ROLE_PRESERVED</td>
 <td style="text-align: right;">5 / 4 / 8</td>
 <td style="text-align: right;">5 / 4 / 8</td>
-<td style="text-align: right;">0.118</td>
+<td style="text-align: right;">0.120</td>
+</tr>
+<tr>
+<td style="text-align: right;">19</td>
+<td>real_world</td>
+<td><code>flask_app</code></td>
+<td style="text-align: right;">0.9602</td>
+<td>ROLE_PRESERVED</td>
+<td style="text-align: right;">10 / 31 / 23</td>
+<td style="text-align: right;">11 / 31 / 27</td>
+<td style="text-align: right;">0.229</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td>control_positive</td>
+<td><code>event_pipeline</code></td>
+<td style="text-align: right;">0.9545</td>
+<td>ROLE_PRESERVED</td>
+<td style="text-align: right;">3 / 8 / 9</td>
+<td style="text-align: right;">3 / 8 / 11</td>
+<td style="text-align: right;">0.111</td>
+</tr>
+<tr>
+<td style="text-align: right;">21</td>
+<td>zoo</td>
+<td><code>09_policy</code></td>
+<td style="text-align: right;">0.9375</td>
+<td>ROLE_PRESERVED</td>
+<td style="text-align: right;">1 / 1 / 3</td>
+<td style="text-align: right;">1 / 1 / 4</td>
+<td style="text-align: right;">0.096</td>
+</tr>
+<tr>
+<td style="text-align: right;">22</td>
+<td>control_positive</td>
+<td><code>flask_mini</code></td>
+<td style="text-align: right;">0.9265</td>
+<td>ROLE_PRESERVED</td>
+<td style="text-align: right;">5 / 2 / 12</td>
+<td style="text-align: right;">5 / 2 / 17</td>
+<td style="text-align: right;">0.122</td>
+</tr>
+<tr>
+<td style="text-align: right;">23</td>
+<td>real_world</td>
+<td><code>requests_lib</code></td>
+<td style="text-align: right;">0.9206</td>
+<td>ROLE_PRESERVED</td>
+<td style="text-align: right;">8 / 44 / 15</td>
+<td style="text-align: right;">10 / 44 / 17</td>
+<td style="text-align: right;">0.215</td>
+</tr>
+<tr>
+<td style="text-align: right;">24</td>
+<td>zoo</td>
+<td><code>07_event_driven</code></td>
+<td style="text-align: right;">0.8667</td>
+<td>ROLE_PRESERVED</td>
+<td style="text-align: right;">0 / 4 / 3</td>
+<td style="text-align: right;">0 / 4 / 5</td>
+<td style="text-align: right;">0.092</td>
 </tr>
 </tbody>
 </table>
@@ -12992,7 +12983,7 @@ role-preservation counts than the JSONL can support, the freshness gate fails.</
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

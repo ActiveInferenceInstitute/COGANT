@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11076,14 +11076,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12687,41 +12687,41 @@ rule is a Python class that inspects a program-graph node and decides
 whether to assign it a semantic role.</p>
 <p>A rule must implement:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomRule</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;One-line description shown in `cogant explain` output.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""One-line description shown in `cogant explain` output."""</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;my_custom_rule&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"my_custom_rule"</span>
     <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>  <span class="c1"># Lower fires first</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RuleResult</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a RuleResult with role, confidence, and reason.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return a RuleResult with role, confidence, and reason."""</span>
         <span class="o">...</span>
 </code></pre></div>
 <h3 id="2-create-the-rule-file">2. Create the rule file</h3>
-<div class="highlight"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>cogant/py/cogant/translate/rules/my_custom_rule.py<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
-<span class="s">&quot;&quot;&quot;Custom rule: detect event-emitter classes as active states.&quot;&quot;&quot;</span>
+<div class="highlight"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>cogant/py/cogant/translate/rules/my_custom_rule.py<span class="w"> </span><span class="s">&lt;&lt; 'EOF'</span>
+<span class="s">"""Custom rule: detect event-emitter classes as active states."""</span>
 
 <span class="s">from cogant.translate.rules.base import TranslationRule, RuleResult</span>
 
 
 <span class="s">class EventEmitterRule(TranslationRule):</span>
-<span class="s">    &quot;&quot;&quot;Assign &#39;active state&#39; (a) role to event-emitter classes.&quot;&quot;&quot;</span>
+<span class="s">    """Assign 'active state' (a) role to event-emitter classes."""</span>
 
-<span class="s">    name = &quot;event_emitter&quot;</span>
+<span class="s">    name = "event_emitter"</span>
 <span class="s">    priority = 45  # Fire before generic class rules</span>
 
 <span class="s">    def evaluate(self, node, graph):</span>
 <span class="s">        # Check if the node is a class that emits events</span>
-<span class="s">        if node.kind != &quot;class&quot;:</span>
+<span class="s">        if node.kind != "class":</span>
 <span class="s">            return RuleResult.no_match()</span>
 
 <span class="s">        method_names = {m.name for m in node.methods}</span>
-<span class="s">        emitter_signals = {&quot;emit&quot;, &quot;dispatch&quot;, &quot;publish&quot;, &quot;notify&quot;}</span>
+<span class="s">        emitter_signals = {"emit", "dispatch", "publish", "notify"}</span>
 
 <span class="s">        if method_names &amp; emitter_signals:</span>
 <span class="s">            return RuleResult(</span>
-<span class="s">                role=&quot;a&quot;,</span>
+<span class="s">                role="a",</span>
 <span class="s">                confidence=0.85,</span>
-<span class="s">                reason=f&quot;Class has emitter methods: {method_names &amp; emitter_signals}&quot;,</span>
+<span class="s">                reason=f"Class has emitter methods: {method_names &amp; emitter_signals}",</span>
 <span class="s">            )</span>
 
 <span class="s">        return RuleResult.no_match()</span>
@@ -12837,7 +12837,7 @@ assigned role and confidence score.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

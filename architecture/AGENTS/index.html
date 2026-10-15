@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10904,14 +10904,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12411,7 +12411,9 @@
 <h2 id="integration-boundary-with-the-upstream-gnn-toolchain">Integration boundary with the upstream GNN toolchain</h2>
 <p>COGANT is a 10-stage repository → GNN bundle compiler. After the validate
 stage, the bundle can be handed to the Active Inference Institute
-<strong>generalized-notation-notation</strong> package via two independent surfaces:</p>
+<strong>generalized-notation-notation</strong> package (optional <code>upstream</code> extra, pinned
+to the GNN 4.1.0 release line; import package <code>gnn</code>) via two independent
+surfaces:</p>
 <table>
 <thead>
 <tr>
@@ -12423,15 +12425,15 @@ stage, the bundle can be handed to the Active Inference Institute
 </thead>
 <tbody>
 <tr>
-<td>Single-file <code>validate_gnn</code></td>
-<td><code>cogant.gnn.upstream_bridge</code> (<code>upstream_*</code> helpers); called from <code>GNNValidator.validate_package</code></td>
-<td><strong>on</strong> (disable: <code>--no-upstream-gnn</code> / <code>COGANT_DISABLE_UPSTREAM_GNN=1</code>)</td>
-<td>warnings on <code>ValidationResult.details["upstream_gnn"]</code>; never fails the stage</td>
+<td>Single-file <code>validate_gnn_syntax</code> (level <code>standard</code>)</td>
+<td><code>cogant.gnn.upstream_bridge</code> (<code>run_upstream_validate_gnn</code> / <code>upstream_*</code> helpers); called from <code>GNNValidator.validate_package</code></td>
+<td><strong>off</strong> (enable: <code>upstream_gnn=True</code>, <code>PipelineConfig.upstream_gnn_validation=True</code>, or <code>COGANT_ENABLE_UPSTREAM_GNN=1</code> when the caller passes <code>upstream_gnn=None</code>; <code>--no-upstream-gnn</code> forces off)</td>
+<td>verdict on <code>ValidationResult.details["upstream_gnn"]</code>; upstream errors (or <code>CAPABILITY_UNAVAILABLE</code> when requested but missing) join <code>ValidationResult.errors</code>; never fails the pipeline's validate stage</td>
 </tr>
 <tr>
 <td>25-step pipeline</td>
-<td><code>cogant.gnn.upstream_bridge.pipeline.run_upstream_pipeline</code> driving <code>src.main.execute_pipeline_step</code></td>
-<td><strong>off</strong> (enable: <code>--upstream-gnn-pipeline</code>); when enabled, steps 11 (<code>render</code>) and 12 (<code>execute</code>) are skipped by default</td>
+<td><code>cogant.gnn.upstream_bridge.pipeline.run_upstream_pipeline</code> issuing one <code>python -m gnn.main --only-steps …</code> invocation</td>
+<td><strong>off</strong> (enable: <code>--upstream-gnn-pipeline</code>); when enabled, steps 1 (<code>setup</code>), 2 (<code>tests</code>), 11 (<code>render</code>), and 12 (<code>execute</code>) are skipped by default</td>
 <td>per-step results in <code>bundle.artifacts['upstream_pipeline_steps' / 'upstream_pipeline_summary']</code>; warnings on the validate stage; never fails the stage</td>
 </tr>
 </tbody>
@@ -12505,7 +12507,7 @@ configuration surface.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

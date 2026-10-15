@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10913,14 +10913,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -11105,6 +11105,17 @@
     <span class="md-ellipsis">
       
         Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#re-measurement-2026-10-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Re-measurement (2026-10-14)
       
     </span>
   </a>
@@ -12530,6 +12541,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#re-measurement-2026-10-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Re-measurement (2026-10-14)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -12553,6 +12575,16 @@
 <h1 id="incremental-mode-benchmark">Incremental Mode Benchmark</h1>
 <p>Measures the wall-time speedup of <code>cogant translate --incremental &lt;commit&gt;</code>
 against the full pipeline on a real-world Python repository.</p>
+<blockquote>
+<p><strong>2026-10-14 correction.</strong> The Scenario 2 figure below (5.57× for a one-file
+change) was measured on a partial path that re-parsed only the changed files
+and <strong>dropped every unchanged file from the resulting model</strong>, then cached
+the reduced result. That path was a data-loss defect and was removed in
+v0.7.0: a source change now re-analyses the full snapshot. The no-change
+path (Scenario 1) is unaffected, and it now also requires that the cached
+run's exported outputs exist in the current <code>output_dir</code>. See
+<a href="#re-measurement-2026-10-14">Re-measurement (2026-10-14)</a>.</p>
+</blockquote>
 <h2 id="setup">Setup</h2>
 <table>
 <thead>
@@ -12718,19 +12750,58 @@ uv<span class="w"> </span>run<span class="w"> </span>cogant<span class="w"> </sp
 <span class="w">    </span>--skip<span class="w"> </span>dynamic,export,validate
 
 <span class="c1"># Programmatic (excludes CLI startup)</span>
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
 <span class="s">from cogant.api.pipeline import PipelineConfig, PipelineRunner</span>
 <span class="s">cfg = PipelineConfig(</span>
-<span class="s">    incremental_since=&quot;HEAD&quot;,</span>
-<span class="s">    cache_dir=&quot;/tmp/cogant_bench/cache&quot;,</span>
-<span class="s">    output_dir=&quot;/tmp/cogant_bench/out&quot;,</span>
-<span class="s">    skip_stages=[&quot;dynamic&quot;, &quot;export&quot;, &quot;validate&quot;],</span>
+<span class="s">    incremental_since="HEAD",</span>
+<span class="s">    cache_dir="/tmp/cogant_bench/cache",</span>
+<span class="s">    output_dir="/tmp/cogant_bench/out",</span>
+<span class="s">    skip_stages=["dynamic", "export", "validate"],</span>
 <span class="s">)</span>
 <span class="s">runner = PipelineRunner()</span>
-<span class="s">bundle = runner.run(&quot;../../evaluation/eval_repos/flask&quot;, cfg)</span>
-<span class="s">print(bundle.metadata[&quot;incremental_stats&quot;])</span>
+<span class="s">bundle = runner.run("../../evaluation/eval_repos/flask", cfg)</span>
+<span class="s">print(bundle.metadata["incremental_stats"])</span>
 <span class="s">PY</span>
 </code></pre></div>
+<h2 id="re-measurement-2026-10-14">Re-measurement (2026-10-14)</h2>
+<p>Same scenarios, same target (Flask, 83 Python files, stages <code>dynamic</code>,
+<code>export</code>, <code>validate</code> skipped), on a shared 4-vCPU Linux container with
+Python 3.13 and COGANT 0.7.0. Medians of 3 baseline runs and 5 incremental
+runs; absolute times are slower than the 2026-04 macOS host, so compare the
+ratios.</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Median</th>
+<th>Ratio vs. full run</th>
+<th><code>incremental_stats</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Full run (no incremental)</td>
+<td>2.360 s</td>
+<td>1.00×</td>
+<td>—</td>
+</tr>
+<tr>
+<td>No change (<code>--incremental HEAD</code>, cache hit)</td>
+<td>0.094 s</td>
+<td><strong>25.16×</strong></td>
+<td><code>cache_hit=True</code>, 0/83 re-parsed</td>
+</tr>
+<tr>
+<td>One file changed (<code>--incremental HEAD~1</code>)</td>
+<td>2.463 s</td>
+<td><strong>0.96×</strong></td>
+<td><code>cache_hit=False</code>, 83/83 re-parsed, reason <code>1 source change(s) detected; re-analysing the full snapshot</code></td>
+</tr>
+</tbody>
+</table>
+<p>A one-file change now costs one full analysis: correctness over speed. A
+genuine partial speedup needs per-file patching of the cached program graph,
+mappings and downstream stage results, which the cache does not store today.</p>
 
 
 
@@ -12789,7 +12860,7 @@ uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </sp
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -11120,14 +11120,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -12768,17 +12768,17 @@ print(f"Data flows: {len(flows)}")
 from cogant.static import SymbolExtractor
 from pathlib import Path
 
-source = &quot;&quot;&quot;
+source = """
 def hello(name: str) -&gt; str:
-    return f&quot;Hello, {name}!&quot;
+    return f"Hello, {name}!"
 
 class Greeter:
     def greet(self, name: str) -&gt; str:
-        return f&quot;Hi, {name}!&quot;
-&quot;&quot;&quot;
+        return f"Hi, {name}!"
+"""
 
 extractor = SymbolExtractor()
-table = extractor.extract_from_source(source, Path(&quot;example.py&quot;))
+table = extractor.extract_from_source(source, Path("example.py"))
 </code></pre></div></p>
 <h3 id="data-structure-quick-reference">Data Structure Quick Reference</h3>
 <h4 id="reposnapshot">RepoSnapshot</h4>
@@ -12992,7 +12992,7 @@ uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </sp
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

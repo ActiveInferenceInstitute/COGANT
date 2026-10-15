@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10910,14 +10910,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../evaluation/GNN_V2_AUDIT_SURFACE/" class="md-nav__link">
+      <a href="../evaluation/GNN_UPSTREAM_AUDIT_SURFACE/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GNN v2 Audit Surface
+    GNN Upstream Audit Surface
   
 
     
@@ -13606,9 +13606,9 @@
 <p>GNN stands for Generalized Notation Notation. It is a text format the Active Inference Institute uses to describe generative models: state-space variables, observation channels, actions, and the A/B/C/D matrices that relate them. If you work in Active Inference research, GNN is how you share models. If you are a software engineer, the GNN is a formal summary of your codebase's information flow: which parts hold state, which parts observe, which parts act, and which parts make decisions.</p>
 <p>See <a href="../theory/gnn_format/">Theory — GNN Format</a>.</p>
 <h3 id="3-what-languages-does-cogant-support">3. What languages does COGANT support?</h3>
-<p>v0.6.0 supports <strong>Python</strong> (via CPython <code>ast</code>), <strong>JavaScript / TypeScript</strong> (via the optional tree-sitter front end), and experimental <strong>Rust</strong> and <strong>Go</strong> structural parsers. The mapping rules are language-agnostic because they operate on <code>NodeKind</code>/<code>EdgeKind</code> in the program graph. Java remains on the roadmap.</p>
+<p>v0.7.0 supports <strong>Python</strong> (via CPython <code>ast</code>), <strong>JavaScript / TypeScript</strong> (via the optional tree-sitter front end), and experimental <strong>Rust</strong> and <strong>Go</strong> structural parsers. The mapping rules are language-agnostic because they operate on <code>NodeKind</code>/<code>EdgeKind</code> in the program graph. Java remains on the roadmap.</p>
 <h3 id="4-how-accurate-is-role-assignment">4. How accurate is role assignment?</h3>
-<p>On the control-positive fixtures shipped with v0.6.0, confidence is reported per rule, per mapping, and per bundle; treat it as heuristic evidence rather than accuracy. Calibration artifacts and reviewer annotations distinguish accepted and rejected mappings, and the docs report precision/recall only where an executable annotation set exists. Unconventional naming, dynamic dispatch, and reflection still reduce recall.</p>
+<p>On the control-positive fixtures shipped with v0.7.0, confidence is reported per rule, per mapping, and per bundle; treat it as heuristic evidence rather than accuracy. Calibration artifacts and reviewer annotations distinguish accepted and rejected mappings, and the docs report precision/recall only where an executable annotation set exists. Unconventional naming, dynamic dispatch, and reflection still reduce recall.</p>
 <p>See <a href="../rnd/calibration/">R&amp;D — Calibration</a>.</p>
 <h3 id="5-do-i-need-to-know-active-inference-to-use-cogant">5. Do I need to know Active Inference to use COGANT?</h3>
 <p>No. COGANT assigns roles and produces the GNN bundle without requiring any Active Inference knowledge from you. The output is useful even if you treat it purely as a "which parts of my codebase are stateful, which read, which write, which orchestrate" summary. If you do know Active Inference, the A/B/C/D matrices and Markov blanket partition will be directly meaningful.</p>
@@ -13638,7 +13638,7 @@
 <h3 id="10a-is-there-rust-ffi-acceleration">10a. Is there Rust FFI acceleration?</h3>
 <p>Yes. Set <code>COGANT_USE_RUST=1</code> to require the optional PyO3 backend; COGANT now fails loudly if the compiled extension is unavailable in that mode. Set <code>COGANT_USE_RUST=0</code> to force pure Python. When the variable is unset, COGANT uses auto mode and records the selected backend in generated outputs.</p>
 <h3 id="10b-does-cogant-ship-type-stubs">10b. Does COGANT ship type stubs?</h3>
-<p>Yes. v0.6.0 ships <code>.pyi</code> stub files for public API modules and a <code>py.typed</code> marker. The repository also includes an export-vs-stub parity audit so public <code>__all__</code> symbols cannot silently drift away from their stub files.</p>
+<p>Yes. v0.7.0 ships <code>.pyi</code> stub files for public API modules and a <code>py.typed</code> marker. The repository also includes an export-vs-stub parity audit so public <code>__all__</code> symbols cannot silently drift away from their stub files.</p>
 <hr />
 <h2 id="technical-limitations">Technical Limitations</h2>
 <h3 id="11-what-codebases-does-cogant-work-well-on">11. What codebases does COGANT work well on?</h3>
@@ -13671,10 +13671,10 @@
 </ul>
 <p>See <a href="../rnd/active_inference_mapping/">R&amp;D — Active Inference Mapping, Surprising Findings</a>.</p>
 <h3 id="15-does-cogant-understand-runtime-behavior">15. Does COGANT understand runtime behavior?</h3>
-<p>No. COGANT is <strong>static analysis only</strong> by default in v0.6.0. It parses Python AST (and JS/TS via tree-sitter when enabled), builds a program graph from structural relationships (calls, imports, inheritance, reads, writes), and applies rules to that graph. It does not execute your code, trace actual function calls, or observe runtime state.</p>
+<p>No. COGANT is <strong>static analysis only</strong> by default in v0.7.0. It parses Python AST (and JS/TS via tree-sitter when enabled), builds a program graph from structural relationships (calls, imports, inheritance, reads, writes), and applies rules to that graph. It does not execute your code, trace actual function calls, or observe runtime state.</p>
 <p>The <code>--coverage</code> and <code>--trace</code> flags accept pre-collected runtime data (coverage.py JSON and function-call traces) and merge them into the graph, but COGANT itself does not generate that data.</p>
 <h3 id="16-can-cogant-analyze-dynamic-languages-like-ruby-or-php">16. Can COGANT analyze dynamic languages like Ruby or PHP?</h3>
-<p>Not in v0.6.0. The parsers currently cover Python, JavaScript/TypeScript, and experimental Rust and Go structural front ends. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more runtime-only evidence gaps for dynamic language targets.</p>
+<p>Not in v0.7.0. The parsers currently cover Python, JavaScript/TypeScript, and experimental Rust and Go structural front ends. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more runtime-only evidence gaps for dynamic language targets.</p>
 <h3 id="17-what-happens-with-code-below-the-confidence-threshold">17. What happens with code below the confidence threshold?</h3>
 <p>Mappings with confidence below 0.4 are kept in the bundle for traceability but excluded from the state-space compilation by default. They appear in the raw <code>semantic_mappings.json</code> but do not contribute to the A/B/C/D matrices or the GNN export. You can lower the threshold with <code>--min-confidence</code> if you want to include them.</p>
 <hr />
@@ -13770,10 +13770,10 @@
 <hr />
 <h2 id="roadmap">Roadmap</h2>
 <h3 id="33-will-cogant-support-rust-go-and-java">33. Will COGANT support Rust, Go, and Java?</h3>
-<p>Python is fully supported (CPython <code>ast</code>); JavaScript and TypeScript are fully supported (v0.4.0+, tree-sitter); Rust and Go have experimental structural parsers (v0.6.0). Java is the next parser priority on the roadmap, also built on tree-sitter. The translation rules are language-agnostic; only the parser and fact-extraction layers need to be language-specific.</p>
+<p>Python is fully supported (CPython <code>ast</code>); JavaScript and TypeScript are fully supported (v0.4.0+, tree-sitter); Rust and Go have experimental structural parsers (v0.7.0). Java is the next parser priority on the roadmap, also built on tree-sitter. The translation rules are language-agnostic; only the parser and fact-extraction layers need to be language-specific.</p>
 <p>See <a href="../roadmap/version_060_planned/#l1">Roadmap — v0.6.x planned</a>.</p>
 <h3 id="34-is-there-a-web-ui">34. Is there a web UI?</h3>
-<p>v0.6.0 ships HTML inspection dashboards and manuscript-facing visual artifacts for browsing the program graph, GNN output, roundtrip deltas, parser certainty, and benchmark summaries. The dashboard workbench is generated from real bundle artifacts rather than hand-authored screenshots.</p>
+<p>v0.7.0 ships HTML inspection dashboards and manuscript-facing visual artifacts for browsing the program graph, GNN output, roundtrip deltas, parser certainty, and benchmark summaries. The dashboard workbench is generated from real bundle artifacts rather than hand-authored screenshots.</p>
 <h3 id="35-what-is-the-long-term-vision">35. What is the long-term vision?</h3>
 <p>COGANT aims to be a bridge between software engineering and Active Inference research:</p>
 <ol>
@@ -13806,7 +13806,7 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">cogant.server.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uvicorn</span>
 <span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">()</span>
-<span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8080</span><span class="p">)</span>
+<span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">"0.0.0.0"</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8080</span><span class="p">)</span>
 </code></pre></div>
 <p>Or via Docker: <code>docker-compose up</code> (uses <code>cogant/Dockerfile</code>, exposes port 8080). Key endpoints: <code>GET /health</code>, <code>POST /analyze</code> (body: <code>{"repo_path": "..."}</code>, returns GNN bundle JSON), <code>GET /api/v1/rules</code> (returns all 22 active rule names). See <code>examples/demo_server.py</code> for a standalone example.</p>
 
@@ -13867,7 +13867,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.expand", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       
