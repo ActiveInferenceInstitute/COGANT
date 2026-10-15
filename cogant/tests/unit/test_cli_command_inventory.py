@@ -19,8 +19,8 @@ from cogant.cli.main import app
 
 pytestmark = pytest.mark.unit
 
-EXPECTED_COMMAND_COUNT = 28
-REQUIRED_COMMANDS = {"reverse", "roundtrip", "upstream-gnn", "translate", "validate"}
+EXPECTED_COMMAND_COUNT = 29
+REQUIRED_COMMANDS = {"finite", "reverse", "roundtrip", "upstream-gnn", "translate", "validate"}
 
 
 def _registered_command_names() -> set[str]:

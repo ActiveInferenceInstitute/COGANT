@@ -79,7 +79,8 @@ state/action cases and likelihood columns still need complete distributions.
 The dense entry count is `states² × actions + observations × states +
 observations + states`. Compilation checks it before allocating the matrices.
 `--max-entries` selects the CLI budget; Python callers can pass `max_entries` to
-`compile_finite_model`. Exceeding it raises an error. The declared state axis is
+`compile_finite_model`. The limit must be a positive integer; exceeding it raises
+an error. The declared state axis is
 preserved in full; this compiler does not prune states, smooth distributions,
 or renormalize declared coefficients. Input parsing and sparse table validation
 are separate from this dense-allocation budget.

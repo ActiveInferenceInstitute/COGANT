@@ -1,6 +1,6 @@
 ## Commands
 
-The Typer app in [`py/cogant/cli/main.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/cli/main.py) registers the current top-level subcommands for v0.6.0. `cogant --help` is ground truth; the entries below are kept in sync by the doc-link verifier.
+The Typer app in [`py/cogant/cli/main.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/cli/main.py) registers the current top-level commands and groups. `cogant --help` is ground truth; command inventory tests guard the registered surface, and the doc-link verifier checks reference links.
 
 ### init
 
@@ -117,14 +117,14 @@ cogant translate ./my_repo --output output/ --skip dynamic,export
 - `--no-dynamic`: Skip the dynamic-analysis enrichment stage (coverage + trace). Faster but less accurate.
 - `--coverage`: Path to a coverage database (`.coverage`) or Cobertura `coverage.xml`.
 - `--trace`: Path to a Chrome DevTools trace JSON file for dynamic analysis.
-- `--incremental`: Git ref (e.g. `HEAD~1`, a commit hash, or a tag) to use as the incremental baseline. Only files that changed between this ref and HEAD are re-parsed; unchanged results are served from `~/.cache/cogant` when available.
+- `--incremental`: Git ref (e.g. `HEAD~1`, a commit hash, or a tag) to use as the incremental baseline. An unchanged snapshot can reuse complete cached outputs; source changes trigger full-snapshot analysis. See `analyze` below for the cache contract.
 - `--cache-dir`: Override the incremental cache directory. Defaults to `~/.cache/cogant`. Useful for tests and benchmarks that need an isolated cache state.
 
 **Artifacts:** Writes **`bundle.json`** in the output directory (full pipeline `Bundle` snapshot for `cogant render` / `cogant validate`) plus stage exports from the `export` stage when run.
 
 **Exit status:** The results table shows each stage's recorded outcome (success, partial, skipped, unavailable, failed). The command exits `1` when any stage failed or errors were recorded; the bundle is still written for inspection.
 
-**Stages:** ingest, static, normalize, graph, translate, statespace, process, export, validate
+**Stages:** ingest, static, normalize, graph, dynamic, translate, statespace, process, export, validate. Dynamic enrichment can be skipped with `--no-dynamic`.
 
 ### analyze
 
@@ -148,6 +148,22 @@ cogant analyze ./my_repo --incremental HEAD~1 --no-dynamic
 - `--quiet, -q`: Suppress per-stage progress output (still prints summary).
 
 Incremental stats (`cache_hit`, `files_reparsed`, `files_total`, `reason`) are reported after the run and persisted on `bundle.metadata['incremental_stats']`.
+
+### finite
+
+Compile and check an explicitly authored finite generative model. Run from the
+inner package root:
+
+```bash
+cogant finite compile examples/finite_models/toggle.json -o output/finite/toggle.json
+cogant finite verify examples/finite_models/toggle.json output/finite/toggle.json
+```
+
+Compilation validates total transition and observation kernels before allocating
+the immutable A/B/C/D artifact. `--max-entries` bounds dense allocation, and an
+output path must be new. Verification checks source identity and every matrix
+coefficient. See the [finite-model contract](../api/finite_models.md) for schema,
+axes, exit codes, Python runtime use, and evidence limits.
 
 ### statespace
 

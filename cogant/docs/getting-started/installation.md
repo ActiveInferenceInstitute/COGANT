@@ -52,7 +52,7 @@ cogant --help
 ## Verify the install
 
 ```bash
-cogant --help           # authoritative list: 28 top-level names (26 commands + plugin + migrate groups)
+cogant --help           # authoritative command index, including finite, plugin, and migrate groups
 cogant scan .           # run a minimal static analysis on the current directory
 ```
 
