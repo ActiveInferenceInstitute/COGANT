@@ -77,3 +77,23 @@ def test_failed_regeneration_preserves_metrics(monkeypatch: pytest.MonkeyPatch) 
     with pytest.raises(module.MetricsProbeError):
         module.main()
     assert path.read_bytes() == before
+
+
+def test_receipt_count_must_match_the_same_run_summary(tmp_path: Path) -> None:
+    module = _module()
+    receipt = tmp_path / "tests.xml"
+    receipt.write_text(
+        '<testsuites><testsuite><testcase name="a"/><testcase name="b"><skipped/></testcase></testsuite></testsuites>'
+    )
+    assert module._test_total_from_report(receipt, {"passing": 1, "skipped": 1}) == 2
+    with pytest.raises(module.MetricsProbeError, match="disagrees"):
+        module._test_total_from_report(receipt, {"passing": 1})
+
+
+@pytest.mark.parametrize("contents", ["broken XML", "<testsuites/>"])
+def test_invalid_receipt_is_rejected(tmp_path: Path, contents: str) -> None:
+    module = _module()
+    receipt = tmp_path / "tests.xml"
+    receipt.write_text(contents)
+    with pytest.raises(module.MetricsProbeError):
+        module._test_total_from_report(receipt, {"passing": 1})

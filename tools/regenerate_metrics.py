@@ -31,10 +31,13 @@ from __future__ import annotations
 import ast
 import json
 import re
+import shlex
 import statistics
 import subprocess
 import sys
+import tempfile
 import tomllib
+import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -233,7 +236,18 @@ def get_test_count_total() -> int:
 # ---------------------------------------------------------------------------
 
 
-def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
+def _test_total_from_report(path: Path, counts: dict[str, int]) -> int:
+    try:
+        report = ET.parse(path).getroot()
+    except (OSError, ET.ParseError) as exc:
+        raise MetricsProbeError(f"Invalid pytest receipt: {path}: {exc}") from exc
+    total = len(list(report.iter("testcase")))
+    if total <= 0 or total != sum(counts.values()):
+        raise MetricsProbeError(f"JUnit total {total} disagrees with pytest summary {counts}")
+    return total
+
+
+def get_test_results_and_coverage() -> tuple[dict[str, int], float, float, int]:
     """Read test results, suite runtime, and coverage from pytest + coverage.json.
 
     Runs pytest with coverage, then reads that invocation's coverage.json.
@@ -242,21 +256,22 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
     Returns
     -------
     tuple
-        ``(test_counts, coverage_percent, suite_runtime_s)`` where
+        ``(test_counts, coverage_percent, suite_runtime_s, total_cases)`` where
         ``test_counts`` is a dict with keys ``passing``/``failing``/``skipped``/
         ``xfailed``/``xpassed``, ``coverage_percent`` is a float parsed from
         ``coverage.json``, and ``suite_runtime_s`` is the wall-clock seconds
         parsed from pytest's terminal summary line (0.0 on parse failure).
     """
     coverage_json = COGANT_DIR / "coverage.json"
+    report_path = Path(tempfile.mkdtemp(prefix="cogant-metrics-")) / "tests.xml"
 
-    # Run pytest in fast mode to get pass/fail counts (no coverage collection).
     test_result = {"passing": 0, "failing": 0, "skipped": 0, "xfailed": 0, "xpassed": 0}
     suite_runtime_s: float = 0.0
     try:
         rc, out = _run(
             "uv run pytest tests/ -q --tb=short -p no:warnings --no-header "
-            "--cov=py/cogant --cov-report=json:coverage.json 2>&1",
+            "--cov=py/cogant --cov-report=json:coverage.json "
+            f"--junitxml={shlex.quote(str(report_path))} 2>&1",
             cwd=COGANT_DIR,
             # The full ~9.7k-test suite takes ~57 min single-process (no
             # pytest-xdist); a tighter cap silently degrades the counts to 0.
@@ -310,7 +325,10 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
     if not 0 < coverage_pct <= 100:
         raise MetricsProbeError(f"Invalid coverage percentage: {coverage_pct}")
 
-    return test_result, coverage_pct, suite_runtime_s
+    total = _test_total_from_report(report_path, test_result)
+    print(f"  pytest receipt: {report_path}", file=sys.stderr)
+    print(f"  tests: {test_result}; total={total}; coverage={coverage_pct}%", file=sys.stderr)
+    return test_result, coverage_pct, suite_runtime_s, total
 
 
 # ---------------------------------------------------------------------------
@@ -806,16 +824,11 @@ def main() -> None:
     print("  [2/10] Test file counts...", file=sys.stderr)
     file_counts = get_test_file_counts()
 
-    print("  [3/10] Test collection count...", file=sys.stderr)
-    test_count_total = get_test_count_total()
-
-    print("  [4/10] Test run results + coverage (this may take a few minutes)...", file=sys.stderr)
-    test_results, coverage_pct, suite_runtime_s = get_test_results_and_coverage()
-
-    if sum(test_results.values()) != test_count_total:
-        raise MetricsProbeError(
-            f"Collected {test_count_total} tests, but run reported {test_results}"
-        )
+    print(
+        "  [3-4/10] Test results, count, and coverage (this may take a few minutes)...",
+        file=sys.stderr,
+    )
+    test_results, coverage_pct, suite_runtime_s, test_count_total = get_test_results_and_coverage()
 
     print("  [5/10] mypy strict errors...", file=sys.stderr)
     mypy_errors = get_mypy_errors()
