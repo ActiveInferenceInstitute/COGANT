@@ -109,4 +109,11 @@ fixture evidence, not inferential statistics over a population.
 
 ## Summary
 
-The ablation study answers three questions. **Which rule families are necessary for which roles?** @tbl:rule-family-ablation reports how structural rules drive HIDDEN\_STATE, semantic rules drive OBSERVATION/ACTION/POLICY/PREFERENCE, control rules drive CONTEXT, behavioural rules drive orchestration POLICY and CONSTRAINT, and resilience rules drive resilience-flavoured POLICY and ACTION evidence. **How many iterations does the fixpoint actually need?** @tbl:fixpoint-iteration-ablation shows one pass on every shipped fixture, with the $K = 10$ cap as a pathological-rule safety valve. **What do the A/B/C/D degraded-output defaults produce when no edge evidence is available?** @tbl:matrix-degraded-output-ablation documents maximum-entropy uniform distributions and identity transitions across the listed fixtures. Simple fixtures use degraded-output defaults universally; real-world fixtures fill an increasing fraction of matrix entries from actual edge evidence.
+@tbl:rule-family-ablation reports net mapping-count changes under rule-family
+removal; role-specific effects require the decomposition in
+@sec:S02-appendix-ablation. @tbl:fixpoint-iteration-ablation reports equal
+mapping counts at the tested iteration caps, which does not establish identical
+records or a complete execution trace. @tbl:matrix-degraded-output-ablation
+records the fixture-specific fractions of uniform likelihood columns, identity
+transition slices, zero preference entries, and uniform-prior flags. These
+structural diagnostics do not establish calibrated source-program behavior.
