@@ -189,7 +189,7 @@ MANUSCRIPT_VARS: dict[str, str] = {
     # Codebase — source counts and public surface area
     # ---------------------------------------------------------------
     "{{PYTHON_SOURCE_FILES}}": "codebase.python_source_files",  # Number of .py files under cogant/
-    "{{PYTHON_LOC}}": "codebase.python_loc",  # Executable python LOC (not blanks/comments)
+    "{{PYTHON_LOC}}": "codebase.python_loc",  # Total source lines, including blanks and comments
     "{{PUBLIC_CLASSES}}": "codebase.public_classes",  # Public class count across cogant/
     "{{PUBLIC_FUNCTIONS}}": "codebase.public_functions",  # Public function/method count
     "{{PUBLIC_MODULES}}": "codebase.public_modules",  # Public module count (no underscore prefix)

@@ -16,7 +16,7 @@ These items are implemented and tested in the current tree.
 | Incremental analysis: `--incremental <git-ref>` / `PipelineConfig.incremental_since` | current | 19.6× no-change speedup on Flask; source changes re-analyse the full snapshot (per-file patching is future work) |
 | Multi-episode Bayesian learning: `run_multi_episode`, `update_D_from_posterior`, `update_A_from_counts` | current | |
 | Production FastAPI server with `/health` + `/translate`; Dockerfile + docker-compose | current | EXPOSE 8080 |
-| Roundtrip role-preservation benchmark | v0.6.0 | Current native ledger records 25/25 ROLE_PRESERVED, 0/25 DRIFT, 0 non-native rows, and 1/25 strict structural-isomorphism row confined to `roundtrip_strict_minimal` |
+| Roundtrip role-preservation benchmark | v0.7.0 | Current native ledger records 24/24 ROLE_PRESERVED, 0/24 DRIFT, 0 non-native rows, and 0/24 strict structural-isomorphism rows |
 | Parquet export (`cogant.export.parquet`) | wave-21 | PyArrow optional dep |
 | Static analysis module: `ComplexityAnalyzer`, `CouplingAnalyzer`, `DeadCodeDetector`, `MetricsAnalyzer` | wave-21 | Halstead, Martin metrics |
 | Network/graph analysis: `GraphAnalyzer` with centrality, community detection, Tarjan SCC | wave-21 | Louvain + component fallback |

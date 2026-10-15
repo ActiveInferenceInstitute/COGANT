@@ -1,6 +1,6 @@
 # COGANT Scope and Readiness Report
 
-**Current package version:** v0.6.0
+**Current package version:** v0.7.0
 **Primary numeric source:** `cogant/evaluation/METRICS.yaml`
 **Roundtrip ledger:** `cogant/evaluation/dataset/roundtrip_results.jsonl`
 
@@ -28,18 +28,18 @@ the native v0.6 release ledger is Python-centered.
 
 | Evidence area | Current checked-in status | Source |
 |---|---:|---|
-| Collected tests | 9691 | `METRICS.yaml` |
-| Passing tests | 9687 | `METRICS.yaml` |
+| Collected tests | 9958 | `METRICS.yaml` |
+| Passing tests | 9909 | `METRICS.yaml` |
 | Failing tests | 0 | `METRICS.yaml` |
-| Line coverage | 95.55% | `METRICS.yaml` / `coverage.json` |
+| Line coverage | 94.54% | `METRICS.yaml` / `coverage.json` |
 | mypy strict errors | 0 | `METRICS.yaml` |
 | ruff violations | 0 | `METRICS.yaml` |
-| Python source files | 240 | `METRICS.yaml` |
-| Roundtrip targets | 25 | `METRICS.yaml` |
-| Role-preserved targets | 25 | `METRICS.yaml` |
+| Python source files | 247 | `METRICS.yaml` |
+| Roundtrip targets | 24 | `METRICS.yaml` |
+| Role-preserved targets | 24 | `METRICS.yaml` |
 | Drift targets | 0 | `METRICS.yaml` |
 | Failed targets | 0 | `METRICS.yaml` |
-| Strict structural isomorphism | 1 | `METRICS.yaml` |
+| Strict structural isomorphism | 0 | `METRICS.yaml` |
 
 ## Supported Claims
 
@@ -47,11 +47,10 @@ the native v0.6 release ledger is Python-centered.
   validated GNN bundle output.
 - The default translation engine registers 22 concrete rules across structural,
   semantic, control, behavioral, and resilience families.
-- The native v0.6 roundtrip ledger in `METRICS.yaml` reports the current
+- The native v0.7 roundtrip ledger in `METRICS.yaml` reports the current
   role-preserved, drift, and failed target counts.
-- Strict structural isomorphism is achieved only by `roundtrip_strict_minimal`,
-  a deliberately minimal reversible fixture; ordinary application fixtures are
-  role-preserved but not graph-isomorphic.
+- No current native ledger row meets the strict structural-isomorphism contract;
+  all measured fixtures meet the public role-preservation threshold.
 - The forward external-repository fixture completes on eight Python libraries,
   but its dulwich row remains a scaling caveat until that fixture is rerun.
 
@@ -68,7 +67,7 @@ the native v0.6 release ledger is Python-centered.
 
 | Gap | Why it matters | Needed evidence |
 |---|---|---|
-| Strict structural isomorphism confined to one minimal fixture | Broad strict roundtrip wording remains unsupported | Structural-invariant preservation on ordinary fixtures or narrower published claim |
+| No strict structural matches in the current ledger | Broad strict roundtrip wording remains unsupported | Structural-invariant preservation on ordinary fixtures or narrower published claim |
 | External-repository fixture needs refresh | The checked-in fixture predates the post-fix dulwich scaling target | Rerun `REAL_WORLD_EVAL.md` fixture and commit updated JSON |
 | Confidence calibration remains unlearned | Rule scores are principled defaults, not empirical precision estimates | Human-labeled corpus and calibration report |
 | JS/TS release evidence is incomplete | Cross-language docs should not imply parity with Python | Native JS/TS roundtrip ledger and CI gate |

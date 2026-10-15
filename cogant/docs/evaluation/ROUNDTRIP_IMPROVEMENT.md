@@ -8,20 +8,18 @@ This page describes the current reverse-synthesis status, not a dated change log
 
 | Metric | Value |
 | --- | ---: |
-| Targets | 25 |
-| ROLE_PRESERVED | 25 |
+| Targets | 24 |
+| ROLE_PRESERVED | 24 |
 | DRIFT | 0 |
 | FAILED | 0 |
-| Strict structural isomorphism | 1 |
-| Mean role-preservation score | 1.0000 |
+| Strict structural isomorphism | 0 |
+| Mean role-preservation score | 0.9819 |
 | Median role-preservation score | 1.0000 |
 
-The reverse synthesizer preserves semantic-role populations for all shipped native
-fixtures. Only `roundtrip_strict_minimal` clears the stricter structural-
-isomorphism contract; it is a deliberately minimal reversible subset, not a
-representative application fixture. Release-facing language should therefore say
-**role-preserved** for the ledger as a whole and reserve **strictly structurally
-isomorphic** for that one row.
+The current native ledger meets the role-preservation threshold for all measured
+fixtures. Six rows score below 1.0, so this does not imply identical role counts.
+No current row clears the stricter structural-isomorphism contract. Release-facing
+language should report threshold acceptance and the remaining structural deltas.
 
 ## Current Reverse-Synthesis Mechanism
 
@@ -74,5 +72,5 @@ uv run pytest tests/unit/test_metrics_api.py -q --no-cov
 - Add JS/TS targets to the native roundtrip ledger, or keep cross-language
   evidence separate from Python-front-end release claims.
 - Add one more small permissively licensed held-out fixture to stress the now-saturated in-sample ledger.
-- Expand strict structural fidelity beyond the deliberately minimal reversible
-  subset without weakening the invariant definition.
+- Establish strict structural fidelity on the current fixtures without weakening
+  the invariant definition.

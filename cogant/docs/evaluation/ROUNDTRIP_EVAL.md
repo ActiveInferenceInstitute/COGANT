@@ -1,6 +1,6 @@
 # COGANT Roundtrip Evaluation
 
-Generated from current native ledger: 2026-06-14
+Generated from current native ledger: 2026-10-15
 Tooling: `tools/regenerate_roundtrip_ledger.py` plus `tools/regenerate_metrics.py`
 Public threshold: `role_preservation_score >= 0.5` = `ROLE_PRESERVED`
 
@@ -14,26 +14,27 @@ Public threshold: `role_preservation_score >= 0.5` = `ROLE_PRESERVED`
 
 | Metric | Current value |
 | --- | ---: |
-| Targets | 25 |
-| ROLE_PRESERVED | 25 |
+| Targets | 24 |
+| ROLE_PRESERVED | 24 |
 | DRIFT | 0 |
 | FAILED | 0 |
 | Non-native rows excluded from current counts | 0 |
-| Strict structural isomorphism | 1 |
-| Mean role-preservation score | 1.0000 |
+| Strict structural isomorphism | 0 |
+| Mean role-preservation score | 0.9819 |
 | Median role-preservation score | 1.0000 |
-| Min / max role-preservation score | 1.0000 / 1.0000 |
+| Min / max role-preservation score | 0.8667 / 1.0000 |
 | Score source | `current_native` |
 
 Interpretation: the current benchmark is strong in-sample evidence for
 role-population preservation on the shipped Python fixtures and reductions, but it is not a
 strict graph-isomorphism result. `ROLE_PRESERVED` means the semantic-role
-multiset survives the forward -> reverse -> forward loop at the public threshold.
+overlap score meets the public threshold in the forward -> reverse -> forward loop.
+Scores below 1.0 can include extra synthesized roles or dropped source roles.
 Strict structural success additionally requires zero node/edge deltas, preserved
 edge-kind counts, matrix value preservation, GNN-section preservation, and
-generated-code success. `roundtrip_strict_minimal` clears that stricter bar
-because it is a deliberately minimal reversible subset; ordinary application
-fixtures remain role-preserved but not strictly graph-isomorphic.
+generated-code success. No current ledger row clears that stricter bar.
+The former `roundtrip_strict_minimal` row is not present in the current shipped
+fixture set and is excluded from the refreshed ledger.
 
 The previous `DRIFT` rows (`cli_tool`, `notebook_module`) now carry source
 HIDDEN_STATE, OBSERVATION, and ACTION roles and roundtrip as `ROLE_PRESERVED`.
@@ -44,31 +45,30 @@ scaffolding cannot by itself launder a row into role-preserved evidence.
 
 | # | Group | Target | s_role | Status | Orig H/O/A | Synth H/O/A | Elapsed s |
 | ---: | --- | --- | ---: | --- | ---: | ---: | ---: |
-| 1 | control_positive | `async_service` | 1.0000 | ROLE_PRESERVED | 1 / 1 / 2 | 1 / 1 / 2 | 0.082 |
-| 2 | control_positive | `calculator` | 1.0000 | ROLE_PRESERVED | 1 / 3 / 6 | 1 / 3 / 6 | 0.105 |
-| 3 | control_positive | `cli_tool` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 1 | 1 / 2 / 1 | 0.099 |
-| 4 | control_positive | `data_pipeline` | 1.0000 | ROLE_PRESERVED | 0 / 0 / 2 | 0 / 0 / 2 | 0.125 |
-| 5 | control_positive | `event_pipeline` | 1.0000 | ROLE_PRESERVED | 1 / 9 / 7 | 1 / 9 / 7 | 0.094 |
-| 6 | control_positive | `flask_mini` | 1.0000 | ROLE_PRESERVED | 6 / 1 / 13 | 6 / 1 / 13 | 0.125 |
-| 7 | control_positive | `multi_package_workspace` | 1.0000 | ROLE_PRESERVED | 0 / 0 / 1 | 0 / 0 / 1 | 0.080 |
-| 8 | control_positive | `notebook_module` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 1 | 1 / 2 / 1 | 0.082 |
-| 9 | control_positive | `plugin_architecture` | 1.0000 | ROLE_PRESERVED | 0 / 2 / 3 | 0 / 2 / 3 | 0.083 |
-| 10 | control_positive | `roundtrip_strict_minimal` | 1.0000 | STRUCTURALLY_ISOMORPHIC | 1 / 1 / 2 | 1 / 1 / 2 | 0.092 |
-| 11 | real_world | `flask_app` | 1.0000 | ROLE_PRESERVED | 13 / 24 / 26 | 13 / 24 / 26 | 0.253 |
-| 12 | real_world | `json_stdlib` | 1.0000 | ROLE_PRESERVED | 3 / 2 / 11 | 3 / 2 / 11 | 0.114 |
-| 13 | real_world | `requests_lib` | 1.0000 | ROLE_PRESERVED | 8 / 37 / 15 | 8 / 37 / 15 | 0.171 |
-| 14 | zoo | `01_simple_state` | 1.0000 | ROLE_PRESERVED | 1 / 1 / 2 | 1 / 1 / 2 | 0.081 |
-| 15 | zoo | `02_observer` | 1.0000 | ROLE_PRESERVED | 1 / 3 / 1 | 1 / 3 / 1 | 0.086 |
-| 16 | zoo | `03_actor` | 1.0000 | ROLE_PRESERVED | 1 / 0 / 4 | 1 / 0 / 4 | 0.111 |
-| 17 | zoo | `04_pomdp_minimal` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 3 | 1 / 2 / 3 | 0.093 |
-| 18 | zoo | `05_multi_factor` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 3 | 1 / 2 / 3 | 0.091 |
-| 19 | zoo | `06_hierarchical` | 1.0000 | ROLE_PRESERVED | 2 / 2 / 4 | 2 / 2 / 4 | 0.086 |
-| 20 | zoo | `07_event_driven` | 1.0000 | ROLE_PRESERVED | 0 / 4 / 3 | 0 / 4 / 3 | 0.086 |
-| 21 | zoo | `08_preferences` | 1.0000 | ROLE_PRESERVED | 1 / 1 / 1 | 1 / 1 / 1 | 0.084 |
-| 22 | zoo | `09_policy` | 1.0000 | ROLE_PRESERVED | 1 / 1 / 3 | 1 / 1 / 3 | 0.082 |
-| 23 | zoo | `10_constraint` | 1.0000 | ROLE_PRESERVED | 1 / 1 / 1 | 1 / 1 / 1 | 0.101 |
-| 24 | zoo | `11_sensor_fusion` | 1.0000 | ROLE_PRESERVED | 3 / 3 / 6 | 3 / 3 / 6 | 0.102 |
-| 25 | zoo | `12_full_pomdp` | 1.0000 | ROLE_PRESERVED | 5 / 4 / 8 | 5 / 4 / 8 | 0.118 |
+| 1 | control_positive | `async_service` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 2 | 1 / 2 / 2 | 0.094 |
+| 2 | control_positive | `calculator` | 1.0000 | ROLE_PRESERVED | 1 / 3 / 6 | 1 / 3 / 6 | 0.103 |
+| 3 | control_positive | `cli_tool` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 1 | 1 / 2 / 1 | 0.086 |
+| 4 | control_positive | `data_pipeline` | 1.0000 | ROLE_PRESERVED | 0 / 0 / 2 | 0 / 0 / 2 | 0.079 |
+| 5 | control_positive | `multi_package_workspace` | 1.0000 | ROLE_PRESERVED | 0 / 0 / 1 | 0 / 0 / 1 | 0.094 |
+| 6 | control_positive | `notebook_module` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 1 | 1 / 2 / 1 | 0.095 |
+| 7 | control_positive | `plugin_architecture` | 1.0000 | ROLE_PRESERVED | 0 / 3 / 3 | 0 / 3 / 3 | 0.103 |
+| 8 | real_world | `json_stdlib` | 1.0000 | ROLE_PRESERVED | 3 / 2 / 11 | 3 / 2 / 11 | 0.124 |
+| 9 | zoo | `01_simple_state` | 1.0000 | ROLE_PRESERVED | 1 / 1 / 2 | 1 / 1 / 2 | 0.109 |
+| 10 | zoo | `02_observer` | 1.0000 | ROLE_PRESERVED | 1 / 3 / 1 | 1 / 3 / 1 | 0.094 |
+| 11 | zoo | `03_actor` | 1.0000 | ROLE_PRESERVED | 1 / 0 / 4 | 1 / 0 / 4 | 0.094 |
+| 12 | zoo | `04_pomdp_minimal` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 3 | 1 / 2 / 3 | 0.096 |
+| 13 | zoo | `05_multi_factor` | 1.0000 | ROLE_PRESERVED | 1 / 2 / 3 | 1 / 2 / 3 | 0.101 |
+| 14 | zoo | `06_hierarchical` | 1.0000 | ROLE_PRESERVED | 2 / 2 / 4 | 2 / 2 / 4 | 0.101 |
+| 15 | zoo | `08_preferences` | 1.0000 | ROLE_PRESERVED | 1 / 1 / 1 | 1 / 1 / 1 | 0.094 |
+| 16 | zoo | `10_constraint` | 1.0000 | ROLE_PRESERVED | 1 / 1 / 1 | 1 / 1 / 1 | 0.095 |
+| 17 | zoo | `11_sensor_fusion` | 1.0000 | ROLE_PRESERVED | 3 / 3 / 6 | 3 / 3 / 6 | 0.099 |
+| 18 | zoo | `12_full_pomdp` | 1.0000 | ROLE_PRESERVED | 5 / 4 / 8 | 5 / 4 / 8 | 0.120 |
+| 19 | real_world | `flask_app` | 0.9602 | ROLE_PRESERVED | 10 / 31 / 23 | 11 / 31 / 27 | 0.229 |
+| 20 | control_positive | `event_pipeline` | 0.9545 | ROLE_PRESERVED | 3 / 8 / 9 | 3 / 8 / 11 | 0.111 |
+| 21 | zoo | `09_policy` | 0.9375 | ROLE_PRESERVED | 1 / 1 / 3 | 1 / 1 / 4 | 0.096 |
+| 22 | control_positive | `flask_mini` | 0.9265 | ROLE_PRESERVED | 5 / 2 / 12 | 5 / 2 / 17 | 0.122 |
+| 23 | real_world | `requests_lib` | 0.9206 | ROLE_PRESERVED | 8 / 44 / 15 | 10 / 44 / 17 | 0.215 |
+| 24 | zoo | `07_event_driven` | 0.8667 | ROLE_PRESERVED | 0 / 4 / 3 | 0 / 4 / 5 | 0.092 |
 
 ## Method
 

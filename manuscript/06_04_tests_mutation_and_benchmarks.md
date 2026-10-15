@@ -2,7 +2,7 @@
 
 ## Test matrix and coverage
 
-The v{{VERSION}} Python implementation ships a test suite that, on the canonical `uv run pytest tests/ --cov=py/cogant` run (the gate in [`../cogant/pyproject.toml`](../cogant/pyproject.toml) measures the `py/cogant/` source tree for the import package `cogant`), reports **{{TEST_COUNT_PASSING}} passing**, **{{TEST_COUNT_FAILING}} failing**, and **{{TEST_COUNT_SKIPPED}} skipped** tests, plus **{{TEST_COUNT_XFAILED}} expected `xfail`** and **{{TEST_COUNT_XPASSED}} `xpass`** case. Any non-zero failing count is a release-blocking evidence gap, not a hidden denominator; the pass/skip/coverage figures below must be read together with that failure count. End-to-end runtime is on the order of several minutes on a 2024-class Apple-silicon workstation (**{{SUITE_RUNTIME_S}}** s in the canonical run); the overall line coverage of the instrumented package is **{{COVERAGE_PCT}}%** on that run, measured across **{{PYTHON_LOC}}** executable lines in **{{PYTHON_SOURCE_FILES}}** source files (see `METRICS.yaml`, generated **{{METRICS_GENERATED_AT}}**). `mypy --strict` on `py/cogant/` reports **{{MYPY_STRICT_ERRORS}}** remaining
+The v{{VERSION}} Python implementation ships a test suite that, on the canonical `uv run pytest tests/ --cov=py/cogant` run (the gate in [`../cogant/pyproject.toml`](../cogant/pyproject.toml) measures the `py/cogant/` source tree for the import package `cogant`), reports **{{TEST_COUNT_PASSING}} passing**, **{{TEST_COUNT_FAILING}} failing**, and **{{TEST_COUNT_SKIPPED}} skipped** tests, plus **{{TEST_COUNT_XFAILED}} expected `xfail`** and **{{TEST_COUNT_XPASSED}} `xpass`** case. Any non-zero failing count is a release-blocking evidence gap, not a hidden denominator; the pass/skip/coverage figures below must be read together with that failure count. End-to-end runtime is on the order of several minutes on a 2024-class Apple-silicon workstation (**{{SUITE_RUNTIME_S}}** s in the canonical run); the overall line coverage of the instrumented package is **{{COVERAGE_PCT}}%** on that run, measured over the instrumented statements in **{{PYTHON_SOURCE_FILES}}** source files. The package contains **{{PYTHON_LOC}}** total source lines, including comments and blanks (see `METRICS.yaml`, generated **{{METRICS_GENERATED_AT}}**). `mypy --strict` on `py/cogant/` reports **{{MYPY_STRICT_ERRORS}}** remaining
 errors. As of 2026-05-19 this count is zero; the pydantic v2 mypy plugin is
 enabled in `cogant/pyproject.toml:[tool.mypy].plugins = ["pydantic.mypy"]`
 and PyYAML is in the `ignore_missing_imports` overrides, which together
@@ -28,7 +28,7 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 
 | Module | Stmts | Cover |
 |---|---:|---:|
-| `cogant.translate.engine` | 250 | 96% |
+| `cogant.translate.engine` | 246 | 96% |
 | `cogant.translate.rules.structural` | 190 | 99% |
 | `cogant.translate.rules.semantic` | 255 | 93% |
 | `cogant.translate.rules.behavioral` | 108 | 100% |
@@ -39,23 +39,23 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 | `cogant.statespace.variables` | 263 | 99% |
 | `cogant.statespace.temporal` | 217 | 100% |
 | `cogant.markov.blanket` | 166 | 100% |
-| `cogant.gnn.matrices` | 359 | 99% |
-| `cogant.static.calls` | 151 | 89% |
+| `cogant.gnn.matrices` | 381 | 99% |
+| `cogant.static.calls` | 129 | 88% |
 | `cogant.static.dataflow` | 297 | 95% |
 | `cogant.static.parser` | 236 | 89% |
 | `cogant.simulate.free_energy` | 165 | 100% |
 | `cogant.simulate.runner` | 252 | 99% |
-| `cogant.simulate.distributions` | 118 | 100% |
-| `cogant.scoring.drift` | 222 | 100% |
-| `cogant.scoring.metrics` | 142 | 99% |
+| `cogant.simulate.distributions` | 120 | 98% |
+| `cogant.scoring.drift` | 212 | 100% |
+| `cogant.scoring.metrics` | 153 | 97% |
 | `cogant.validate.integrity` | 140 | 96% |
 | `cogant.validate.schema_check` | 103 | 96% |
 | `cogant.validate.provenance_check` | 73 | 100% |
-| `cogant.viz.png.mermaid` | 502 | 78% |
-| `cogant.viz.png.program_graph` | 283 | 89% |
-| `cogant.viz.png.state_space` | 215 | 97% |
+| `cogant.viz.png.mermaid` | 505 | 88% |
+| `cogant.viz.png.program_graph` | 284 | 89% |
+| `cogant.viz.png.state_space` | 452 | 92% |
 | `cogant.viz.matrix_view` | 324 | 92% |
-| `cogant.viz.network_view` | 227 | 91% |
+| `cogant.viz.network_view` | 229 | 91% |
 | `cogant.viz.flow` | 251 | 99% |
 
 : Statement coverage of load-bearing modules (canonical v{{VERSION}} run, {{METRICS_GENERATED_AT}}). {#tbl:coverage-stmt-modules}
@@ -98,7 +98,7 @@ The modules with the strongest mutation signal are `static/dataflow.py` (3 of 3 
 
 ## Benchmark suite (shipped)
 
-A reproducible benchmark harness lives at `../cogant/benchmarks/bench_suite.py` and writes its canonical results to `../cogant/benchmarks/results/`. The snapshot below is from `{{BENCHMARK_SUITE_FILE}}` (three iterations per fixture, CPython {{BENCHMARK_PYTHON_VERSION}} / {{BENCHMARK_OS}}) and should be regenerated after performance work. These timings are engineering regression measurements, not a comparative benchmark suite against external systems; benchmark-design concerns such as workload representativeness, environment control, and statistical treatment are therefore listed as future work rather than inferred from this small fixture set [@hasselbring2021benchmarking; @ralph2020empiricalStandards].
+A reproducible benchmark harness lives at `../cogant/benchmarks/bench_suite.py` and writes its canonical results to `../cogant/benchmarks/results/`. The snapshot below is from `{{BENCHMARK_SUITE_FILE}}` (three iterations per fixture, CPython {{BENCHMARK_PYTHON_VERSION}} / {{BENCHMARK_OS}}) and should be regenerated after performance work. The refreshed local timings were collected while other verification tasks were active. These timings are engineering diagnostics, not a comparative benchmark suite against external systems; benchmark-design concerns such as workload representativeness, environment control, and statistical treatment are therefore listed as future work rather than inferred from this small fixture set [@hasselbring2021benchmarking; @ralph2020empiricalStandards].
 
 | Fixture | Wall-clock median (ms) | Wall-clock p95 (ms) | Nodes | Edges | Mappings | Peak memory (MB) |
 |---|---:|---:|---:|---:|---:|---:|

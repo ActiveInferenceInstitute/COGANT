@@ -1,7 +1,7 @@
 # Performance Targets
 
-Last updated: 2026-06-06 (v0.6 current status). Measured values from `evaluation/METRICS.yaml`
-and the Flask benchmark (`cogant translate --incremental`).
+Last updated: 2026-10-15 (v0.7 current status). Current roundtrip values come from
+`evaluation/METRICS.yaml`; older performance measurements retain their stated limits.
 
 ---
 
@@ -9,9 +9,9 @@ and the Flask benchmark (`cogant translate --incremental`).
 
 | Benchmark | Result | Notes |
 |-----------|--------|-------|
-| Flask app — no-change incremental | **19.6× speedup** (25.2× re-measured 2026-10-14) | Reuses the cached run when outputs exist |
-| Flask app — single-file change | **≈1×** (0.96× re-measured 2026-10-14) | Full snapshot re-analysed; the former 5.6× partial path dropped unchanged files and was withdrawn |
-| Roundtrip ledger classification (25 fixtures/reductions) | **25 ROLE_PRESERVED / 0 DRIFT / 0 non-native rows** | Current native ledger; strict structural isomorphism is 1/25 and confined to `roundtrip_strict_minimal` |
+| Flask app — no-change incremental | Cache reuse verified | Historical speedup ratios are withdrawn pending a controlled benchmark |
+| Flask app — single-file change | Full snapshot re-analysed | The former partial-analysis speedup dropped unchanged files and was withdrawn |
+| Roundtrip ledger classification (24 fixtures/reductions) | **24 ROLE_PRESERVED / 0 DRIFT / 0 non-native rows** | Current native ledger; strict structural isomorphism is 0/24 |
 | AII validator score (all fixtures) | **100/100** | |
 | `cogant translate` on 8 real-world repos | all pass | flask, requests, dulwich, etc. |
 | Dulwich edge-density stress case | Checked-in fixture: 380.02s / 8510.9 MB; post-fix target: <120s | 1.80 e/n ratio; needs refreshed external fixture before new public timing claim |
@@ -88,9 +88,12 @@ processing reduces wall clock (v1.0).
 
 ---
 
-## Test Coverage Targets
+## Historical Coverage Snapshot and Targets
 
-| Component | current Actual | v0.6.x Target | v1.0 Target |
+The component estimates below are historical planning values. Current aggregate
+coverage is **94.54%**; see `METRICS.yaml` and the generated coverage report.
+
+| Component | Historical estimate | v0.6.x Target | v1.0 Target |
 |-----------|--------------|--------------|------------|
 | Core pipeline (`graph/`, `translate/`, `statespace/`) | ~85% | 88% | 92% |
 | Parsers (`parsers/`, `ingest/`, `static/`, `dynamic/`) | ~78% | 83% | 90% |

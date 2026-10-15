@@ -29,17 +29,16 @@ preserved GNN sections, and generated-code success.
 
 | Metric | Value |
 | --- | ---: |
-| Targets | 25 |
-| ROLE_PRESERVED | 25 |
+| Targets | 24 |
+| ROLE_PRESERVED | 24 |
 | DRIFT | 0 |
 | FAILED | 0 |
-| Strict structural isomorphism | 1 |
-| Mean role-preservation score | 1.0000 |
+| Strict structural isomorphism | 0 |
+| Mean role-preservation score | 0.9819 |
 
-The single strict row is `roundtrip_strict_minimal`, a deliberately tiny
-hand-authored reversible subset with one state carrier, one observation reader,
-and one action mutator. It demonstrates the invariant bar; ordinary application
-fixtures remain role-preserved but not strictly structurally isomorphic.
+No current ledger row meets the strict structural-isomorphism contract.
+Role-preservation scores below 1.0 reflect differences in role counts even when
+the public threshold is met.
 
 ## Validation Procedure
 
@@ -67,7 +66,7 @@ and fails if `METRICS.yaml` reports incompatible values.
 Roundtrip validation is evidence for role-population preservation on the measured
 fixtures. It is not evidence for arbitrary-program semantic equivalence,
 reference-device runtime behavior, calibrated probabilities, or strict graph
-identity outside the explicitly strict minimal fixture.
+identity on the current fixture set.
 
 ## Required Extensions
 
