@@ -97,21 +97,19 @@ def _render_publication_batch_timeline(
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         from matplotlib.lines import Line2D
-    except Exception:
+    except ModuleNotFoundError:
         if allow_subprocess and (root / "cogant" / "pyproject.toml").is_file():
             script = (
                 "from pathlib import Path\n"
                 "import sys\n"
                 "sys.path.insert(0, str(Path.cwd().parent / 'tools'))\n"
-                "from manuscript_figures import _render_publication_batch_timeline\n"
-                "_render_publication_batch_timeline(Path.cwd().parent, allow_subprocess=False)\n"
+                "from figures.renderers import _render_publication_batch_timeline\n"
+                "raise SystemExit(0 if _render_publication_batch_timeline(Path.cwd().parent, allow_subprocess=False) else 1)\n"
             )
             subprocess.run(
                 ["uv", "run", "python", "-c", script],
                 cwd=root / "cogant",
-                check=False,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                check=True,
             )
             return output if output.is_file() else None
         return None
@@ -253,7 +251,7 @@ def _render_publication_batch_timeline(
         "generated_at": datetime.now(UTC).isoformat(),
         "key": "roundtrip_batch_gantt",
         "figure": output.name,
-        "renderer": "tools.manuscript_figures.render_publication_batch_timeline",
+        "renderer": "tools.figures.renderers._render_publication_batch_timeline",
         "source_artifact": str(manifest_path.relative_to(root)),
         "source_artifact_digest": _sha256_file(manifest_path),
         "layout_method": "calculator-focused horizontal elapsed-time timeline with batch context",
@@ -459,21 +457,19 @@ def _render_publication_batch_evidence_summary(
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-    except Exception:
+    except ModuleNotFoundError:
         if allow_subprocess and (root / "cogant" / "pyproject.toml").is_file():
             script = (
                 "from pathlib import Path\n"
                 "import sys\n"
                 "sys.path.insert(0, str(Path.cwd().parent / 'tools'))\n"
-                "from manuscript_figures import _render_publication_batch_evidence_summary\n"
-                "_render_publication_batch_evidence_summary(Path.cwd().parent, allow_subprocess=False)\n"
+                "from figures.renderers import _render_publication_batch_evidence_summary\n"
+                "raise SystemExit(0 if _render_publication_batch_evidence_summary(Path.cwd().parent, allow_subprocess=False) else 1)\n"
             )
             subprocess.run(
                 ["uv", "run", "python", "-c", script],
                 cwd=root / "cogant",
-                check=False,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                check=True,
             )
             return output if output.is_file() else None
         return None
@@ -560,7 +556,7 @@ def _render_publication_batch_evidence_summary(
         "generated_at": datetime.now(UTC).isoformat(),
         "key": "batch_evidence_summary",
         "figure": output.name,
-        "renderer": "tools.manuscript_figures.render_publication_batch_evidence_summary",
+        "renderer": "tools.figures.renderers._render_publication_batch_evidence_summary",
         "source_artifact": str(metrics_path.relative_to(root)),
         "source_artifact_digest": _sha256_file(metrics_path),
         "layout_method": "2x2 small-multiple horizontal bar summary",
@@ -650,10 +646,13 @@ def _prepare_source_figures(
         run_dir = root / "cogant" / "output" / "calculator"
         if run_dir.is_dir():
             try:
-                from cogant.viz.inspection_dashboard import render_graphical_abstract_png
+                from cogant.viz.inspection_dashboard import (
+                    render_graphical_abstract_png,
+                )
 
-                render_graphical_abstract_png(run_dir)
-            except Exception:
+                if render_graphical_abstract_png(run_dir) is None and strict:
+                    raise RuntimeError("graphical abstract rendering is unavailable")
+            except ModuleNotFoundError:
                 if (root / "cogant" / "pyproject.toml").is_file():
                     script = (
                         "from pathlib import Path\n"
@@ -663,10 +662,10 @@ def _prepare_source_figures(
                     subprocess.run(
                         ["uv", "run", "python", "-c", script],
                         cwd=root / "cogant",
-                        check=False,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
+                        check=True,
                     )
+                elif strict:
+                    raise
     if "roundtrip_batch_gantt" in keys:
         _render_publication_batch_timeline(root)
     if "batch_evidence_summary" in keys:
@@ -679,8 +678,9 @@ def _prepare_source_figures(
             try:
                 from cogant.viz.png.gnn_markdown import render_gnn_markdown_mosaic_png
 
-                render_gnn_markdown_mosaic_png(gnn_md, output)
-            except Exception:
+                if render_gnn_markdown_mosaic_png(gnn_md, output) is None and strict:
+                    raise RuntimeError("GNN markdown rendering is unavailable")
+            except ModuleNotFoundError:
                 if (root / "cogant" / "pyproject.toml").is_file():
                     script = (
                         "from pathlib import Path\n"
@@ -692,10 +692,10 @@ def _prepare_source_figures(
                     subprocess.run(
                         ["uv", "run", "python", "-c", script],
                         cwd=root / "cogant",
-                        check=False,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
+                        check=True,
                     )
+                elif strict:
+                    raise
     for figure in figures:
         if figure.key != "forward_abcd_matrices":
             continue
@@ -709,9 +709,11 @@ def _prepare_source_figures(
             result = render_all_pngs(run_dir, strict_real_matrices=True)
             if result.get("connections"):
                 rendered = True
-        except Exception:
+        except ModuleNotFoundError:
             rendered = False
-        if rendered or not (root / "cogant" / "pyproject.toml").is_file():
+        if rendered:
+            continue
+        if not (root / "cogant" / "pyproject.toml").is_file():
             continue
         try:
             rel_run_dir = Path(figure.source).parent.relative_to("cogant")
@@ -726,9 +728,7 @@ def _prepare_source_figures(
         subprocess.run(
             ["uv", "run", "python", "-c", script],
             cwd=root / "cogant",
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            check=True,
         )
     if {
         "confidence_calibration",
@@ -739,21 +739,24 @@ def _prepare_source_figures(
         if not run_dir.is_dir():
             return
         try:
-            from cogant.viz.inspection_dashboard import render_interpretability_detail_pngs
+            from cogant.viz.inspection_dashboard import (
+                render_interpretability_detail_pngs,
+            )
 
-            render_interpretability_detail_pngs(run_dir)
-        except Exception:
+            if not render_interpretability_detail_pngs(run_dir) and strict:
+                raise RuntimeError("interpretability rendering is unavailable")
+        except ModuleNotFoundError:
             if not (root / "cogant" / "pyproject.toml").is_file():
+                if strict:
+                    raise
                 return
             script = (
                 "from pathlib import Path\n"
                 "from cogant.viz.inspection_dashboard import render_interpretability_detail_pngs\n"
-                "render_interpretability_detail_pngs(Path('output/calculator'))\n"
+                "raise SystemExit(0 if render_interpretability_detail_pngs(Path('output/calculator')) else 1)\n"
             )
             subprocess.run(
                 ["uv", "run", "python", "-c", script],
                 cwd=root / "cogant",
-                check=False,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                check=True,
             )

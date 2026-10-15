@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import zlib
 from pathlib import Path
@@ -12,12 +13,12 @@ TOOLS_ROOT = PROJECT_ROOT / "tools"
 if str(TOOLS_ROOT) not in sys.path:
     sys.path.insert(0, str(TOOLS_ROOT))
 
-import audit_figure_renderers as afr  # noqa: E402
-from manuscript_figures import (  # noqa: E402
+import audit_figure_renderers as afr
+from figures.metadata import _artifact_summary
+from figures.renderers import _render_publication_batch_timeline
+from manuscript_figures import (
     MANUSCRIPT_FIGURES,
     ManuscriptFigure,
-    _artifact_summary,
-    _render_publication_batch_timeline,
     copy_manuscript_figures,
 )
 
@@ -349,7 +350,7 @@ def test_copy_manuscript_figures_strict_rejects_tall_timeline(
             caption="Calculator timeline.",
             role="forward-reverse-forward-roundtrip",
             source_artifact="cogant/output/run_manifest.json",
-            renderer="tools.manuscript_figures._render_publication_batch_timeline",
+            renderer="tools.figures.renderers._render_publication_batch_timeline",
             method_note="Timeline method.",
             reading_guide="Read top to bottom.",
             limitations="Single run.",
@@ -404,6 +405,9 @@ def test_publication_batch_timeline_selects_calculator_and_bounds_height(
     assert output is not None
     sidecar = json.loads(output.with_suffix(".figure.json").read_text(encoding="utf-8"))
     assert sidecar["selected_target_id"] == "calculator"
+    registered = next(f for f in MANUSCRIPT_FIGURES if f.key == "roundtrip_batch_gantt")
+    assert sidecar["renderer"] == registered.renderer
+    afr.resolve_renderer(sidecar["renderer"])
     assert sidecar["selected_target_command_count"] == 3
     assert sidecar["batch_target_count"] == 2
     assert sidecar["batch_command_count"] == 5
@@ -414,6 +418,47 @@ def test_publication_batch_timeline_selects_calculator_and_bounds_height(
     assert width >= 1400
     assert height <= 1400
     assert width / height >= 1.6
+
+
+@pytest.mark.parametrize("key", ["roundtrip_batch_gantt", "batch_evidence_summary"])
+@pytest.mark.parametrize("child_fails", [False, True])
+def test_renderer_subprocess_provenance_and_failure(
+    tmp_path: Path, key: str, child_fails: bool
+) -> None:
+    figure = next(f for f in MANUSCRIPT_FIGURES if f.key == key)
+    source = tmp_path / figure.source_artifact
+    source.parent.mkdir(parents=True)
+    source.write_text(json.dumps({"targets": [{
+        "id": "calculator", "commands": [{"step": "validate", "wall_time_s": 1}],
+        "score": 100, "roundtrip_status": "isomorphic",
+    }]}), encoding="utf-8")
+    output = tmp_path / figure.source
+    if child_fails:
+        _write_test_png(output)
+        stale_bytes = output.read_bytes()
+        (tmp_path / "cogant" / "pyproject.toml").write_text("[invalid", encoding="utf-8")
+    module, name = figure.renderer.removeprefix("tools.").rsplit(".", 1)
+    script = (
+        "import sys\nfrom pathlib import Path\n"
+        f"sys.path.insert(0, {str(TOOLS_ROOT)!r})\n"
+        f"from {module} import {name}\n"
+        f"raise SystemExit(0 if {name}(Path({str(tmp_path)!r})) else 1)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, *(["-S"] if child_fails else []), "-c", script],
+        text=True, capture_output=True, check=False,
+    )
+    if child_fails:
+        assert result.returncode != 0
+        assert "CalledProcessError" in result.stderr
+        assert output.read_bytes() == stale_bytes
+        assert not output.with_suffix(".figure.json").exists()
+    else:
+        assert result.returncode == 0, result.stderr
+        assert output.read_bytes().startswith(b"\x89PNG")
+        sidecar = json.loads(output.with_suffix(".figure.json").read_text())
+        assert sidecar["renderer"] == figure.renderer
+        afr.resolve_renderer(sidecar["renderer"])
 
 
 def test_copy_manuscript_figures_strict_fails_on_uncited_registered_figure(

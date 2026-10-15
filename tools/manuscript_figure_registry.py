@@ -211,7 +211,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "roundtrip gates."
         ),
         source_artifact="cogant/output/run_manifest.json",
-        renderer="tools.manuscript_figures._render_publication_batch_timeline",
+        renderer="tools.figures.renderers._render_publication_batch_timeline",
         method_note=(
             "Wide matplotlib timeline generated from the selected target's command "
             "records in the batch manifest; batch-wide context remains in the sidecar."
@@ -239,7 +239,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "workbench completeness."
         ),
         source_artifact="cogant/output/dashboard/metrics_per_target.json",
-        renderer="tools.manuscript_figures._render_publication_batch_evidence_summary",
+        renderer="tools.figures.renderers._render_publication_batch_evidence_summary",
         method_note=(
             "Matplotlib small-multiple chart generated from the batch dashboard JSON; "
             "the raw Mermaid audit sidecars remain in cogant/output/dashboard/."

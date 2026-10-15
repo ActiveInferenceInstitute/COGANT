@@ -30,7 +30,8 @@ Authoritative ground truth for prose numbers: `../cogant/evaluation/METRICS.yaml
 
 All CLIs in this directory are directory-independent — paths are anchored on `__file__`, so `uv run python tools/<script>.py` works from any cwd.
 
-`manuscript_figures.py` is intentionally a small compatibility wrapper. Keep
+`manuscript_figures.py` exposes the copying CLI and public figure registry. Keep
 the implementation split under `figures/` by concern: PNG inspection,
 publication renderers, sidecar/metadata validation, and copy-manifest
-orchestration. Preserve compatibility renderer symbols re-exported by the wrapper.
+orchestration. Registry renderer paths and subprocess imports must point directly
+to `figures.renderers`; artifact inspection uses `figures.metadata`.
