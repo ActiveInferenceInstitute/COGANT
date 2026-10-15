@@ -25,8 +25,8 @@ publication:
   pages: ""
   year: "2026"
   artifact_doi: "10.5281/zenodo.20705350"
-  artifact_archive: "https://doi.org/10.5281/zenodo.20705350"
-  artifact_commit: "v0.7.0"
+  artifact_archive: "https://github.com/ActiveInferenceInstitute/COGANT/archive/55e5b01c75a36558c26af633e05514aa14487127.zip"
+  artifact_commit: "55e5b01c75a36558c26af633e05514aa14487127"
 
 keywords:
   - "program analysis"
