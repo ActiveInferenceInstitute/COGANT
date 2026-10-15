@@ -11,6 +11,7 @@ yielded string keys and ``compute_state_space_drift`` raised
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -25,7 +26,7 @@ from cogant.api.orchestration import (
     run_static,
     run_translate,
 )
-from cogant.cli.diff import diff_command, load_bundle
+from cogant.cli.diff import diff_command
 from cogant.scoring.drift import DriftAnalyzer
 
 pytestmark = pytest.mark.unit
@@ -62,11 +63,12 @@ def test_state_space_drift_reads_dict_shaped_gnn_state_space(
     two_packages_of_same_source: tuple[Path, Path],
 ) -> None:
     package_a, package_b = two_packages_of_same_source
-    bundle_a = load_bundle(package_a)
+    bundle_a = json.loads((package_a / "model.gnn.json").read_text(encoding="utf-8"))
     assert isinstance(bundle_a["state_space"]["observations"], dict)
     assert bundle_a["state_space"]["observations"]
 
-    analyzer = DriftAnalyzer(bundle_a, load_bundle(package_b))
+    bundle_b = json.loads((package_b / "model.gnn.json").read_text(encoding="utf-8"))
+    analyzer = DriftAnalyzer(bundle_a, bundle_b)
     ss_drift = analyzer.compute_state_space_drift()
 
     assert all(count == 0 for count in ss_drift.values())

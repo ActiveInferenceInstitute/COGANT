@@ -286,8 +286,12 @@ def test_init_creates_config(tmp_path: Path):
     config = target / ".cogant" / "config.json"
     assert config.exists(), "init did not create .cogant/config.json"
     data = json.loads(config.read_text())
-    assert "version" in data
-    assert "stages" in data
+    from cogant.config.loaders import ConfigLoader
+
+    assert data["schema_version"] == "1.0"
+    assert data["pipeline"]["stages"]
+    loaded = ConfigLoader.load_json_from_file(config)
+    assert loaded.pipeline.stages == data["pipeline"]["stages"]
 
 
 @pytest.mark.integration
