@@ -1,17 +1,19 @@
 from __future__ import annotations
 
+import importlib.util
+import shutil
 import sys
 from pathlib import Path
+from types import ModuleType
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-import audit_roadmap_truth as art  # noqa: E402
-
-
-def _write_clean_tree(tmp_path: Path, monkeypatch) -> None:
+def _write_obsolete_tree(tmp_path: Path) -> ModuleType:
     roadmap = tmp_path / "cogant" / "docs" / "roadmap"
     roadmap.mkdir(parents=True)
     todo = tmp_path / "TODO.md"
@@ -57,23 +59,57 @@ def _write_clean_tree(tmp_path: Path, monkeypatch) -> None:
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(art, "REPO_ROOT", tmp_path)
-    monkeypatch.setattr(art, "ROADMAP_DIR", roadmap)
-    monkeypatch.setattr(art, "TODO_PATH", todo)
-    monkeypatch.setattr(art, "TASKS_PATH", tasks)
+    tools = tmp_path / "tools"
+    tools.mkdir()
+    script = tools / "audit_roadmap_truth.py"
+    shutil.copyfile(TOOLS / script.name, script)
+    spec = importlib.util.spec_from_file_location("isolated_roadmap_audit", script)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def test_audit_roadmap_truth_accepts_clean_refactor_tranche(tmp_path: Path, monkeypatch) -> None:
-    _write_clean_tree(tmp_path, monkeypatch)
+def test_audit_roadmap_truth_rejects_obsolete_tranche(tmp_path: Path) -> None:
+    art = _write_obsolete_tree(tmp_path)
 
-    assert art.audit() == []
+    findings = art.audit()
+    assert any("current sequence missing 'cog-p5-01'" in item for item in findings)
+    assert any("dependency missing cog-p4-01" in item for item in findings)
+
+
+def _write_current_tree(tmp_path: Path) -> ModuleType:
+    art = _write_obsolete_tree(tmp_path)
+    for name in ("TODO.md", "tasks.yaml"):
+        shutil.copyfile(ROOT / name, tmp_path / name)
+    return art
+
+
+def test_current_coordination_passes(tmp_path: Path) -> None:
+    assert _write_current_tree(tmp_path).audit() == []
+
+
+@pytest.mark.parametrize("marker", ["cog-p0-01", "cog-p1-01", "cog-p2-01", "cog-p3-01", "cog-p5-01"])
+def test_missing_current_marker_fails(tmp_path: Path, marker: str) -> None:
+    art = _write_current_tree(tmp_path)
+    art.TODO_PATH.write_text(art.TODO_PATH.read_text().replace(marker, "removed-task"))
+    assert f"TODO.md: current sequence missing {marker!r}" in art.audit()
+
+
+@pytest.mark.parametrize("blocker", ["cog-p0", "cog-p1-03", "cog-p2-03", "cog-p3-04", "cog-p4-01"])
+def test_missing_current_release_dependency_fails(tmp_path: Path, blocker: str) -> None:
+    art = _write_current_tree(tmp_path)
+    art.TASKS_PATH.write_text(
+        art.TASKS_PATH.read_text().replace(f"  - {blocker}\n", "  - removed-task\n")
+    )
+    assert f"tasks.yaml: release milestone dependency missing {blocker}" in art.audit()
 
 
 def test_audit_roadmap_truth_rejects_removed_current_and_benchmark_claims(
     tmp_path: Path,
-    monkeypatch,
 ) -> None:
-    _write_clean_tree(tmp_path, monkeypatch)
+    art = _write_current_tree(tmp_path)
     (art.ROADMAP_DIR / "version_010_current.md").write_text(
         "## Version 0" + ".1.0 (current)\n",
         encoding="utf-8",
@@ -91,8 +127,8 @@ def test_audit_roadmap_truth_rejects_removed_current_and_benchmark_claims(
     assert any("artifact counts" in finding for finding in findings)
 
 
-def test_audit_roadmap_truth_rejects_todo_task_drift(tmp_path: Path, monkeypatch) -> None:
-    _write_clean_tree(tmp_path, monkeypatch)
+def test_audit_roadmap_truth_rejects_todo_task_drift(tmp_path: Path) -> None:
+    art = _write_current_tree(tmp_path)
     art.TODO_PATH.write_text("## Current Sequence\n1. Feature-first expansion\n", encoding="utf-8")
     art.TASKS_PATH.write_text(
         "- id: cog-m1\n  deps:\n  - cog-5\n",

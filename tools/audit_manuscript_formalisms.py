@@ -30,8 +30,8 @@ from formalisms import (  # noqa: E402
     FORMAL_REF_RE,
     GENERATED_FORMAL_RE,
     HAND_NUMBERED_FORMAL_HEADING_RE,
-    LEGACY_SEC_FORMAL_HEADING_RE,
-    LEGACY_SEC_FORMAL_REF_RE,
+    MISSCOPED_FORMAL_HEADING_RE,
+    MISSCOPED_FORMAL_REF_RE,
     SKIP_NAMES,
     build_formalism_registry,
     iter_manuscript_markdown,
@@ -72,7 +72,7 @@ def _audit_source(manuscript_dir: Path) -> list[str]:
     references: list[tuple[str, Path, int]] = []
     for path in iter_manuscript_markdown(manuscript_dir):
         for line_no, line in _non_fenced_lines(path):
-            if LEGACY_SEC_FORMAL_HEADING_RE.match(line):
+            if MISSCOPED_FORMAL_HEADING_RE.match(line):
                 findings.append(
                     _finding(
                         path,
@@ -108,7 +108,7 @@ def _audit_source(manuscript_dir: Path) -> list[str]:
                         )
                     )
                 definitions[anchor] = (path, line_no)
-            for match in LEGACY_SEC_FORMAL_REF_RE.finditer(line):
+            for match in MISSCOPED_FORMAL_REF_RE.finditer(line):
                 findings.append(
                     _finding(
                         path,

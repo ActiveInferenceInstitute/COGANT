@@ -62,11 +62,11 @@ def test_strict_audit_accepts_generated_formalism_numbering(tmp_path: Path) -> N
     assert "[]{#prop:fixpoint-termination}**Proposition 1" in rendered
 
 
-def test_legacy_section_labeled_formalism_fails_source_audit(tmp_path: Path) -> None:
+def test_section_labeled_formalism_fails_source_audit(tmp_path: Path) -> None:
     manuscript_dir, _source = _write_source(
         tmp_path,
         "### Definition: Foo {#sec:def-foo}\n\n"
-        "Legacy prose points at @sec:def-foo.\n",
+        "Prose points at @sec:def-foo.\n",
     )
 
     findings = formalism_audit.audit(

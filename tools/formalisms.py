@@ -48,7 +48,7 @@ FORMAL_HEADING_RE = re.compile(
     r"(?P<label>[A-Za-z0-9_-]+)\}\s*$"
 )
 
-LEGACY_SEC_FORMAL_HEADING_RE = re.compile(
+MISSCOPED_FORMAL_HEADING_RE = re.compile(
     r"^(?P<level>#{2,6})\s+"
     r"(?P<display_kind>Definition|Proposition|Implementation invariant|"
     r"Empirical invariant|Conjecture|Algorithm|Theorem):.*?"
@@ -63,7 +63,7 @@ HAND_NUMBERED_FORMAL_HEADING_RE = re.compile(
 
 FORMAL_REF_RE = re.compile(r"(?<![\w])@(def|prop|inv|conj|alg|thm):([A-Za-z0-9_-]+)\b")
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
-LEGACY_SEC_FORMAL_REF_RE = re.compile(
+MISSCOPED_FORMAL_REF_RE = re.compile(
     r"(?<![\w])@sec:((?:def|prop|thm|alg|conj|inv)-[A-Za-z0-9_-]+)\b"
 )
 GENERATED_FORMAL_RE = re.compile(
