@@ -224,7 +224,7 @@ def translate(
         if incremental:
             config.incremental_since = incremental
             console.print(
-                f"[dim]--incremental {incremental}: only re-parsing files changed since ref[/dim]"
+                f"[dim]--incremental {incremental}: checking snapshot cache against ref[/dim]"
             )
         if cache_dir:
             config.cache_dir = _cli_path(cache_dir)
