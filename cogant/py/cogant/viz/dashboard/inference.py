@@ -12,8 +12,11 @@ def _free_energy_chart(trace: InferenceTrace) -> str:
     records = trace.trace[:100]
     values = [record.free_energy for record in records]
     low, high = min(values), max(values)
-    if low == high:
-        low, high = low - 0.5, high + 0.5
+    near_constant = high - low <= 1e-12 * max(1.0, abs(low), abs(high))
+    if near_constant:
+        center = low / 2 + high / 2
+        padding = max(0.5, abs(center) * 0.05)
+        low, high = center - padding, center + padding
     span = high - low
     points = [
         (18 + 76 * index / max(len(records) - 1, 1), 250 - 200 * (value - low) / span)
@@ -43,6 +46,12 @@ def _free_energy_chart(trace: InferenceTrace) -> str:
         f'<g stroke="currentColor" stroke-width="2">{segments}</g>'
         f'<g fill="currentColor">{circles}</g></svg>'
         f"<p>Showing {len(records)} of {len(trace.trace)} recorded observations.</p>"
+        + (
+            "<p>Display axis padded for a near-constant trace (relative tolerance "
+            "1e-12 with a 1-nat scale floor); recorded values are unchanged.</p>"
+            if near_constant
+            else ""
+        )
     )
 
 

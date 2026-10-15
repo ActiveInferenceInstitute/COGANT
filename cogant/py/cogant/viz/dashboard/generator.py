@@ -963,6 +963,7 @@ class DashboardGenerator:
         checksums = manifest.get("checksums", {})
         files = manifest.get("files", [])
         stats = manifest.get("graph_stats", {})
+        state_dimensions = self.gnn_validation.get("dimensions", {}).get("state_space", {})
 
         # Build validation status
         status_badge = f'<span class="badge {"badge-pass" if valid else "badge-fail"}">{"✓ Valid" if valid else "✗ Invalid"}</span>'
@@ -1044,16 +1045,17 @@ class DashboardGenerator:
                     <div class="validation-icon">📊</div>
                     <div>
                         <strong>Graph Stats</strong>
-                        <p>Nodes: {stats.get("nodes", 0)}</p>
-                        <p>Edges: {stats.get("edges", 0)}</p>
+                        <p>Nodes: {html.escape(str(stats.get("nodes", "Not recorded")))}</p>
+                        <p>Edges: {html.escape(str(stats.get("edges", "Not recorded")))}</p>
                     </div>
                 </div>
                 <div class="validation-check">
                     <div class="validation-icon">⚙️</div>
                     <div>
                         <strong>State Space</strong>
-                        <p>Variables: {details.get("state_space_stats", {}).get("variables", 0)}</p>
-                        <p>Observations: {details.get("state_space_stats", {}).get("observations", 0)}</p>
+                        <p>States: {html.escape(str(state_dimensions.get("n_states", "Not recorded")))}</p>
+                        <p>Observations: {html.escape(str(state_dimensions.get("n_obs", "Not recorded")))}</p>
+                        <p>Actions: {html.escape(str(state_dimensions.get("n_actions", "Not recorded")))}</p>
                     </div>
                 </div>
             </div>
@@ -1084,14 +1086,11 @@ class DashboardGenerator:
             kind = getattr(mapping, "kind", "unknown")
             if hasattr(kind, "value"):
                 kind = kind.value
-            label = getattr(mapping, "label", "")
-            confidence = getattr(mapping, "confidence", 0.0)
-            if hasattr(confidence, "value"):
-                confidence = confidence.value
+            label = mapping.semantic_label
+            confidence = mapping.confidence_score
 
             # Count source/target nodes
-            source_nodes = getattr(mapping, "source_nodes", [])
-            num_nodes = len(source_nodes) if source_nodes else 0
+            num_nodes = len(mapping.graph_fragment_node_ids)
 
             description = getattr(mapping, "description", "")
 
@@ -1110,7 +1109,8 @@ class DashboardGenerator:
     <div id="semantic-mappings" class="tab-content">
         <div class="container">
             <h2>Semantic Mappings</h2>
-            <input type="text" class="search-box" placeholder="Search mappings..."
+            <label for="mapping-search">Search mappings</label>
+            <input id="mapping-search" type="search" class="search-box" placeholder="Search mappings..."
                    onkeyup="filterTable(this, 'mappings-table')">
             <div class="table-scroll" role="region" aria-label="Semantic mappings" tabindex="0"><table id="mappings-table">
                 <thead>

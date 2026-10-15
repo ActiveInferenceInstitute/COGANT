@@ -9,6 +9,7 @@ model", "no GNN validation", etc. branches that are otherwise uncovered.
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -25,6 +26,7 @@ from cogant.schemas.graph import (
     NodeKind,
     ProgramGraph,
 )
+from cogant.schemas.semantic import MappingKind, SemanticMapping
 from cogant.statespace.compiler import StateSpaceModel
 from cogant.statespace.temporal import TimeRegime
 from cogant.validate.report import ValidationReport
@@ -189,6 +191,76 @@ class TestDashboardGeneratorEmptyState:
 
 class TestDashboardGeneratorPopulated:
     """Exercise the populated / non-empty rendering branches too."""
+
+    @pytest.mark.parametrize("variation, expected_range", [(1e-16, 0.01), (0.1, 190.0)])
+    def test_inference_chart_does_not_magnify_roundoff(
+        self, tmp_path: Path, variation: float, expected_range: float
+    ) -> None:
+        package(tmp_path / "gnn_package")
+        write_inference_trace_artifact(tmp_path, steps=2)
+        trace = load_inference_trace(tmp_path)
+        records = tuple(
+            record.model_copy(update={"free_energy": index * variation})
+            for index, record in enumerate(trace.trace)
+        )
+        rendered = render_inference_tab(trace.model_copy(update={"trace": records}))
+        heights = [
+            float(value) for value in re.findall(r'<circle cx="[^"]+" cy="([^"]+)"', rendered)
+        ]
+        if variation < 1e-12:
+            assert max(heights) - min(heights) < expected_range
+            assert "near-constant" in rendered
+        else:
+            assert max(heights) - min(heights) > expected_range
+        assert trace.trace[0].free_energy != records[0].free_energy
+
+    @pytest.mark.parametrize("dimensions", [{"n_states": 6, "n_obs": 3, "n_actions": 18}, {}])
+    def test_package_summary_uses_recorded_state_dimensions(
+        self, dimensions: dict[str, int]
+    ) -> None:
+        dg = DashboardGenerator(
+            graph=_empty_graph(),
+            state_space=_empty_state_space(),
+            process_model=_empty_process_model(),
+            semantic_mappings={},
+            mermaid_diagrams={},
+            validation_report=_empty_validation_report(),
+            repo_name="x",
+            gnn_validation={"valid": True, "dimensions": {"state_space": dimensions}},
+        )
+        rendered = dg._generate_gnn_package_tab()
+        for label, key in (
+            ("States", "n_states"),
+            ("Observations", "n_obs"),
+            ("Actions", "n_actions"),
+        ):
+            assert f"{label}: {dimensions.get(key, 'Not recorded')}" in rendered
+        assert "Variables: 0" not in rendered
+
+    def test_mapping_search_has_visible_label_and_real_mapping_fields(self) -> None:
+        dg = DashboardGenerator(
+            graph=_empty_graph(),
+            state_space=_empty_state_space(),
+            process_model=_empty_process_model(),
+            semantic_mappings={
+                "m1": SemanticMapping(
+                    id="m1",
+                    kind=MappingKind.ACTION,
+                    semantic_label="Filter & act",
+                    graph_fragment_node_ids=["one", "two"],
+                    confidence_score=0.73,
+                )
+            },
+            mermaid_diagrams={},
+            validation_report=_empty_validation_report(),
+            repo_name="x",
+        )
+        rendered = dg._generate_semantic_mappings_tab()
+        assert '<label for="mapping-search">Search mappings</label>' in rendered
+        assert 'id="mapping-search"' in rendered
+        assert "Filter &amp; act" in rendered
+        assert "73%" in rendered
+        assert "<td>2</td>" in rendered
 
     def test_inference_table_escapes_labels_and_discloses_display_limits(
         self, tmp_path: Path
