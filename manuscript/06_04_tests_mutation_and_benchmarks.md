@@ -3,11 +3,9 @@
 ## Test matrix and coverage
 
 The v{{VERSION}} Python implementation ships a test suite that, on the canonical `uv run pytest tests/ --cov=py/cogant` run (the gate in [`../cogant/pyproject.toml`](../cogant/pyproject.toml) measures the `py/cogant/` source tree for the import package `cogant`), reports **{{TEST_COUNT_PASSING}} passing**, **{{TEST_COUNT_FAILING}} failing**, and **{{TEST_COUNT_SKIPPED}} skipped** tests, plus **{{TEST_COUNT_XFAILED}} expected `xfail`** and **{{TEST_COUNT_XPASSED}} `xpass`** case. Any non-zero failing count is a release-blocking evidence gap, not a hidden denominator; the pass/skip/coverage figures below must be read together with that failure count. End-to-end runtime is on the order of several minutes on a 2024-class Apple-silicon workstation (**{{SUITE_RUNTIME_S}}** s in the canonical run); the overall line coverage of the instrumented package is **{{COVERAGE_PCT}}%** on that run, measured over the instrumented statements in **{{PYTHON_SOURCE_FILES}}** source files. The package contains **{{PYTHON_LOC}}** total source lines, including comments and blanks (see `METRICS.yaml`, generated **{{METRICS_GENERATED_AT}}**). `mypy --strict` on `py/cogant/` reports **{{MYPY_STRICT_ERRORS}}** remaining
-errors. As of 2026-05-19 this count is zero; the pydantic v2 mypy plugin is
-enabled in `cogant/pyproject.toml:[tool.mypy].plugins = ["pydantic.mypy"]`
-and PyYAML is in the `ignore_missing_imports` overrides, which together
-resolve the residual stub-resolution diagnostics that previously generated
-a 30-error count. The figure is still *errors among reported
+errors. The pydantic v2 mypy plugin is enabled in
+`cogant/pyproject.toml:[tool.mypy].plugins = ["pydantic.mypy"]`, and PyYAML
+is in the `ignore_missing_imports` overrides. The figure is *errors among reported
 diagnostics*, not a completeness certificate; `--strict` does not enable
 `--disallow-any-unimported`, so consumers using unstubbed third-party
 packages remain a separate audit class documented in the package scope-of-record
@@ -39,28 +37,35 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 | `cogant.statespace.variables` | 263 | 99% |
 | `cogant.statespace.temporal` | 217 | 100% |
 | `cogant.markov.blanket` | 166 | 100% |
-| `cogant.gnn.matrices` | 381 | 99% |
+| `cogant.gnn.matrices` | 379 | 99% |
 | `cogant.static.calls` | 129 | 88% |
-| `cogant.static.dataflow` | 297 | 95% |
+| `cogant.static.dataflow` | 294 | 95% |
 | `cogant.static.parser` | 236 | 89% |
-| `cogant.simulate.free_energy` | 165 | 100% |
-| `cogant.simulate.runner` | 252 | 99% |
+| `cogant.simulate.free_energy` | 64 | 95% |
+| `cogant.simulate.runner` | 118 | 98% |
 | `cogant.simulate.distributions` | 120 | 98% |
 | `cogant.scoring.drift` | 212 | 100% |
 | `cogant.scoring.metrics` | 153 | 97% |
 | `cogant.validate.integrity` | 140 | 96% |
 | `cogant.validate.schema_check` | 103 | 96% |
 | `cogant.validate.provenance_check` | 73 | 100% |
-| `cogant.viz.png.mermaid` | 505 | 88% |
+| `cogant.viz.png.mermaid` | 505 | 78% |
 | `cogant.viz.png.program_graph` | 284 | 89% |
 | `cogant.viz.png.state_space` | 452 | 92% |
 | `cogant.viz.matrix_view` | 324 | 92% |
 | `cogant.viz.network_view` | 229 | 91% |
 | `cogant.viz.flow` | 251 | 99% |
+| `cogant.runtime.categorical` | 132 | 95% |
+| `cogant.runtime.inference` | 62 | 97% |
+| `cogant.runtime.inference_records` | 85 | 93% |
+| `cogant.gnn.execution` | 47 | 100% |
+| `cogant.gnn.runner` | 88 | 100% |
+| `cogant.reverse.fenced` | 90 | 91% |
+| `cogant.viz.inference_view` | 70 | 96% |
 
 : Statement coverage of load-bearing modules (canonical v{{VERSION}} run, {{METRICS_GENERATED_AT}}). {#tbl:coverage-stmt-modules}
 
-The aggregate **{{COVERAGE_PCT}}%** in `METRICS.yaml` is measured with `[tool.coverage.run] source = ["py/cogant"]` and **omits** `cogant/static/treesitter_parser.py` (configured in `../cogant/pyproject.toml`). The `viz/` package is instrumented and covered in v{{VERSION}} by a dedicated viz test suite because the rendered program graphs, matrix panels, Markov blanket views, and run overviews are part of the human interpretability surface rather than decorative output. Lower rows in @tbl:coverage-stmt-modules (for example `static.calls` and `static.parser`) highlight residual branch gaps, not omitted packages. See `../cogant/CHANGELOG.md` for release-cycle deltas.
+The aggregate **{{COVERAGE_PCT}}%** in `METRICS.yaml` is measured with `[tool.coverage.run] source = ["py/cogant"]` and **omits** `cogant/static/treesitter_parser.py` (configured in `../cogant/pyproject.toml`). The `viz/` package is instrumented and covered in v{{VERSION}} by a dedicated viz test suite because the rendered program graphs, matrix panels, Markov blanket views, and run overviews are part of the human interpretability surface rather than decorative output. Lower rows in @tbl:coverage-stmt-modules (for example `static.calls` and `static.parser`) highlight residual statement coverage gaps, not omitted packages. See `../cogant/CHANGELOG.md` for release-cycle deltas.
 
 ## Mutation testing
 
