@@ -7,38 +7,24 @@ This section describes the programmatic surface that the shipped Python package 
 ## End-to-end data flow
 
 ```mermaid
-flowchart LR
-  subgraph entryPoints [Entry_points]
-    SE[Session]
-    PR[PipelineRunner]
-  end
-  subgraph cfg [Configuration]
-    PC[PipelineConfig]
-  end
-  subgraph stages [Stages]
-    DAG[ingest_to_validate_DAG]
-  end
-  subgraph artifacts [Artifacts]
-    BU[Bundle]
-    GP[gnn_package]
+flowchart TB
+  subgraph sourceRoute [Repository_analysis]
+    direction LR
+    SE[Session] --> DAG[ingest_to_validate_DAG]
+    PR[PipelineRunner] --> PC[PipelineConfig]
+    PC --> DAG
+    DAG --> BU[Bundle]
+    BU --> GP[gnn_package]
   end
   subgraph finiteModels [Authored_finite_models]
-    FS[FiniteModelSpec]
-    FC[compile_finite_model]
-    FM[FiniteModel]
-    VF[verify_finite_model]
+    direction LR
+    FS[FiniteModelSpec] --> FC[compile_finite_model]
+    FC --> FM[FiniteModel]
+    FS --> VF[verify_finite_model]
+    FM --> VF
+    FM -->|matrix_copies| RT[AgentRuntime]
   end
-  RT[AgentRuntime]
-  SE --> DAG
-  PR --> PC
-  PC --> DAG
-  DAG --> BU
-  BU --> GP
-  FS --> FC
-  FC --> FM
-  FS --> VF
-  FM --> VF
-  FM -->|matrix_copies| RT
+  sourceRoute ~~~ finiteModels
 ```
 
 `Session` exposes stepwise methods (`extract_static`, `build_graph`, …) up to `export_all`; `PipelineRunner` executes the full ingest-to-validate DAG — including the `validate` gate that the stepwise `Session` path does not run — under one `PipelineConfig`. Exported files (`model.gnn.md`, JSON companions, `manifest.json`) materialize under the configured output tree. The authoritative command and flag list lives in `../cogant/docs/cli/README.md`.
