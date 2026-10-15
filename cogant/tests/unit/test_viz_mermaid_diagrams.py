@@ -178,8 +178,9 @@ def test_state_diagram_contains_transitions_and_notes():
     assert "level" in out
     # Note block for variable with description
     assert "note right of" in out
-    # Transition label mentions the action id (literal id, not the name)
-    assert "--> v1=post: a1" in out
+    assert 'state "v1=#quot;pre#quot;" as c0' in out
+    assert 'state "v1=#quot;post#quot;" as c1' in out
+    assert "c0 --> c1: a1" in out
 
 
 def test_state_diagram_empty_model_header_only():

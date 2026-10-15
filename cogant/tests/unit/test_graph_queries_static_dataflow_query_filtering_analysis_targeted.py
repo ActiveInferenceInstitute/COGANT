@@ -433,40 +433,41 @@ class TestDataFlowEdge:
 
 
 # ---------------------------------------------------------------------------
-# static/dataflow.py — SymbolExtractor
+# static/symbols.py — SymbolExtractor
 # ---------------------------------------------------------------------------
 
 
 class TestSymbolExtractor:
-    def test_extract_from_source_returns_something(self):
-        from cogant.static.dataflow import SymbolExtractor
+    def test_extract_from_source_records_assignment(self):
+        from cogant.static.symbols import SymbolExtractor
 
         extractor = SymbolExtractor()
         result = extractor.extract_from_source("x = 1\n", Path("test.py"))
-        assert result is not None
+        assert [(symbol.name, symbol.kind) for symbol in result.symbols] == [("x", "variable")]
 
     def test_extract_from_source_with_function(self):
-        from cogant.static.dataflow import SymbolExtractor
+        from cogant.static.symbols import SymbolExtractor
 
         extractor = SymbolExtractor()
         source = "def foo():\n    pass\n"
         result = extractor.extract_from_source(source, Path("test.py"))
-        assert result is not None
+        assert [(symbol.name, symbol.kind) for symbol in result.symbols] == [("foo", "function")]
 
     def test_extract_from_source_with_class(self):
-        from cogant.static.dataflow import SymbolExtractor
+        from cogant.static.symbols import SymbolExtractor
 
         extractor = SymbolExtractor()
         source = "class Bar:\n    pass\n"
         result = extractor.extract_from_source(source, Path("test.py"))
-        assert result is not None
+        assert [(symbol.name, symbol.kind) for symbol in result.symbols] == [("Bar", "class")]
 
     def test_extract_from_source_has_symbols(self):
-        from cogant.static.dataflow import SymbolExtractor
+        from cogant.static.symbols import SymbolExtractor
 
         extractor = SymbolExtractor()
         source = "x = 1\ndef foo():\n    pass\n"
         result = extractor.extract_from_source(source, Path("test.py"))
-        # Should have symbols (either as list or attribute)
-        symbols = getattr(result, "symbols", result) if not isinstance(result, list) else result
-        assert symbols is not None
+        assert {(symbol.name, symbol.kind) for symbol in result.symbols} == {
+            ("x", "variable"),
+            ("foo", "function"),
+        }
