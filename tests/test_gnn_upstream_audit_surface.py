@@ -429,8 +429,35 @@ def test_missing_pip_audit_is_reported_as_not_scanned(module, tmp_path: Path) ->
     surface = module.build_surface(audit)
 
     assert surface.supply_chain_scanned is False
-    assert surface.supply_chain_pass is True
+    assert surface.supply_chain_pass is False
     assert "Supply-chain scan: NOT SCANNED" in module.render_markdown(surface)
+    assert module.main(["--audit-dir", str(audit), "--strict-supply-chain"]) == 1
+
+
+def test_historical_probe_cannot_override_current_probe(module, tmp_path: Path) -> None:
+    audit = _write_fixture_audit_dir(tmp_path, installed_commit=OTHER)
+    (audit / "version_probe_refreshed.txt").write_text(f"installed_commit={PIN}\n")
+    assert module.build_surface(audit).version_claim_pass is False
+
+
+@pytest.mark.parametrize("phase", [{"ran": False}, {"ran": True, "returncode": 2}, {}])
+def test_failed_collection_does_not_admit_old_scan(module, tmp_path: Path, phase) -> None:
+    audit = _write_fixture_audit_dir(tmp_path)
+    (audit / "pip_audit_path.json").write_text('{"dependencies": []}')
+    (audit / "collect_manifest.json").write_text(
+        json.dumps({"finished_at": "2026-10-15", "phases": {"pip_audit": phase}})
+    )
+    surface = module.build_surface(audit)
+    assert not surface.supply_chain_scanned
+    assert not surface.supply_chain_pass
+
+
+def test_recollection_preserves_existing_evidence(module, tmp_path: Path) -> None:
+    audit = _write_fixture_audit_dir(tmp_path)
+    old_probe = (audit / "version_probe.txt").read_bytes()
+    with pytest.raises(FileExistsError, match="empty directory"):
+        module.collect_audit_dir(audit, pip_audit=False, ls_remote=False)
+    assert (audit / "version_probe.txt").read_bytes() == old_probe
 
 
 def test_main_writes_json_markdown_svg_and_strict_exit(module, tmp_path: Path) -> None:

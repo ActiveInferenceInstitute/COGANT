@@ -22,9 +22,8 @@ Exit codes
 * ``0`` — METRICS.yaml written successfully.
 * ``1`` — fatal error (missing ``cogant/`` tree, write failure, etc.).
 
-Test/mypy/ruff timeouts degrade to warning messages with ``-1``
-sentinel values for the affected metric so the YAML still writes; CI
-should then flag the negative value downstream.
+Failed, timed-out, or unparseable probes abort without replacing METRICS.yaml.
+Test results and coverage are collected by the same pytest invocation.
 """
 
 from __future__ import annotations
@@ -62,16 +61,27 @@ if str(TOOLS_DIR.resolve()) not in sys.path:
 # ---------------------------------------------------------------------------
 
 
+class MetricsProbeError(RuntimeError):
+    pass
+
+
 def _run(cmd: str, cwd: Path | None = None, timeout: int = 180) -> tuple[int, str]:
     """Run a shell command, return (returncode, combined stdout+stderr)."""
-    result = subprocess.run(
-        cmd,
-        shell=True,
-        cwd=cwd or REPO_ROOT,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            cwd=cwd or REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise MetricsProbeError(f"Probe timed out after {timeout}s: {cmd}") from exc
+    if result.returncode != 0:
+        raise MetricsProbeError(
+            f"Probe exited {result.returncode}: {cmd}\n{result.stdout}{result.stderr}"
+        )
     return result.returncode, result.stdout + result.stderr
 
 
@@ -210,10 +220,12 @@ def get_test_count_total() -> int:
         m = re.search(r"collected\s+(\d+)\s+item", out)
         if m:
             return int(m.group(1))
-        return 0
+        m = re.search(r"(\d+)\s+tests?\s+collected", out)
+        if m:
+            return int(m.group(1))
+        raise MetricsProbeError(f"Could not parse pytest collection count:\n{out}")
     except subprocess.TimeoutExpired:
-        print("WARNING: pytest --collect-only timed out; using 0", file=sys.stderr)
-        return 0
+        raise MetricsProbeError("pytest collection timed out")
 
 
 # ---------------------------------------------------------------------------
@@ -224,11 +236,8 @@ def get_test_count_total() -> int:
 def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
     """Read test results, suite runtime, and coverage from pytest + coverage.json.
 
-    Runs pytest --tb=no -q (fast, no full suite re-run for coverage) then
-    reads coverage.json for the coverage percentage.  This is O(seconds) not
-    O(minutes) because we skip --cov during this invocation — the caller is
-    expected to have already run the suite with coverage separately and
-    committed coverage.json.
+    Runs pytest with coverage, then reads that invocation's coverage.json.
+    A failing suite, missing report, or unparseable summary aborts regeneration.
 
     Returns
     -------
@@ -246,7 +255,8 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
     suite_runtime_s: float = 0.0
     try:
         rc, out = _run(
-            "uv run pytest tests/ -q --tb=no -p no:warnings --no-header --no-cov 2>&1",
+            "uv run pytest tests/ -q --tb=short -p no:warnings --no-header "
+            "--cov=py/cogant --cov-report=json:coverage.json 2>&1",
             cwd=COGANT_DIR,
             # The full ~9.7k-test suite takes ~57 min single-process (no
             # pytest-xdist); a tighter cap silently degrades the counts to 0.
@@ -287,18 +297,18 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
                         m = int(m_ms.group(2))
                         s = float(m_ms.group(3))
                         suite_runtime_s = round(h * 3600 + m * 60 + s, 2)
-    except subprocess.TimeoutExpired:
-        print("WARNING: pytest run timed out; test counts will be 0", file=sys.stderr)
+    except subprocess.TimeoutExpired as exc:
+        raise MetricsProbeError("pytest suite timed out") from exc
 
-    # Read coverage from coverage.json (expected to exist from last --cov run).
-    coverage_pct = 0.0
-    if coverage_json.exists():
-        try:
-            data = json.loads(coverage_json.read_text())
-            totals = data.get("totals", {})
-            coverage_pct = round(float(totals.get("percent_covered", 0.0)), 2)
-        except (json.JSONDecodeError, KeyError):
-            pass
+    if test_result["passing"] <= 0 or suite_runtime_s <= 0:
+        raise MetricsProbeError(f"Could not parse successful pytest summary:\n{out}")
+    try:
+        data = json.loads(coverage_json.read_text())
+        coverage_pct = round(float(data["totals"]["percent_covered"]), 2)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise MetricsProbeError(f"Invalid coverage report: {coverage_json}: {exc}") from exc
+    if not 0 < coverage_pct <= 100:
+        raise MetricsProbeError(f"Invalid coverage percentage: {coverage_pct}")
 
     return test_result, coverage_pct, suite_runtime_s
 
@@ -324,7 +334,9 @@ def get_mypy_errors() -> int:
     except subprocess.TimeoutExpired:
         print("WARNING: mypy --strict timed out after 120s", file=sys.stderr)
         return -1
-    return sum(1 for line in out.splitlines() if "error:" in line)
+    if "Success: no issues found" not in out:
+        raise MetricsProbeError(f"Could not parse successful mypy result:\n{out}")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -353,7 +365,9 @@ def get_ruff_violations() -> int:
     json_start = out.find("[")
     if json_start != -1:
         try:
-            return len(json.loads(out[json_start:].strip().split("\n")[0]))
+            diagnostics, _ = json.JSONDecoder().raw_decode(out[json_start:])
+            if isinstance(diagnostics, list):
+                return len(diagnostics)
         except json.JSONDecodeError:
             pass
     # Fallback: summary-line parsing.
@@ -361,7 +375,7 @@ def get_ruff_violations() -> int:
     if m:
         return int(m.group(1))
     # If exit code 0 and no "Found N" line, assume clean.
-    return 0 if rc == 0 else -1
+    raise MetricsProbeError(f"Could not parse ruff JSON diagnostics:\n{out}")
 
 
 # ---------------------------------------------------------------------------
@@ -548,8 +562,7 @@ def parse_roundtrip_results() -> dict:
             "scaffolding_fraction": _scaffolding_fraction(e),
             "roundtrip_status": _status(e),
             "strict_structural": _status(e) == "STRUCTURALLY_ISOMORPHIC",
-            "role_preserved": _status(e)
-            in {"STRUCTURALLY_ISOMORPHIC", "ROLE_PRESERVED"},
+            "role_preserved": _status(e) in {"STRUCTURALLY_ISOMORPHIC", "ROLE_PRESERVED"},
             "fixture_group": e.get("fixture_group", e.get("group", "")),
             "file_count": e.get("file_count", 0),
             "loc": e.get("loc", 0),
@@ -815,44 +828,10 @@ def main() -> None:
     print("  [4/10] Test run results + coverage (this may take a few minutes)...", file=sys.stderr)
     test_results, coverage_pct, suite_runtime_s = get_test_results_and_coverage()
 
-    # Durability guard (audit 2026-05-18): the pytest sub-invocation above can
-    # mis-parse in some environments (uv re-sync noise, transient editable-install
-    # breakage) and return passing=0. A multi-thousand-test suite never
-    # legitimately reports 0 passing, so treat passing==0 as a parse/run failure:
-    # preserve the prior canonical METRICS test counts + suite runtime and warn
-    # loudly, instead of silently zeroing the canonical numbers.
-    if test_results["passing"] == 0:
-        _prev_path = EVAL_DIR / "METRICS.yaml"
-        if _prev_path.exists():
-            try:
-                _prev = yaml.safe_load(_prev_path.read_text()) or {}
-                _pt = _prev.get("testing") or {}
-                test_results = {
-                    "passing": _pt.get("test_count_passing", 0),
-                    "failing": _pt.get("test_count_failing", 0),
-                    "skipped": _pt.get("test_count_skipped", 0),
-                    "xfailed": _pt.get("test_count_xfailed", 0),
-                    "xpassed": _pt.get("test_count_xpassed", 0),
-                }
-                if not test_count_total:
-                    test_count_total = _pt.get("test_count_total", 0)
-                if not suite_runtime_s:
-                    suite_runtime_s = (_prev.get("benchmark") or {}).get(
-                        "suite_runtime_s", 0.0
-                    )
-                print(
-                    "WARNING: pytest parse yielded 0 passing (environment/parse "
-                    "failure, not a real result). PRESERVED prior METRICS test "
-                    "counts/runtime. Re-run the suite manually and update only if "
-                    "the code actually changed.",
-                    file=sys.stderr,
-                )
-            except Exception as _e:  # pragma: no cover - defensive
-                print(
-                    f"WARNING: pytest parse yielded 0 passing and prior METRICS "
-                    f"could not be read to preserve counts: {_e}",
-                    file=sys.stderr,
-                )
+    if sum(test_results.values()) != test_count_total:
+        raise MetricsProbeError(
+            f"Collected {test_count_total} tests, but run reported {test_results}"
+        )
 
     print("  [5/10] mypy strict errors...", file=sys.stderr)
     mypy_errors = get_mypy_errors()
@@ -1000,4 +979,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except MetricsProbeError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(1)

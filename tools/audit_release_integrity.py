@@ -39,7 +39,7 @@ INIT_PATH = INNER / "py" / "cogant" / "__init__.py"
 INNER_PYPROJECT = INNER / "pyproject.toml"
 ROOT_PYPROJECT = ROOT / "pyproject.toml"
 LOCK_PATH = INNER / "uv.lock"
-DEFAULT_WHEEL_DIR = Path("/tmp/cogant-wheelhouse")
+DEFAULT_WHEEL_DIR = INNER / "dist"
 REPORT_PATH = ROOT / "output" / "reports" / "release_integrity.json"
 
 
@@ -367,7 +367,7 @@ def _reproducibility_report() -> tuple[dict[str, Any], list[str]]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--wheel", help="wheel to validate; defaults to the latest /tmp/cogant-wheelhouse wheel")
+    parser.add_argument("--wheel", help="wheel to validate; defaults to the latest cogant/dist wheel")
     parser.add_argument("--require-wheel", action="store_true", help="fail if no wheel is available")
     parser.add_argument("--check-wheel-reproducibility", action="store_true", help="build two wheels and compare bytes")
     parser.add_argument("--no-openapi", action="store_true", help="skip the optional FastAPI OpenAPI check")

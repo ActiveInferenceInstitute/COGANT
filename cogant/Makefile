@@ -104,12 +104,7 @@ release-gate:
 	cd .. && uv run python tools/release_gate.py
 
 wheel-smoke:
-	uv build --wheel --out-dir /tmp/cogant-wheelhouse
-	rm -rf /tmp/cogant-wheel-install
-	# Install the wheel with its required runtime dependencies, but do not ask
-	# uv to resolve optional extras (especially the large upstream GNN checkout).
-	uv pip install --target /tmp/cogant-wheel-install /tmp/cogant-wheelhouse/cogant-*.whl
-	cd /tmp && PYTHONPATH=/tmp/cogant-wheel-install uv run --project "$(CURDIR)" python -c "import importlib; [importlib.import_module(n) for n in ('cogant','cogant.api','cogant.cli','cogant.config','cogant.gnn','cogant.parsers','cogant.reverse','cogant.server')]; from cogant.parsers import get_parser, parser_capabilities; [get_parser(lang) for lang in sorted(parser_capabilities())]"
+	uv run python ../tools/wheel_smoke.py
 
 # Cleanup
 clean: clean-cache

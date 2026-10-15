@@ -72,7 +72,7 @@ INNER = ROOT / "cogant"
 PYPROJECT_PATH = INNER / "pyproject.toml"
 LOCK_PATH = INNER / "uv.lock"
 DEFAULT_EXAMPLE = INNER / "examples" / "control_positive" / "calculator"
-DEFAULT_AUDIT_DIR = Path("/tmp/cogant_gnn_upstream_audit")
+DEFAULT_AUDIT_DIR = ROOT / "output" / "gnn_upstream_audit"
 
 UPSTREAM_DISTRIBUTION = "generalized-notation-notation"
 UPSTREAM_IMPORT_NAME = "gnn"
@@ -237,8 +237,8 @@ class AuditSurface:
 
     @property
     def supply_chain_pass(self) -> bool:
-        """True when no known-vulnerability finding is present."""
-        return not self.supply_chain_findings
+        """True when a completed scan contains no known-vulnerability findings."""
+        return self.supply_chain_scanned and not self.supply_chain_findings
 
     @property
     def single_file_validation_pass(self) -> bool:
@@ -672,7 +672,6 @@ def build_surface(
     """
     expectation = expectation or load_upstream_expectation()
     version = parse_version_probe(audit_dir / "version_probe.txt")
-    version.update(parse_version_probe(audit_dir / "version_probe_refreshed.txt"))
 
     summary_dir = resolve_summary_dir(audit_dir)
     run = parse_upstream_summary(summary_dir / PIPELINE_SUMMARY_NAME, summary_dir)
@@ -698,6 +697,20 @@ def build_surface(
         version.get(f"{release_tag}_tag") if release_tag else None
     )
     pip_audit_path = audit_dir / "pip_audit_path.json"
+    scanned = _pip_audit_scanned(pip_audit_path)
+    manifest_path = audit_dir / "collect_manifest.json"
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            scan = manifest["phases"]["pip_audit"]
+            scanned = (
+                scanned
+                and bool(manifest.get("finished_at"))
+                and scan.get("ran") is True
+                and scan.get("returncode") in (0, 1)
+            )
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            scanned = False
     return AuditSurface(
         upstream_commit=upstream_commit,
         expected_commit=expectation.pinned_commit,
@@ -729,7 +742,7 @@ def build_surface(
         single_file_validation=parse_single_file_validation(
             audit_dir / "single_file_validation.json"
         ),
-        supply_chain_scanned=_pip_audit_scanned(pip_audit_path),
+        supply_chain_scanned=scanned,
         supply_chain_findings=parse_pip_audit(pip_audit_path),
     )
 
@@ -755,7 +768,7 @@ def render_markdown(surface: AuditSurface) -> str:
     """Render a review-ready Markdown summary."""
     supply = (
         "NOT SCANNED"
-        if not surface.supply_chain_scanned and surface.supply_chain_pass
+        if not surface.supply_chain_scanned
         else "PASS"
         if surface.supply_chain_pass
         else "FINDINGS"
@@ -1254,6 +1267,8 @@ def collect_audit_dir(
 
     expectation = expectation or load_upstream_expectation()
     audit_dir = audit_dir.resolve()
+    if audit_dir.exists() and any(audit_dir.iterdir()):
+        raise FileExistsError(f"Audit collection requires an empty directory: {audit_dir}")
     audit_dir.mkdir(parents=True, exist_ok=True)
     manifest: dict[str, Any] = {
         "tool": Path(__file__).name,
@@ -1262,6 +1277,8 @@ def collect_audit_dir(
         "expectation": asdict(expectation),
         "phases": {},
     }
+    manifest_path = audit_dir / "collect_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
     def _phase(name: str, started: float, **info: Any) -> None:
         manifest["phases"][name] = {"duration_s": round(time.perf_counter() - started, 2), **info}
@@ -1283,8 +1300,6 @@ def collect_audit_dir(
 
     started = time.perf_counter()
     upstream_dir = audit_dir / SUMMARY_DIRNAMES[0]
-    if upstream_dir.exists():
-        shutil.rmtree(upstream_dir)
     result = run_upstream_pipeline(
         UpstreamPipelineConfig(target_dir=package_dir, output_dir=upstream_dir, skip_llm=True)
     )

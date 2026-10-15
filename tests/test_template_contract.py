@@ -8,11 +8,7 @@ from cogant_template_contract import contract_paths, project_root, validate_cont
 def test_project_root_points_to_cogant_staging_root() -> None:
     root = project_root()
 
-    # The staging root's directory name is "cogant" at the template render
-    # location (projects/working/cogant) but "COGANT" in a sidecar clone of
-    # the repo, so only the case-insensitive name plus the layout contract
-    # are stable across checkouts.
-    assert root.name.lower() == "cogant"
+    assert root == Path(__file__).resolve().parents[1]
     assert (root / "AGENTS.md").is_file()
     assert (root / "cogant" / "pyproject.toml").is_file()
 
