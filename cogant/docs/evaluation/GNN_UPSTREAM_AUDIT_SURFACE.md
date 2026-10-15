@@ -199,4 +199,3 @@ Optional upstream extras (D2, scikit-learn, Gradio, bnlearn, an LLM backend)
 change what several steps can exercise. Treat a 100/100 COGANT package score
 as a structural-validation statement, not as proof that every upstream
 framework backend can render and run every COGANT package.
-
