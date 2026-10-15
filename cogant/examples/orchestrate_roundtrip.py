@@ -13,7 +13,7 @@ Outputs to output/{repo_name}/ with comprehensive analysis:
   - Mermaid diagrams (class, dependency, state, sequence, semantic, boundary)
   - Charts (node/edge distribution as HTML)
   - Graph exports (typed_graph.json, cytoscape.json, adjacency_matrix.json, graph.dot)
-  - Semantic mappings and simulation traces
+  - Semantic mappings and source-bound model inference traces
   - HTML index and markdown summary
 """
 
@@ -206,6 +206,8 @@ class RoundtripOrchestrator:
             # Step 9: Format GNN output and validate
             logger.info("\n[9/9] Formatting GNN output and validating...")
             success = self._format_and_validate(graph, state_space, semantic_mappings)
+            if not success:
+                return False
 
             # Additional analysis: Compute metrics and self-drift
             logger.info("\n[Metrics] Computing codebase metrics and baseline drift...")
@@ -633,53 +635,26 @@ class RoundtripOrchestrator:
             logger.info("  [Task 1] Building process model from program graph...")
             process_model = self._build_process_model(graph)
 
-            # Format markdown (with graceful fallback)
-            try:
-                logger.info(
-                    f"  Creating formatter: semantic_mappings type = {type(semantic_mappings).__name__}, len = {len(semantic_mappings) if hasattr(semantic_mappings, '__len__') else 'N/A'}"
+            formatter = GNNMarkdownFormatter(graph, state_space, process_model, semantic_mappings)
+            markdown = formatter.format()
+            exporter = GNNJSONExporter(graph, state_space, process_model, semantic_mappings)
+            json_data = exporter.export()
+            reporter = ReportGenerator(graph, state_space, process_model, self.repo_path.name)
+            report = reporter.generate()
+            self._save_outputs(markdown, json_data, report)
+            if not report.is_valid:
+                logger.warning(
+                    "Diagnostic model assessment has issues; executable GNN package admission "
+                    "is checked separately below"
                 )
-                formatter = GNNMarkdownFormatter(
-                    graph, state_space, process_model, semantic_mappings
-                )
-                markdown = formatter.format()
-                logger.info(f"  Formatted GNN markdown ({len(markdown)} chars)")
-            except Exception as e:
-                logger.warning(f"GNN markdown formatting failed, using minimal fallback: {e}")
-                markdown = f"# {self.repo_path.name} Analysis\n\nMarkdown generation failed: {e}\n"
-
-            # Export JSON (with graceful fallback)
-            try:
-                exporter = GNNJSONExporter(graph, state_space, process_model, semantic_mappings)
-                json_data = exporter.export()
-                logger.info(f"  Exported JSON with {len(json_data)} top-level keys")
-            except Exception as e:
-                logger.warning(f"GNN JSON export failed: {e}", exc_info=True)
-                json_data = {"error": str(e), "note": "JSON export failed"}
-
-            # Generate validation report (with graceful fallback)
-            try:
-                reporter = ReportGenerator(graph, state_space, process_model, self.repo_path.name)
-                report = reporter.generate()
-                logger.info(
-                    f"  Generated validation report: {'VALID' if report.is_valid else 'ISSUES FOUND'}"
-                )
-            except Exception as e:
-                logger.warning(f"Validation report generation failed: {e}")
-
-                # Create minimal report object
-                class MinimalReport:
-                    is_valid = False
-                    coverage_score = 0.0
-                    confidence_score = 0.0
-                    issues = []
-                    id = f"report_{self.repo_path.name}"
-                    summary = f"Report generation failed: {e}"
-
-                report = MinimalReport()
-
-            # Save core outputs
-            if markdown or json_data or report:
-                self._save_outputs(markdown or "", json_data or {}, report)
+            if not self._build_gnn_package(graph, state_space, process_model, semantic_mappings):
+                return False
+            if not self._validate_gnn_package():
+                return False
+            if not self._add_inference_trace():
+                return False
+            if not self._run_gnn_model():
+                return False
 
             # Save enhanced program graph
             self._save_enhanced_program_graph(graph)
@@ -699,10 +674,6 @@ class RoundtripOrchestrator:
             # Generate and save metrics
             logger.info("  [Metrics] Computing and saving codebase metrics...")
             self._save_metrics_report(graph, state_space, semantic_mappings)
-            # Task 2: Add simulation trace output
-            logger.info("  [Task 2] Adding simulation trace output...")
-            self._add_simulation_trace(state_space)
-
             # Task 3: Add confidence heatmap HTML
             logger.info("  [Task 3] Adding confidence heatmap HTML...")
             self._add_confidence_heatmap(semantic_mappings)
@@ -746,21 +717,10 @@ class RoundtripOrchestrator:
                 "  Generated rich outputs: Mermaid diagrams, charts, semantic mappings, summary, dashboard, timeline, heatmap, trace"
             )
 
-            # Task 6: Build GNN package
-            logger.info("  [Task 6] Building GNN package...")
-            self._build_gnn_package(graph, state_space, process_model, semantic_mappings)
-
-            # Task 7: Validate GNN package
-            logger.info("  [Task 7] Validating GNN package...")
-            self._validate_gnn_package()
-
-            # Task 8: Run GNN model
-            logger.info("  [Task 8] Running GNN model...")
-            self._run_gnn_model()
-
             # Task 9: Run the full GNN pipeline into a dedicated subfolder
             logger.info("  [Task 9] Running full GNN pipeline into gnn_pipeline/ ...")
-            self._run_full_gnn_pipeline(graph, state_space, process_model, semantic_mappings)
+            if not self._run_full_gnn_pipeline(graph, state_space, process_model, semantic_mappings):
+                return False
 
             # PNG rasterization is the final step of the pipeline so that every
             # upstream artifact (mermaid, svg, dot, validation badge, GNN
@@ -772,12 +732,7 @@ class RoundtripOrchestrator:
 
         except Exception as e:
             logger.error(f"Rich output generation failed: {e}", exc_info=True)
-            # Still return True if we at least generated core outputs
-            return True
-
-    def _save_program_graph(self, graph):
-        """Save program graph as JSON (compatibility, kept for compatibility)."""
-        self._save_enhanced_program_graph(graph)
+            return False
 
     def _save_enhanced_program_graph(self, graph):
         """Save program graph as JSON with metadata and provenance."""
@@ -1897,82 +1852,17 @@ class RoundtripOrchestrator:
                 connections={},
             )
 
-    def _add_simulation_trace(self, state_space):
-        """Task 2: Add simulation trace output after state space compilation."""
+    def _add_inference_trace(self) -> bool:
+        """Execute the exported GNN and admit its source-bound typed trace."""
+        from cogant.runtime.inference import load_inference_trace, write_inference_trace_artifact
+
         try:
-            from cogant.simulate.runner import ModelRunner
-            from cogant.simulate.visualization import SimulationVisualizer
-
-            runner = ModelRunner()
-
-            # Run basic simulation
-            logger.info("  Running basic state space simulation...")
-            trace = runner.run_simulation(state_space, steps=20)
-
-            trace_data = {
-                "metadata": {
-                    "total_steps": len(trace),
-                    "variables": list(state_space.variables.keys())[:10],
-                },
-                "trace": [
-                    {
-                        "step": t.get("step"),
-                        "action": t.get("action"),
-                        "success": t.get("success"),
-                        "state_keys": list(t.get("state", {}).keys())[:5],
-                    }
-                    for t in trace
-                ],
-            }
-
-            trace_file = self.output_dir / "simulation_trace.json"
-            with open(trace_file, "w") as f:
-                json.dump(trace_data, f, indent=2, default=str)
-            logger.info(f"  Saved simulation trace to {trace_file}")
-
-            # Run Active Inference simulation
-            logger.info("  Running Active Inference simulation...")
-            ai_trace = runner.run_active_inference(state_space, steps=20)
-
-            # Convert trace to serializable format
-            ai_trace_serialized = []
-            for step in ai_trace:
-                ai_trace_serialized.append(
-                    {
-                        "step": step.get("step", 0),
-                        "observation": str(step.get("observation", "")),
-                        "action": str(step.get("action", "")),
-                        "free_energy": float(step.get("free_energy", 0.0)),
-                        "beliefs": {str(k): float(v) for k, v in step.get("beliefs", {}).items()},
-                        "predicted_state_keys": list(step.get("predicted_state", {}).keys())[:5],
-                    }
-                )
-
-            ai_trace_file = self.output_dir / "active_inference_trace.json"
-            with open(ai_trace_file, "w") as f:
-                json.dump(ai_trace_serialized, f, indent=2, default=str)
-            logger.info(f"  Saved Active Inference trace to {ai_trace_file}")
-
-            # Generate simulation report
-            logger.info("  Generating simulation report...")
-            report = runner.generate_report(ai_trace)
-            report_file = self.output_dir / "simulation_report.md"
-            with open(report_file, "w") as f:
-                f.write(report)
-            logger.info(f"  Saved simulation report to {report_file}")
-
-            # Generate HTML report with visualizations
-            logger.info("  Generating visualization HTML...")
-            visualizer = SimulationVisualizer()
-            html_report = visualizer.generate_html_report(ai_trace, state_space)
-            html_file = self.output_dir / "free_energy_trajectory.html"
-            with open(html_file, "w") as f:
-                f.write(html_report)
-            logger.info(f"  Saved visualization HTML to {html_file}")
-
+            path = write_inference_trace_artifact(self.output_dir, steps=10)
+            trace = load_inference_trace(self.output_dir)
+            logger.info("Saved %s model-rollout steps to %s", len(trace.trace), path)
             return True
-        except Exception as e:
-            logger.warning(f"Simulation trace failed: {e}", exc_info=True)
+        except (OSError, ValueError) as error:
+            logger.error("Exported GNN inference failed: %s", error, exc_info=True)
             return False
 
     def _add_confidence_heatmap(self, semantic_mappings):
@@ -2199,10 +2089,9 @@ Generated: {datetime.now().isoformat()}
 - `program_graph.json` - Detailed program graph with metadata
 - `validation_report.json` - Validation results
 - `summary.md` - This file
-- `simulation_trace.json` - State space simulation trace
-- `active_inference_trace.json` - Active Inference simulation with beliefs and free energy
-- `simulation_report.md` - Markdown report of Active Inference simulation
-- `free_energy_trajectory.html` - Interactive visualization of free energy dynamics and beliefs
+- `inference_trace.json` - Source-bound typed model rollout with matrix snapshot and digests
+- `gnn_execution_trace.json` - Labelled posterior, action scores and next-belief predictions
+- `gnn_execution_report.md` - Scoped report of exported-model execution
 - `confidence_heatmap.html` - Semantic mapping confidence visualization
 - `process_timeline.mermaid` - Process timeline gantt chart
 
@@ -2360,7 +2249,7 @@ Generated: {datetime.now().isoformat()}
 
             logger.info(
                 f"    Execution complete: {execution['steps_completed']} steps, "
-                f"total_reward={execution['total_reward']:.3f}"
+                f"source_sha256={execution['source_sha256']}"
             )
 
             # Save execution trace
@@ -2954,7 +2843,7 @@ Generated: {datetime.now().isoformat()}
             from cogant.gnn.validator import GNNValidator
         except ImportError as e:
             logger.warning(f"GNN pipeline modules unavailable: {e}")
-            return
+            return False
 
         gnn_dir = self.output_dir / "gnn_pipeline"
         gnn_dir.mkdir(exist_ok=True)
@@ -2997,7 +2886,7 @@ Generated: {datetime.now().isoformat()}
                     pg = builder.finalize()
                 except Exception as rebuild_err:
                     logger.warning(f"GNN pipeline graph reconstruction failed: {rebuild_err}")
-                    return
+                    return False
 
             # 1) Build package
             logger.info("    [GNN pipeline] Building package...")
@@ -3031,6 +2920,9 @@ Generated: {datetime.now().isoformat()}
             score = validation_dict.get("score", 0)
             logger.info(f"    [GNN pipeline] Validation score: {score}%")
 
+            if not validation.valid:
+                return False
+
             # 3) Execute compiled model
             logger.info("    [GNN pipeline] Executing compiled model...")
             try:
@@ -3049,7 +2941,8 @@ Generated: {datetime.now().isoformat()}
                 )
                 logger.info(f"    [GNN pipeline] Execution complete: {steps} steps")
             except Exception as e:
-                logger.warning(f"    [GNN pipeline] Execution failed: {e}")
+                logger.error(f"    [GNN pipeline] Execution failed: {e}")
+                return False
 
             # 4) Write a pipeline manifest documenting what's in gnn_pipeline/
             manifest = {
@@ -3062,8 +2955,10 @@ Generated: {datetime.now().isoformat()}
             (gnn_dir / "pipeline_manifest.json").write_text(
                 json.dumps(manifest, indent=2, default=str)
             )
+            return True
         except Exception as e:
-            logger.warning(f"Full GNN pipeline failed: {e}", exc_info=True)
+            logger.error(f"Full GNN pipeline failed: {e}", exc_info=True)
+            return False
 
     def _generate_advanced_visualizations(self, graph, state_space, semantic_mappings):
         """Generate advanced visualization types: factor graph, sunburst, radar, matrix."""
