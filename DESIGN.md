@@ -30,7 +30,9 @@ width and 20px padding. The established spacing steps include 4, 8, 12, 20,
 Inference SVGs use percentage-based horizontal coordinates, a 300px plot height
 and an 800px maximum width. Text stays 12px at phone widths rather than shrinking
 with a view box. Long digests wrap within the panel.
-Record tables own horizontal scrolling on narrow screens.
+Record tables own horizontal scrolling on narrow screens. The shared
+`.table-scroll` region retains native table layout and keyboard focus; grid
+children allow shrinking so intrinsic table widths cannot expand the document.
 
 ## 5. Components and states
 

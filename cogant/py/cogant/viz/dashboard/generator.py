@@ -554,7 +554,7 @@ class DashboardGenerator:
 """
 
         return f"""
-<table>
+<div class="table-scroll" role="region" aria-label="State variables" tabindex="0"><table>
     <thead>
         <tr>
             <th>ID</th>
@@ -565,7 +565,7 @@ class DashboardGenerator:
     <tbody>
         {rows}
     </tbody>
-</table>
+</table></div>
 """
 
     def _generate_observations_table(self) -> str:
@@ -586,7 +586,7 @@ class DashboardGenerator:
 """
 
         return f"""
-<table>
+<div class="table-scroll" role="region" aria-label="Observations" tabindex="0"><table>
     <thead>
         <tr>
             <th>ID</th>
@@ -597,7 +597,7 @@ class DashboardGenerator:
     <tbody>
         {rows}
     </tbody>
-</table>
+</table></div>
 """
 
     def _generate_actions_table(self) -> str:
@@ -618,7 +618,7 @@ class DashboardGenerator:
 """
 
         return f"""
-<table>
+<div class="table-scroll" role="region" aria-label="Actions" tabindex="0"><table>
     <thead>
         <tr>
             <th>ID</th>
@@ -629,7 +629,7 @@ class DashboardGenerator:
     <tbody>
         {rows}
     </tbody>
-</table>
+</table></div>
 """
 
     def _generate_transitions_table(self) -> str:
@@ -650,7 +650,7 @@ class DashboardGenerator:
 """
 
         return f"""
-<table>
+<div class="table-scroll" role="region" aria-label="Transitions" tabindex="0"><table>
     <thead>
         <tr>
             <th>ID</th>
@@ -661,7 +661,7 @@ class DashboardGenerator:
     <tbody>
         {rows}
     </tbody>
-</table>
+</table></div>
 """
 
     def _generate_process_flow_tab(self) -> str:
@@ -711,7 +711,7 @@ class DashboardGenerator:
 """
 
         stages_table = f"""
-<table>
+<div class="table-scroll" role="region" aria-label="Process stages" tabindex="0"><table>
     <thead>
         <tr>
             <th>Stage</th>
@@ -726,7 +726,7 @@ class DashboardGenerator:
     <tbody>
         {stages_rows}
     </tbody>
-</table>
+</table></div>
 """
 
         # Create simple Gantt-style timeline using CSS
@@ -975,7 +975,7 @@ class DashboardGenerator:
 """
 
         files_table = f"""
-<table>
+<div class="table-scroll" role="region" aria-label="Package files" tabindex="0"><table>
     <thead>
         <tr>
             <th>File</th>
@@ -985,7 +985,7 @@ class DashboardGenerator:
     <tbody>
         {files_rows}
     </tbody>
-</table>
+</table></div>
 """
 
         # Errors/Warnings
@@ -997,12 +997,12 @@ class DashboardGenerator:
             )
             error_html = f"""
             <h3>Errors</h3>
-            <table>
+            <div class="table-scroll" role="region" aria-label="Package errors" tabindex="0"><table>
                 <thead>
                     <tr><th>Type</th><th>Message</th></tr>
                 </thead>
                 <tbody>{error_rows}</tbody>
-            </table>
+            </table></div>
 """
 
         warning_html = ""
@@ -1013,12 +1013,12 @@ class DashboardGenerator:
             )
             warning_html = f"""
             <h3>Warnings</h3>
-            <table>
+            <div class="table-scroll" role="region" aria-label="Package warnings" tabindex="0"><table>
                 <thead>
                     <tr><th>Type</th><th>Message</th></tr>
                 </thead>
                 <tbody>{warning_rows}</tbody>
-            </table>
+            </table></div>
 """
 
         return f"""
@@ -1108,7 +1108,7 @@ class DashboardGenerator:
             <h2>Semantic Mappings</h2>
             <input type="text" class="search-box" placeholder="Search mappings..."
                    onkeyup="filterTable(this, 'mappings-table')">
-            <table id="mappings-table">
+            <div class="table-scroll" role="region" aria-label="Semantic mappings" tabindex="0"><table id="mappings-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -1122,7 +1122,7 @@ class DashboardGenerator:
                 <tbody>
                     {rows}
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 """
@@ -1182,7 +1182,7 @@ class DashboardGenerator:
 """
             issues_html = f"""
             <h3>Issues Found</h3>
-            <table>
+            <div class="table-scroll" role="region" aria-label="Validation issues" tabindex="0"><table>
                 <thead>
                     <tr>
                         <th>Severity</th>
@@ -1192,7 +1192,7 @@ class DashboardGenerator:
                 <tbody>
                     {issues_html}
                 </tbody>
-            </table>
+            </table></div>
 """
 
         return f"""
