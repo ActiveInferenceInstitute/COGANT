@@ -222,7 +222,7 @@ flowchart_text = generator.generate_flowchart(
         ("A", "B"),
         ("B", "C"),
         ("C", "D"),
-    ]
+    ],
 )
 
 with open("output/pipeline.mmd", "w") as f:
@@ -276,11 +276,7 @@ C_prior = np.array([0.7, 0.3])  # Goal preferences
 D_prior = np.array([0.5, 0.5])  # Initial state
 
 pdf_path = exporter.export_matrices(
-    A=A_matrix,
-    B=B_matrices,
-    C=C_prior,
-    D=D_prior,
-    output_path="output/matrices.pdf"
+    A=A_matrix, B=B_matrices, C=C_prior, D=D_prior, output_path="output/matrices.pdf"
 )
 print(f"Matrices exported to {pdf_path}")
 ```

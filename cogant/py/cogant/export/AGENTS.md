@@ -33,15 +33,15 @@ stage 10: validate/     → AII validator (0–100 score)
 
 ```python
 class ExportFormat(Enum):
-    JSON = "json"              # Typed JSON with schema
-    GRAPHML = "graphml"        # Graph interchange format (XML-based)
-    PARQUET = "parquet"        # Columnar format (Apache Arrow)
-    SVG = "svg"                # Scalable vector graphics
-    PNG = "png"                # Bitmap image
-    PDF = "pdf"                # Multi-page PDF report
-    MERMAID = "mermaid"        # Mermaid diagram syntax
-    DOT = "dot"                # Graphviz DOT format
-    JSONLINES = "jsonlines"    # Line-delimited JSON
+    JSON = "json"  # Typed JSON with schema
+    GRAPHML = "graphml"  # Graph interchange format (XML-based)
+    PARQUET = "parquet"  # Columnar format (Apache Arrow)
+    SVG = "svg"  # Scalable vector graphics
+    PNG = "png"  # Bitmap image
+    PDF = "pdf"  # Multi-page PDF report
+    MERMAID = "mermaid"  # Mermaid diagram syntax
+    DOT = "dot"  # Graphviz DOT format
+    JSONLINES = "jsonlines"  # Line-delimited JSON
 ```
 
 | Format | Use Case | Data Type | Size (typical) | External Deps |
@@ -98,7 +98,7 @@ class MultiFormatExporter:
         graph: ProgramGraph,
         mappings: SemanticMappings,
         output_dir: Path,
-        formats: List[ExportFormat]
+        formats: List[ExportFormat],
     ) -> BundleManifest:
         """Export to multiple formats in one call."""
 ```
@@ -154,7 +154,7 @@ cogant_bundle_2026_04_13_120000/
 ```python
 @dataclass
 class BundleManifest:
-    bundle_id: str              # Unique ID
+    bundle_id: str  # Unique ID
     timestamp: datetime
     cogant_version: str
     source_language: str
@@ -165,16 +165,17 @@ class BundleManifest:
     # Integrity
     total_size: int
     file_count: int
-    checksums: dict[str, str]   # Path -> SHA256
+    checksums: dict[str, str]  # Path -> SHA256
 
     # Provenance
     pipeline_stages: list[StageMetadata]
     provenance: dict[str, Any]
 
     # Quality
-    validation_score: float     # 0.0-100.0
+    validation_score: float  # 0.0-100.0
     error_count: int
     warning_count: int
+
 
 @dataclass
 class FileMetadata:
@@ -207,7 +208,7 @@ manifest = exporter.export_to_all(
         ExportFormat.PARQUET,
         ExportFormat.PNG,
         ExportFormat.MERMAID,
-    ]
+    ],
 )
 
 print(f"Exported to: {manifest.bundle_id}")
@@ -225,13 +226,10 @@ config = ExportConfig(
     formats=[ExportFormat.JSON, ExportFormat.GRAPHML],
     output_dir="output",
     prefix="my_project",
-    overwrite=False  # Don't overwrite existing files
+    overwrite=False,  # Don't overwrite existing files
 )
 
-manifest = exporter.export(
-    graph=program_graph,
-    config=config
-)
+manifest = exporter.export(graph=program_graph, config=config)
 
 print(f"Manifest: {manifest}")
 ```
@@ -268,11 +266,7 @@ provenance = {
     "pipeline_duration": 2.5,  # seconds
 }
 
-manifest = exporter.export(
-    graph=program_graph,
-    provenance=provenance,
-    output_dir="output"
-)
+manifest = exporter.export(graph=program_graph, provenance=provenance, output_dir="output")
 
 # Manifest includes provenance
 print(manifest.provenance)
@@ -292,7 +286,7 @@ for project in ["project_a", "project_b", "project_c"]:
     manifest = exporter.export_to_all(
         graph=graph,
         output_dir=Path(f"output/{project}"),
-        formats=[ExportFormat.JSON, ExportFormat.PARQUET]
+        formats=[ExportFormat.JSON, ExportFormat.PARQUET],
     )
     print(f"{project}: {manifest.file_count} files")
 ```
@@ -310,11 +304,7 @@ print(f"Validation score: {score}/100")
 
 # Export with validation metadata
 exporter = BundleExporter()
-manifest = exporter.export(
-    graph=program_graph,
-    validation_score=score,
-    output_dir="output"
-)
+manifest = exporter.export(graph=program_graph, validation_score=score, output_dir="output")
 ```
 
 ## Export Workflows

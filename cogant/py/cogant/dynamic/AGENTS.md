@@ -69,14 +69,14 @@ The dynamic module is **non-invasive** — it mutates the graph in-place, adding
 ```python
 @dataclass
 class TraceEvent:
-    name: str               # Function or event name
-    cat: str               # Category (e.g., "function", "v8", "devtools")
-    ph: str                # Phase ('B' begin, 'E' end, 'X' complete)
-    ts: float              # Timestamp (microseconds since epoch or arbitrary reference)
-    dur: float             # Duration (microseconds)
-    pid: int               # Process ID
-    tid: int               # Thread ID
-    args: dict[str, Any]   # Additional metadata (arguments, return value, etc.)
+    name: str  # Function or event name
+    cat: str  # Category (e.g., "function", "v8", "devtools")
+    ph: str  # Phase ('B' begin, 'E' end, 'X' complete)
+    ts: float  # Timestamp (microseconds since epoch or arbitrary reference)
+    dur: float  # Duration (microseconds)
+    pid: int  # Process ID
+    tid: int  # Thread ID
+    args: dict[str, Any]  # Additional metadata (arguments, return value, etc.)
 ```
 
 ### CoverageIngester — Parse Coverage Reports
@@ -108,9 +108,9 @@ class TraceEvent:
 ```python
 @dataclass
 class CoverageSpan:
-    file: str                      # File path (relative or absolute)
-    lines_covered: set[int]        # Line numbers that executed
-    lines_missing: set[int]        # Line numbers not executed
+    file: str  # File path (relative or absolute)
+    lines_covered: set[int]  # Line numbers that executed
+    lines_missing: set[int]  # Line numbers not executed
     branch_coverage: float | None  # 0.0-1.0 or None if no data
     covered_branches: int = 0
     total_branches: int = 0
@@ -167,11 +167,11 @@ def enrich_graph(
 ```python
 @dataclass
 class EnrichmentResult:
-    nodes_enriched: int        # Count of nodes that got coverage/trace data
-    edges_added: int           # Count of dynamic CALLS edges added
-    coverage_spans_matched: int # Spans that found matching nodes
-    trace_calls_matched: int   # Call-graph edges matched to nodes
-    errors: list[str]          # Warnings/diagnostics (non-fatal)
+    nodes_enriched: int  # Count of nodes that got coverage/trace data
+    edges_added: int  # Count of dynamic CALLS edges added
+    coverage_spans_matched: int  # Spans that found matching nodes
+    trace_calls_matched: int  # Call-graph edges matched to nodes
+    errors: list[str]  # Warnings/diagnostics (non-fatal)
     confidence_tier_distribution: dict[str, int]  # {tier: count}
 ```
 
@@ -213,6 +213,7 @@ class CoverageSpan:
     covered_branches: int = 0
     total_branches: int = 0
 
+
 @dataclass
 class CoverageData:
     type: str = "coverage"  # e.g. "coverage", "cobertura"
@@ -234,6 +235,7 @@ class TraceEvent:
     pid: int
     tid: int
     args: dict[str, Any]
+
 
 @dataclass
 class TraceData:
@@ -266,18 +268,14 @@ from cogant.graph import ProgramGraph
 
 graph = ProgramGraph(...)  # From static + graph pipeline
 
-result = enrich_graph(
-    graph,
-    coverage_path="/path/to/coverage.xml",
-    trace_path=None
-)
+result = enrich_graph(graph, coverage_path="/path/to/coverage.xml", trace_path=None)
 
 print(f"Enriched {result.nodes_enriched} nodes")
 print(f"Coverage spans matched: {result.coverage_spans_matched}")
 
 # Nodes now have coverage_hits and branch_coverage metadata
 for node in graph.nodes.values():
-    if hasattr(node, 'coverage_hits') and node.coverage_hits > 0:
+    if hasattr(node, "coverage_hits") and node.coverage_hits > 0:
         print(f"  {node.name}: {node.coverage_hits} lines covered")
 ```
 
@@ -286,11 +284,7 @@ for node in graph.nodes.values():
 ```python
 from cogant.dynamic.enrichment import enrich_graph
 
-result = enrich_graph(
-    graph,
-    coverage_path=None,
-    trace_path="/path/to/trace.json"
-)
+result = enrich_graph(graph, coverage_path=None, trace_path="/path/to/trace.json")
 
 print(f"Added {result.edges_added} dynamic CALLS edges")
 print(f"Trace calls matched: {result.trace_calls_matched}")
@@ -307,9 +301,7 @@ for edge in graph.edges.values():
 from cogant.dynamic.enrichment import enrich_graph
 
 result = enrich_graph(
-    graph,
-    coverage_path="/path/to/.coverage",
-    trace_path="/path/to/chrome_trace.json"
+    graph, coverage_path="/path/to/.coverage", trace_path="/path/to/chrome_trace.json"
 )
 
 print(f"Enrichment result:")

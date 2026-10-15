@@ -187,9 +187,15 @@ print(f"Architectural: {drift_score.architectural_score:.1f}")
 print(f"Semantic Churn: {drift_score.semantic_churn_score:.1f}")
 
 print(f"\nDetailed Changes:")
-print(f"  Nodes: +{drift_score.details['nodes_added']} -{drift_score.details['nodes_removed']} ~{drift_score.details['nodes_modified']}")
-print(f"  Edges: +{drift_score.details['edges_added']} -{drift_score.details['edges_removed']} ~{drift_score.details['edges_modified']}")
-print(f"  Variables: +{drift_score.details['variables_added']} -{drift_score.details['variables_removed']} ~{drift_score.details['variables_modified']}")
+print(
+    f"  Nodes: +{drift_score.details['nodes_added']} -{drift_score.details['nodes_removed']} ~{drift_score.details['nodes_modified']}"
+)
+print(
+    f"  Edges: +{drift_score.details['edges_added']} -{drift_score.details['edges_removed']} ~{drift_score.details['edges_modified']}"
+)
+print(
+    f"  Variables: +{drift_score.details['variables_added']} -{drift_score.details['variables_removed']} ~{drift_score.details['variables_modified']}"
+)
 print(f"  Variable Role Changes: {drift_score.details['variable_role_changes']}")
 print(f"  Action Set Changes: {drift_score.details['action_set_changes']}")
 print(f"  Policy Changes: {drift_score.details['policy_changes']}")
@@ -229,7 +235,7 @@ from cogant.scoring import CodebaseMetrics
 metrics = CodebaseMetrics(
     graph_dict=bundle["graph"],
     state_space_dict=bundle["state_space"],
-    mappings_dict=bundle["mappings"]
+    mappings_dict=bundle["mappings"],
 )
 
 # Individual scores
@@ -286,10 +292,18 @@ summary_a = metrics_a.summary()
 summary_b = metrics_b.summary()
 
 print(f"=== Quality Trend Analysis ===")
-print(f"Complexity: {summary_a.complexity_score:.1f} → {summary_b.complexity_score:.1f} ({summary_b.complexity_score - summary_a.complexity_score:+.1f})")
-print(f"Coupling: {summary_a.coupling_score:.1f} → {summary_b.coupling_score:.1f} ({summary_b.coupling_score - summary_a.coupling_score:+.1f})")
-print(f"Cohesion: {summary_a.cohesion_score:.1f} → {summary_b.cohesion_score:.1f} ({summary_b.cohesion_score - summary_a.cohesion_score:+.1f})")
-print(f"Coverage: {summary_a.semantic_coverage:.1%} → {summary_b.semantic_coverage:.1%} ({summary_b.semantic_coverage - summary_a.semantic_coverage:+.1%})")
+print(
+    f"Complexity: {summary_a.complexity_score:.1f} → {summary_b.complexity_score:.1f} ({summary_b.complexity_score - summary_a.complexity_score:+.1f})"
+)
+print(
+    f"Coupling: {summary_a.coupling_score:.1f} → {summary_b.coupling_score:.1f} ({summary_b.coupling_score - summary_a.coupling_score:+.1f})"
+)
+print(
+    f"Cohesion: {summary_a.cohesion_score:.1f} → {summary_b.cohesion_score:.1f} ({summary_b.cohesion_score - summary_a.cohesion_score:+.1f})"
+)
+print(
+    f"Coverage: {summary_a.semantic_coverage:.1%} → {summary_b.semantic_coverage:.1%} ({summary_b.semantic_coverage - summary_a.semantic_coverage:+.1%})"
+)
 
 # Detect regressions
 if summary_b.complexity_score < summary_a.complexity_score - 5.0:
@@ -365,7 +379,7 @@ except Exception as e:
         total_score=0.0,
         architectural_score=0.0,
         semantic_churn_score=0.0,
-        details={"error": str(e), "recovery": "Bundles may be incompatible"}
+        details={"error": str(e), "recovery": "Bundles may be incompatible"},
     )
 ```
 

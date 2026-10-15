@@ -339,7 +339,7 @@ builder = GNNPackageBuilder(
     state_space=state_space,
     process_model=process_model,
     mappings=semantic_mappings,
-    config={"name": "flask_app", "version": "1.0.0"}
+    config={"name": "flask_app", "version": "1.0.0"},
 )
 
 # Build package
@@ -384,7 +384,7 @@ result = runner.run(steps=10)
 print(f"Executed {len(result['traces'])} steps")
 
 # Inspect traces
-for trace in result['traces'][:3]:
+for trace in result["traces"][:3]:
     print(f"\nStep {trace.step}:")
     print(f"  State: {trace.state}")
     print(f"  Action: {trace.action}")

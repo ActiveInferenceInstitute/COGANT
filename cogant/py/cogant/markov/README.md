@@ -35,13 +35,13 @@ Typical workflow:
 
 ```python
 extractor = MarkovBlanketExtractor(program_graph)
-blanket = extractor.extract(strategy="auto")               # pick a module automatically
+blanket = extractor.extract(strategy="auto")  # pick a module automatically
 # or extractor.extract(strategy="module", module_names=["core"])
 # or extractor.extract(strategy="mapping_kind", mapping_kinds=["hidden_state"],
 #                     semantic_mappings=bundle.artifacts["_semantic_mappings"])
 
 network = build_blanket_network(program_graph, blanket)
-record  = serialize_blanket(blanket, program_graph)
+record = serialize_blanket(blanket, program_graph)
 ```
 
 ## Seed strategies

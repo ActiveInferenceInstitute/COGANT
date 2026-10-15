@@ -109,7 +109,7 @@ builder = GNNPackageBuilder(
     state_space=state_space_model,
     process_model=process_model,
     mappings=semantic_mappings,
-    config={"author": "alice", "version": "1.0.0"}
+    config={"author": "alice", "version": "1.0.0"},
 )
 manifest = builder.build("/path/to/output")
 
@@ -125,7 +125,9 @@ runner = GNNModelRunner("/path/to/output")
 observations = [{"sensor_1": 0.5, "sensor_2": 0.3}, ...]
 traces = runner.run(observations, num_steps=100)
 for trace in traces:
-    print(f"Step {trace.step}: action={trace.action}, reward={trace.reward}, free_energy={trace.free_energy_after}")
+    print(
+        f"Step {trace.step}: action={trace.action}, reward={trace.reward}, free_energy={trace.free_energy_after}"
+    )
 ```
 
 ## Dependencies

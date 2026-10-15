@@ -104,6 +104,7 @@ class Node:
     is_public: bool
     stability_score: float  # 0.0-1.0 (1.0 = stable)
 
+
 @dataclass
 class Edge:
     source_id: str
@@ -111,6 +112,7 @@ class Edge:
     kind: EdgeKind  # CALLS, IMPORTS, READS, WRITES, CONSTRAINT, CONFIGURATION, ...
     confidence: float  # 0.0-1.0 (1.0 = certain)
     metadata: dict[str, Any]
+
 
 @dataclass
 class ProgramGraph:
@@ -136,6 +138,7 @@ class GraphMetrics:
     diameter: int | None
     clustering_coefficient: float  # [0, 1]
 
+
 @dataclass
 class CentralityScores:
     betweenness_centrality: dict[str, float]
@@ -143,17 +146,20 @@ class CentralityScores:
     pagerank: dict[str, float]
     closeness_centrality: dict[str, float]
 
+
 @dataclass
 class CycleDetection:
     has_cycles: bool
     cycles: list[list[str]]  # Each cycle is a list of node IDs
     strongly_connected_components: list[frozenset[str]]
 
+
 @dataclass
 class PathAnalysis:
     shortest_path: list[str] | None
     all_paths: list[list[str]]
     critical_path: list[str]  # Longest path in DAG
+
 
 @dataclass
 class HotspotAnalysis:
@@ -211,8 +217,7 @@ reachable = query.transitive_closure("main")
 print(f"From main, can reach {len(reachable)} nodes")
 
 # Find all nodes with high complexity (metadata filtering)
-complex_nodes = [n for n in graph.nodes.values()
-                 if n.metadata.get('cyclomatic_complexity', 0) > 10]
+complex_nodes = [n for n in graph.nodes.values() if n.metadata.get("cyclomatic_complexity", 0) > 10]
 print(f"High-complexity functions: {[n.name for n in complex_nodes]}")
 ```
 
@@ -232,9 +237,7 @@ print(f"Clustering coefficient: {metrics.clustering_coefficient:.2f}")
 # Centrality: find important nodes
 centrality = analyzer.compute_centrality()
 top_betweenness = sorted(
-    centrality.betweenness_centrality.items(),
-    key=lambda x: x[1],
-    reverse=True
+    centrality.betweenness_centrality.items(), key=lambda x: x[1], reverse=True
 )[:5]
 print("Top bottlenecks (betweenness):")
 for node_id, score in top_betweenness:
@@ -288,7 +291,7 @@ merger = GraphMerger()
 merged = merger.merge_graphs(
     static_graph,
     dynamic_graph,
-    conflict_resolution='dynamic_priority'  # Prefer dynamic facts
+    conflict_resolution="dynamic_priority",  # Prefer dynamic facts
 )
 
 print(f"Merged graph: {len(merged.nodes)} nodes")
@@ -302,19 +305,20 @@ query = GraphQuery(graph)
 
 # All functions with CC > 10
 high_cc = [
-    n for n in graph.nodes.values()
-    if n.kind.value == 'FUNCTION'
-    and n.metadata.get('cyclomatic_complexity', 0) > 10
+    n
+    for n in graph.nodes.values()
+    if n.kind.value == "FUNCTION" and n.metadata.get("cyclomatic_complexity", 0) > 10
 ]
 print(f"High cyclomatic complexity: {len(high_cc)}")
-for node in sorted(high_cc, key=lambda n: n.metadata['cyclomatic_complexity'], reverse=True)[:5]:
+for node in sorted(high_cc, key=lambda n: n.metadata["cyclomatic_complexity"], reverse=True)[:5]:
     print(f"  {node.name}: CC={node.metadata['cyclomatic_complexity']}")
 
 # All nodes in zone of pain (high instability + concrete)
 unstable = [
-    n for n in graph.nodes.values()
-    if n.metadata.get('instability', 0) > 0.8
-    and n.metadata.get('distance_from_main_sequence', 0) > 0.3
+    n
+    for n in graph.nodes.values()
+    if n.metadata.get("instability", 0) > 0.8
+    and n.metadata.get("distance_from_main_sequence", 0) > 0.3
 ]
 print(f"Zone of pain (unstable): {len(unstable)}")
 ```

@@ -83,14 +83,15 @@ The RepoSnapshot serves as the **contract between ingest and all downstream cons
 ```python
 @dataclass
 class RepoMetadata:
-    name: str              # Repository name
-    url: str               # Repository URL or local path
+    name: str  # Repository name
+    url: str  # Repository URL or local path
     commit_hash: str | None
     commit_message: str | None
     timestamp: datetime | None  # Snapshot time
-    author: str | None     # Commit author
-    language: str | None   # Primary language (e.g., "python")
+    author: str | None  # Commit author
+    language: str | None  # Primary language (e.g., "python")
     description: str | None
+
 
 @dataclass
 class RepoSnapshot:
@@ -186,12 +187,12 @@ IGNORE_PATTERNS = {
 ```python
 @dataclass
 class FileInfo:
-    path: Path             # Absolute path
-    relative_path: str     # Path relative to repo root
-    language: str | None   # Detected language
-    size_bytes: int        # File size in bytes
+    path: Path  # Absolute path
+    relative_path: str  # Path relative to repo root
+    language: str | None  # Detected language
+    size_bytes: int  # File size in bytes
     is_test: bool = False  # Is this a test file?
-    checksum: str | None   # SHA256 checksum (optional)
+    checksum: str | None  # SHA256 checksum (optional)
 ```
 
 ### ManifestParser — Dependency Extraction
@@ -237,10 +238,10 @@ class FileInfo:
 ```python
 @dataclass
 class Dependency:
-    name: str              # Package name
-    version: str | None    # Version specifier (e.g., ">=1.0,<2.0")
-    is_dev: bool = False   # Development dependency?
-    is_local: bool = False # Local/path dependency?
+    name: str  # Package name
+    version: str | None  # Version specifier (e.g., ">=1.0,<2.0")
+    is_dev: bool = False  # Development dependency?
+    is_local: bool = False  # Local/path dependency?
     extras: list[str] = field(default_factory=list)  # [extras] markers
 ```
 
@@ -309,6 +310,7 @@ class RepoMetadata:
     language: str | None = None
     description: str | None = None
 
+
 @dataclass(frozen=True)
 class FileInfo:
     path: Path
@@ -318,6 +320,7 @@ class FileInfo:
     is_test: bool = False
     checksum: str | None = None
 
+
 @dataclass(frozen=True)
 class Dependency:
     name: str
@@ -325,6 +328,7 @@ class Dependency:
     is_dev: bool = False
     is_local: bool = False
     extras: list[str] = field(default_factory=list)
+
 
 @dataclass(frozen=True)
 class RepoSnapshot:
@@ -344,9 +348,7 @@ from cogant.ingest.repo import RepoIngester
 
 ingester = RepoIngester()
 snapshot = ingester.ingest_local(
-    Path("/path/to/my/repo"),
-    include_test_files=True,
-    compute_checksums=False
+    Path("/path/to/my/repo"), include_test_files=True, compute_checksums=False
 )
 
 print(f"Repository: {snapshot.metadata.name}")
@@ -407,15 +409,9 @@ print(f"Dev dependencies: {len(dev)}")
 ```python
 from cogant.ingest.files import FileEnumerator
 
-enumerator = FileEnumerator(
-    Path("/path/to/repo"),
-    respect_gitignore=True
-)
+enumerator = FileEnumerator(Path("/path/to/repo"), respect_gitignore=True)
 
-files = enumerator.enumerate(
-    include_test_files=True,
-    compute_checksums=True
-)
+files = enumerator.enumerate(include_test_files=True, compute_checksums=True)
 
 for file_info in files:
     print(f"{file_info.relative_path}")
@@ -433,8 +429,8 @@ from cogant.ingest.language_detect import LanguageDetector
 
 detector = LanguageDetector()
 lang = detector.detect("my_script.py")  # Returns "python"
-lang = detector.detect("app.tsx")       # Returns "typescript"
-lang = detector.detect("data.json")     # Returns None
+lang = detector.detect("app.tsx")  # Returns "typescript"
+lang = detector.detect("data.json")  # Returns None
 
 # Get parser for language
 parser = detector.get_parser("python")
@@ -515,11 +511,13 @@ Ingest **never modifies the repository**:
        dependencies = []
 
        for dep_name, dep_spec in data.get("dependencies", {}).items():
-           dependencies.append(Dependency(
-               name=dep_name,
-               version=dep_spec.get("version"),
-               is_dev=dep_spec.get("dev", False),
-           ))
+           dependencies.append(
+               Dependency(
+                   name=dep_name,
+                   version=dep_spec.get("version"),
+                   is_dev=dep_spec.get("dev", False),
+               )
+           )
 
        return metadata, dependencies
    ```
@@ -550,7 +548,8 @@ Ingest **never modifies the repository**:
        """Enumerate files within size range."""
        files = self.enumerate()
        filtered = [
-           f for f in files
+           f
+           for f in files
            if f.size_bytes >= min_bytes and (max_bytes is None or f.size_bytes <= max_bytes)
        ]
        return filtered
@@ -564,9 +563,10 @@ Ingest **never modifies the repository**:
    ```python
    # In _extract_metadata:
    import subprocess
-   tags = subprocess.check_output(
-       ["git", "tag", "--list"], cwd=repo_path, text=True
-   ).strip().split("\n")
+
+   tags = (
+       subprocess.check_output(["git", "tag", "--list"], cwd=repo_path, text=True).strip().split("\n")
+   )
    metadata.tags = tags
    ```
 

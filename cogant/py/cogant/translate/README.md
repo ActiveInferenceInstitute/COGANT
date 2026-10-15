@@ -79,13 +79,28 @@ Curates mappings: accept_mapping(mapping_id, reviewer, feedback), reject_mapping
 ```python
 from cogant.translate.engine import TranslationEngine
 from cogant.translate.rules import (
-    ReadOnlyInputRule, MutatingSubsystemRule, OrchestratorRule,
-    TestAssertionRule, RetryPatternRule, EventBusRule, ConfigRule,
-    FeatureFlagRule, ObservationRule, ActionRule, PolicyRule,
-    PreferenceRule, ContextRule, InheritanceRule, ContainmentRule,
-    DataPipelineRule, ErrorBoundaryRule, SingletonAccessRule,
+    ReadOnlyInputRule,
+    MutatingSubsystemRule,
+    OrchestratorRule,
+    TestAssertionRule,
+    RetryPatternRule,
+    EventBusRule,
+    ConfigRule,
+    FeatureFlagRule,
+    ObservationRule,
+    ActionRule,
+    PolicyRule,
+    PreferenceRule,
+    ContextRule,
+    InheritanceRule,
+    ContainmentRule,
+    DataPipelineRule,
+    ErrorBoundaryRule,
+    SingletonAccessRule,
     CircuitBreakerRule,
-    ParameterRule, StateMachineRule, RateLimiterRule,  # parameter/state/rate-limit rules
+    ParameterRule,
+    StateMachineRule,
+    RateLimiterRule,  # parameter/state/rate-limit rules
 )
 from cogant.translate.confidence import ConfidenceModel
 from cogant.translate.review import ReviewManager

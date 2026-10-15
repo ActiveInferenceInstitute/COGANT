@@ -375,14 +375,16 @@ try:
 except Exception as e:
     logger.error(f"Validation failed: {e}")
     # Return generic error issue
-    return [ValidationIssue(
-        id="VALIDATION_EXCEPTION",
-        severity="ERROR",
-        category="VALIDATION",
-        message=f"Internal validation error: {e}",
-        affected_ids=[],
-        recommendation="Contact support or file a bug report."
-    )]
+    return [
+        ValidationIssue(
+            id="VALIDATION_EXCEPTION",
+            severity="ERROR",
+            category="VALIDATION",
+            message=f"Internal validation error: {e}",
+            affected_ids=[],
+            recommendation="Contact support or file a bug report.",
+        )
+    ]
 ```
 
 - Graph traversal errors → logged, validation continues

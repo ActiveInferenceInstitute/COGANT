@@ -142,6 +142,7 @@ class AgentStep:
     action: int
     free_energy: float
 
+
 @dataclass
 class EpisodeResult:
     steps: list[AgentStep]
@@ -151,6 +152,7 @@ class EpisodeResult:
     mean_free_energy: float
     final_free_energy: float
 
+
 @dataclass
 class MultiEpisodeResult:
     episodes: list[EpisodeResult]
@@ -159,12 +161,14 @@ class MultiEpisodeResult:
     D_trajectory: list[list[float]]
     learning_rate: float
 
+
 @dataclass
 class AgentConfig:
     max_steps: int = 100
     convergence_threshold: float = 1e-4
     action_selection: str = "preference"
     seed: int = 42
+
 
 @dataclass
 class EpisodeMetrics:
@@ -174,6 +178,7 @@ class EpisodeMetrics:
     final_free_energy: float
     n_unique_obs: int = 0
     action_entropy: float = 0.0
+
 
 @dataclass
 class RunMetrics:
@@ -189,12 +194,14 @@ class RunMetrics:
 from cogant.runtime.loop import AgentRuntime
 
 # Create runtime from raw matrices
-rt = AgentRuntime.from_matrices_dict({
-    "A": [[0.9, 0.1], [0.1, 0.9]],    # Likelihood: 2 obs, 2 states
-    "B": [[[1.0], [0.0]], [[0.0], [1.0]]],  # Transition: 2 states, 1 action
-    "C": [1.0, 0.0],                   # Preference: obs 0 preferred
-    "D": [0.5, 0.5],                   # Prior: uniform
-})
+rt = AgentRuntime.from_matrices_dict(
+    {
+        "A": [[0.9, 0.1], [0.1, 0.9]],  # Likelihood: 2 obs, 2 states
+        "B": [[[1.0], [0.0]], [[0.0], [1.0]]],  # Transition: 2 states, 1 action
+        "C": [1.0, 0.0],  # Preference: obs 0 preferred
+        "D": [0.5, 0.5],  # Prior: uniform
+    }
+)
 
 # Run a single episode and inspect results
 episode = rt.run_episode()
@@ -211,15 +218,11 @@ from cogant.runtime.loop import AgentRuntime
 rt = AgentRuntime.from_matrices_dict({...})
 
 # Learn across 10 episodes with A and D updates
-result = rt.run_multi_episode(
-    n_episodes=10,
-    update_A=True,
-    update_D=True,
-    learning_rate=1e-2
-)
+result = rt.run_multi_episode(n_episodes=10, update_A=True, update_D=True, learning_rate=1e-2)
 
 # Plot VFE trajectory
 import matplotlib.pyplot as plt
+
 fig = result.episodes_metrics().plot_free_energy()
 plt.show()
 
@@ -252,6 +255,7 @@ state = rt.serialize()
 
 # Save to JSON
 import json
+
 with open("agent_state.json", "w") as f:
     json.dump(state, f)
 

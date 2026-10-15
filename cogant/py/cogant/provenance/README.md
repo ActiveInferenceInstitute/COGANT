@@ -25,7 +25,7 @@ tracker.add_record(
     evidence_location="src/main.py:42",
     extraction_method="StateVariableExtractor",
     confidence=0.85,
-    metadata={"pattern": "hidden_state annotation"}
+    metadata={"pattern": "hidden_state annotation"},
 )
 
 # Query records for a target

@@ -31,13 +31,12 @@ VisualizationPlugin: Plugin for custom visualizations with supported_visualizati
 ```python
 from cogant.plugins import LanguagePlugin, PluginMetadata
 
+
 class RustPlugin(LanguagePlugin):
     def __init__(self):
-        super().__init__(PluginMetadata(
-            name="rust-analyzer",
-            version="0.1.0",
-            author="COGANT Team"
-        ))
+        super().__init__(
+            PluginMetadata(name="rust-analyzer", version="0.1.0", author="COGANT Team")
+        )
         self.supported_languages = {"rust"}
 
     def initialize(self, config):

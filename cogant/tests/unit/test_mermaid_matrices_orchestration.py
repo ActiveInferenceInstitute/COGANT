@@ -498,9 +498,7 @@ class TestMatricesValidateErrors:
     def test_validate_shapes_A_inconsistent_column_count(self) -> None:
         gm = self._baseline()
         # Right number of rows, wrong column count (line 782 trigger).
-        gm.compute_A = lambda: [
-            [0.5, 0.5]
-        ]  # 1 row, 2 cols vs n_states=1  # type: ignore[method-assign]
+        gm.compute_A = lambda: [[0.5, 0.5]]  # 1 row, 2 cols vs n_states=1  # type: ignore[method-assign]
         ok, errs = gm.validate_shapes()
         assert ok is False
         assert any("inconsistent column count" in e for e in errs)

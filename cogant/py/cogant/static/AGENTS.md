@@ -133,12 +133,14 @@ class SymbolInfo:
     type_hint: str | None
     docstring: str | None
 
+
 @dataclass
 class ImportEdge:
     source_module: str
     target_module: str
     import_kind: str  # 'from', 'import'
     line_num: int
+
 
 @dataclass
 class CallEdge:
@@ -312,7 +314,7 @@ report = analyzer.analyze(
     import_graph=import_graph,
     abstract_classes=abstract_classes,
     concrete_classes=concrete_classes,
-    package_name="mypackage"
+    package_name="mypackage",
 )
 
 # Identify high-risk modules
@@ -336,11 +338,7 @@ source = Path("complex_file.py").read_text()
 report = analyzer.analyze(source, Path("complex_file.py"))
 
 # Sort by cognitive complexity
-sorted_funcs = sorted(
-    report.entries,
-    key=lambda e: e.cognitive_complexity,
-    reverse=True
-)
+sorted_funcs = sorted(report.entries, key=lambda e: e.cognitive_complexity, reverse=True)
 
 print("Top 5 most cognitively complex functions:")
 for entry in sorted_funcs[:5]:

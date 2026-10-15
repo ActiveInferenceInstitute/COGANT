@@ -20,10 +20,7 @@ ParquetExporter exports graphs as columnar PyArrow tables for ML training and da
 from cogant.export import BundleExporter
 from pathlib import Path
 
-exporter = BundleExporter(
-    graph, state_space, process_model,
-    mappings, output_dir=Path("output")
-)
+exporter = BundleExporter(graph, state_space, process_model, mappings, output_dir=Path("output"))
 
 # Export to all formats
 output_path = exporter.export()

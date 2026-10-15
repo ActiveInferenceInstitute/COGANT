@@ -96,19 +96,28 @@ Canonical Pydantic and dataclass definitions for all data structures: program gr
 
 ```python
 from cogant.schemas import (
-    ProgramGraph, Node, Edge, NodeKind, EdgeKind,
-    SemanticMapping, MappingKind, ConfidenceTier,
-    StateSpaceModel, StateVariable, ObservationModality,
-    ProcessModel, ProcessStage,
+    ProgramGraph,
+    Node,
+    Edge,
+    NodeKind,
+    EdgeKind,
+    SemanticMapping,
+    MappingKind,
+    ConfidenceTier,
+    StateSpaceModel,
+    StateVariable,
+    ObservationModality,
+    ProcessModel,
+    ProcessStage,
     GNNExportBundle,
-    ValidationReport
+    ValidationReport,
 )
 
 # Create graph
 graph = ProgramGraph(
     nodes={"n1": Node(id="n1", kind=NodeKind.FUNCTION, name="foo")},
     edges={"e1": Edge(id="e1", kind=EdgeKind.CALLS, source="n1", target="n2")},
-    metadata=GraphMetadata(name="example", language="python")
+    metadata=GraphMetadata(name="example", language="python"),
 )
 
 # Create mapping
@@ -118,17 +127,13 @@ mapping = SemanticMapping(
     graph_fragment_node_ids=["n1"],
     semantic_label="foo - Read-Only Input",
     confidence_score=0.85,
-    confidence_tier=ConfidenceTier.STATIC_PLUS_RUNTIME
+    confidence_tier=ConfidenceTier.STATIC_PLUS_RUNTIME,
 )
 
 # Create state space
 state_space = StateSpaceModel(
-    state_variables=[
-        StateVariable(name="x", kind="continuous", bounds=[-1, 1])
-    ],
-    observation_modalities=[
-        ObservationModality(name="sensor_obs", state_dependence=["x"])
-    ]
+    state_variables=[StateVariable(name="x", kind="continuous", bounds=[-1, 1])],
+    observation_modalities=[ObservationModality(name="sensor_obs", state_dependence=["x"])],
 )
 ```
 

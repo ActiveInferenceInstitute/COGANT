@@ -216,9 +216,17 @@ Main orchestrator: consumes ProgramGraph + SemanticMappings, produces StateSpace
 
 ```python
 from cogant.statespace import (
-    StateSpaceCompiler, StateVariable, StateVariableType, ConfidenceLevel,
-    ObservationModality, Action, Transition, Likelihood, Preference,
-    TemporalAnalyzer, TimeRegime
+    StateSpaceCompiler,
+    StateVariable,
+    StateVariableType,
+    ConfidenceLevel,
+    ObservationModality,
+    Action,
+    Transition,
+    Likelihood,
+    Preference,
+    TemporalAnalyzer,
+    TimeRegime,
 )
 
 # Given: program_graph from graph/, semantic_mappings from translate/
@@ -297,8 +305,10 @@ print(f"Execution regime: {regime}")
 
 # Get ordering constraints
 for constraint in analyzer.get_ordering_constraints():
-    print(f"{constraint.predecessor_id} -> {constraint.successor_id} "
-          f"({constraint.constraint_type}, confidence={constraint.confidence})")
+    print(
+        f"{constraint.predecessor_id} -> {constraint.successor_id} "
+        f"({constraint.constraint_type}, confidence={constraint.confidence})"
+    )
 
 # Identify event patterns
 for pattern in analyzer.get_event_patterns():
@@ -338,6 +348,7 @@ else:
 
 # Export for downstream use
 import json
+
 data = {
     "id": state_space.id,
     "variables": {vid: {...} for vid, var in state_space.variables.items()},
@@ -360,10 +371,7 @@ compiler = StateSpaceCompiler(graph, schema_name="pymcts")
 prev_state_space = load_previous_result()
 
 # Recompile; reuses variables if graph structure unchanged
-state_space = compiler.compile_incremental(
-    semantic_mappings,
-    prev_result=prev_state_space
-)
+state_space = compiler.compile_incremental(semantic_mappings, prev_result=prev_state_space)
 
 print(f"Compilation took: {state_space.metadata.get('duration_ms')} ms")
 ```
@@ -431,10 +439,13 @@ try:
 except Exception as e:
     logger.warning(f"Extraction error: {e}")
     # Return partial result with degraded_output set
-    return StateSpaceModel(..., degraded_output=DegradedOutput(
-        reason=str(e),
-        affected_matrices=["A", "B"]  # which matrices are incomplete
-    ))
+    return StateSpaceModel(
+        ...,
+        degraded_output=DegradedOutput(
+            reason=str(e),
+            affected_matrices=["A", "B"],  # which matrices are incomplete
+        ),
+    )
 ```
 
 - Type inference errors are logged; default types used
