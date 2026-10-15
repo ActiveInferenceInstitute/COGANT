@@ -158,10 +158,6 @@ class ReverseGNNModel:
         if self.matrix_source == "fenced":
             return len(self.D)
         if self.D:
-            if len(self.D) == 1 and len(self.hidden_states) == 1:
-                declared = self.cardinalities.get(self.hidden_states[0], 0)
-                if declared > 1:
-                    return declared
             return len(self.D)
         if self.B:
             return len(self.B)
@@ -1092,51 +1088,6 @@ def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
                 if card is not None and card > 0:
                     model.cardinalities[slot] = card
                     break
-
-    # Reconcile a degenerate single-entry D with a declared multi-state
-    # factor. The forward pipeline's aggregate in-memory matrices carry one
-    # entry per *variable* while the StateSpaceBlock declares per-variable
-    # *cardinalities*, so a fenced ``D[[rows=1]]`` block can arrive for a
-    # factor declared ``s_f0[10]``. The n_states property intentionally
-    # reads the declared cardinality in that case; without this expansion
-    # the synthesized matrices module would fail its "D must contain N
-    # entries" shape contract. Broadcasting the single entry uniformly
-    # preserves the prior's semantics (all mass on one aggregate state
-    # becomes uniform over the factor's categories), matching the
-    # InitialParameterization broadcast convention (1/card per category).
-    if len(model.D) == 1 and len(model.hidden_states) == 1:
-        declared = model.cardinalities.get(model.hidden_states[0], 0)
-        if declared > 1 and abs(model.D[0] - 1.0) < 1e-12:
-            _require_element_budget(f"expanded prior for {model.hidden_states[0]}", declared)
-            if model.A and len(model.A[0]) == 1:
-                _require_element_budget("expanded A likelihood", len(model.A), declared)
-            if model.B and len(model.B) == 1 and model.B[0] and len(model.B[0]) == 1:
-                _require_element_budget(
-                    "expanded B transitions", declared, declared, len(model.B[0][0])
-                )
-            model.D = [1.0 / declared] * declared
-            # Realign the aggregate matrices to the expanded state dimension.
-            # The fenced gnn-matrices block carries one row/column per
-            # *variable* while the factorized declaration expands the single
-            # factor to ``declared`` categories; broadcast the aggregate
-            # column to every expanded state column so A stays column-
-            # stochastic and B keeps a valid (per-action) transition shape.
-            n_expanded = declared
-            if model.A and len(model.A[0]) == 1:
-                model.A = [list(row) * n_expanded for row in model.A]
-            if model.B and len(model.B) == 1 and model.B[0] and len(model.B[0]) == 1:
-                # Aggregate B is a single self-transition column; expand to
-                # the identity transition over the factor's categories so
-                # each per-action column still sums to 1.0 (matches the
-                # factorized InitialParameterization identity convention).
-                n_actions = len(model.B[0][0])
-                model.B = [
-                    [
-                        [1.0 if row == col else 0.0 for _ in range(n_actions)]
-                        for col in range(n_expanded)
-                    ]
-                    for row in range(n_expanded)
-                ]
 
 
 def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from dataclasses import dataclass
+from typing import NamedTuple
 
 Vector = Sequence[float]
 Matrix = Sequence[Vector]
@@ -78,8 +78,7 @@ def variational_free_energy(
     return complexity - math.fsum(terms)
 
 
-@dataclass(frozen=True, slots=True)
-class CategoricalStep:
+class CategoricalStep(NamedTuple):
     posterior: list[float]
     prediction: list[float]
     action: int
@@ -88,16 +87,13 @@ class CategoricalStep:
     observation: int
 
 
-@dataclass(frozen=True, slots=True)
 class CategoricalModel:
     """Validated matrix view shared by filtering, simulation and planning."""
 
-    A: Matrix
-    B: Tensor
-    C: Vector
-    D: Vector
+    __slots__ = ("_A", "_B", "_C", "_D")
 
-    def __post_init__(self) -> None:
+    def __init__(self, A: Matrix, B: Tensor, C: Vector, D: Vector) -> None:
+        self._A, self._B, self._C, self._D = A, B, C, D
         distribution(self.D, "prior D")
         n = len(self.D)
         likelihood_matrix(self.A, n)
@@ -113,6 +109,22 @@ class CategoricalModel:
         for s in range(n):
             for action in range(actions):
                 distribution([self.B[t][s][action] for t in range(n)], "transition B column")
+
+    @property
+    def A(self) -> Matrix:
+        return self._A
+
+    @property
+    def B(self) -> Tensor:
+        return self._B
+
+    @property
+    def C(self) -> Vector:
+        return self._C
+
+    @property
+    def D(self) -> Vector:
+        return self._D
 
     @property
     def n_actions(self) -> int:

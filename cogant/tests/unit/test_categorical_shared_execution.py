@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import json
 import math
 import subprocess
 import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -179,3 +182,15 @@ def test_generated_driver_filters_then_executes_selected_action(tmp_path: Path) 
         check=True,
     )
     assert json.loads(result.stdout) == [0.0, 1.0]
+
+
+def test_generated_module_executes_without_module_registration() -> None:
+    name = "_cogant_generated_portability_control"
+    module = types.ModuleType(name)
+    assert name not in sys.modules
+    exec(render_matrices_module(parse_gnn(FENCED)), module.__dict__)
+    result = module.inference_step([1.0], 0)
+    assert result.posterior == [1.0]
+    assert result.free_energy == pytest.approx(-math.log(0.25))
+    assert result.action == 0
+    assert name not in sys.modules
