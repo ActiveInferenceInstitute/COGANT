@@ -224,11 +224,14 @@ class TestConfigPresets:
 
         assert len(PRESETS) >= 1
 
-    def test_presets_have_cogant_key(self):
+    def test_presets_expose_typed_cogant_section_and_canonical_json(self):
         from cogant.config.presets import PRESETS
+        from cogant.config.schema import CogantConfig, ProjectConfig
 
         for name, preset in PRESETS.items():
-            assert "cogant" in preset, f"Preset '{name}' missing 'cogant'"
+            assert isinstance(preset, ProjectConfig), name
+            assert isinstance(preset.cogant, CogantConfig), name
+            assert preset.model_dump(mode="json")["cogant"] == preset.cogant.model_dump(mode="json")
 
 
 # ---------------------------------------------------------------------------

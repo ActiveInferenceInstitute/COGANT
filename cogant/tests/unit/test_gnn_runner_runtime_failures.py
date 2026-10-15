@@ -126,8 +126,32 @@ def test_report_exposes_scope_and_truncates_only_display(tmp_path: Path) -> None
     assert "5 more steps" in report
     assert len(result["traces"]) == 35
     assert result["source_sha256"] in report
-    assert "Reward" not in report
-    assert "Model Quality Assessment" not in report
+    assert set(result) == {
+        "success",
+        "error",
+        "steps_completed",
+        "source_sha256",
+        "matrices_sha256",
+        "observation_mode",
+        "policy_horizon",
+        "policy_objective",
+        "traces",
+        "final_state",
+        "final_beliefs",
+        "statistics",
+        "free_energy_trajectory",
+        "action_distribution",
+    }
+    assert result["observation_mode"] == "model_rollout"
+    assert result["policy_horizon"] == 1
+    assert result["policy_objective"] == "risk_plus_ambiguity"
+    energies = [trace.free_energy_after for trace in model.traces]
+    assert result["free_energy_trajectory"] == energies
+    assert result["statistics"] == {
+        "unique_actions": 2,
+        "mean_free_energy": sum(energies) / len(energies),
+    }
+    assert sum(result["action_distribution"].values()) == 35
     json.dumps(result, allow_nan=False)
 
 

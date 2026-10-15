@@ -6,9 +6,9 @@ current COGANT) and extracts the structured content required to synthesize a
 Python package: the state space, observation modalities, actions,
 policies, constraints, ontology annotations, and A/B/C/D matrices.
 
-The parser is deliberately **tolerant**: it accepts bare upstream connection
+Connection and section parsing accepts bare upstream connection
 syntax (``D_f0>s_f0``), grouped multi-source edges (``(A_m0, s_f0)>o_m0``),
-legacy bare comma sources (``A_m0,s_f0>o_m0``), and compatibility
+bare comma sources (``A_m0,s_f0>o_m0``), and
 parenthesised examples (``(D_f0) > (s_f0)``), both bracketed matrix blocks
 (``A[[rows=3][cols=2]]``) and InitialParameterization tuple blocks
 (``D_f0={ (0.3, 0.3, 0.4) }``), and any mix of COGANT's extended
@@ -816,9 +816,8 @@ def _parse_initial_parameterization(
                         per_factor_A.setdefault(f"A_m{index}", matrix)
 
     # A factorized upstream block does not always include a global A/B/C/D
-    # tensor.  Preserve the historical projection as an explicitly degraded
-    # compatibility representation so reverse tooling can still inspect and
-    # compile legacy files.  The diagnostics are carried into generated
+    # tensor. Preserve factor projection as an explicitly degraded structural
+    # representation for reverse inspection. The diagnostics are carried into generated
     # provenance by callers; this is never treated as equivalent to a global
     # matrix block.
     def declared_dimension(names: list[str]) -> int:
@@ -881,7 +880,6 @@ def _parse_initial_parameterization(
                 # "D must contain N entries" synthesis error.
                 D_vec = [value for values in factor_vectors for value in values]
             else:
-                # Legacy model objects already use one name per global state.
                 D_vec = [max(values) if values else 1.0 for values in factor_vectors]
             total = sum(D_vec) or 1.0
             model.D = [value / total for value in D_vec]
