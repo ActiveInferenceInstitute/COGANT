@@ -165,8 +165,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dev dependencies
-        run: uv sync --extra dev
+      - name: Install typecheck dependencies
+        # The inference renderer imports Pillow through the visualization extra.
+        # Install those interfaces so strict mypy checks their actual types.
+        run: uv sync --extra dev --extra viz
 
       - name: Run mypy (strict)
         # ``--no-warn-unused-configs`` because the defensive overrides in
