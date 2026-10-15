@@ -35,7 +35,7 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 | `cogant.translate.rules.control` | 79 | 100% |
 | `cogant.translate.rules.resilience` | 164 | 93% |
 | `cogant.translate.confidence` | 98 | 100% |
-| `cogant.statespace.compiler` | 471 | 99% |
+| `cogant.statespace.compiler` | 471 | 100% |
 | `cogant.statespace.variables` | 263 | 99% |
 | `cogant.statespace.temporal` | 217 | 100% |
 | `cogant.markov.blanket` | 166 | 100% |

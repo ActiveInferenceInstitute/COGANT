@@ -225,6 +225,10 @@ def build_steps(*, include_tests: bool = True) -> list[GateStep]:
                 "manuscript-numbers", ("uv", "run", "python", "tools/audit_manuscript_numbers.py")
             ),
             _step(
+                "coverage-table",
+                ("uv", "run", "python", "tools/check_coverage_table.py", "--strict"),
+            ),
+            _step(
                 "manuscript-links",
                 ("uv", "run", "python", "tools/audit_manuscript_markdown_links.py"),
             ),
