@@ -365,10 +365,12 @@ def test_copy_manuscript_figures_strict_rejects_tall_timeline(
         copy_manuscript_figures(tmp_path, figures=figures, strict=True)
 
 
+@pytest.mark.parametrize("savefig_style", [{}, {"savefig.bbox": "tight", "savefig.dpi": 300}])
 def test_publication_batch_timeline_selects_calculator_and_bounds_height(
     tmp_path: Path,
+    savefig_style: dict,
 ) -> None:
-    pytest.importorskip("matplotlib")
+    matplotlib = pytest.importorskip("matplotlib")
     manifest = tmp_path / "cogant" / "output" / "run_manifest.json"
     manifest.parent.mkdir(parents=True, exist_ok=True)
     manifest.write_text(
@@ -396,7 +398,8 @@ def test_publication_batch_timeline_selects_calculator_and_bounds_height(
         encoding="utf-8",
     )
 
-    output = _render_publication_batch_timeline(tmp_path)
+    with matplotlib.rc_context(savefig_style):
+        output = _render_publication_batch_timeline(tmp_path)
 
     assert output is not None
     sidecar = json.loads(output.with_suffix(".figure.json").read_text(encoding="utf-8"))

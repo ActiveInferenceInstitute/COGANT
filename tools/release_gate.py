@@ -60,6 +60,8 @@ def _step(
     env: dict[str, str] | None = None,
     timeout_seconds: int = 900,
 ) -> GateStep:
+    if tuple(command[:2]) == ("uv", "run"):
+        command = ("uv", "run", "--project", str(INNER), *command[2:])
     return GateStep(
         name=name,
         cwd=cwd,
@@ -87,16 +89,46 @@ def build_steps(*, include_tests: bool = True) -> list[GateStep]:
             _step("ruff", ("uv", "run", "ruff", "check", "py/cogant", "tests"), cwd=INNER),
             _step(
                 "mypy",
-                ("uv", "run", "mypy", "--package", "cogant", "--strict", "--no-warn-unused-configs"),
+                (
+                    "uv",
+                    "run",
+                    "mypy",
+                    "--package",
+                    "cogant",
+                    "--strict",
+                    "--no-warn-unused-configs",
+                ),
                 cwd=INNER,
                 env={"MYPYPATH": "py"},
             ),
-            _step("rust-format", ("cargo", "fmt", "--manifest-path", "rust/Cargo.toml", "--all", "--check"), cwd=INNER),
-            _step("rust-check", ("cargo", "check", "--manifest-path", "rust/Cargo.toml", "--workspace"), cwd=INNER),
-            _step("rust-test", ("cargo", "test", "--manifest-path", "rust/Cargo.toml", "--workspace"), cwd=INNER),
+            _step(
+                "rust-format",
+                ("cargo", "fmt", "--manifest-path", "rust/Cargo.toml", "--all", "--check"),
+                cwd=INNER,
+            ),
+            _step(
+                "rust-check",
+                ("cargo", "check", "--manifest-path", "rust/Cargo.toml", "--workspace"),
+                cwd=INNER,
+            ),
+            _step(
+                "rust-test",
+                ("cargo", "test", "--manifest-path", "rust/Cargo.toml", "--workspace"),
+                cwd=INNER,
+            ),
             _step(
                 "rust-clippy",
-                ("cargo", "clippy", "--manifest-path", "rust/Cargo.toml", "--workspace", "--all-targets", "--", "-D", "warnings"),
+                (
+                    "cargo",
+                    "clippy",
+                    "--manifest-path",
+                    "rust/Cargo.toml",
+                    "--workspace",
+                    "--all-targets",
+                    "--",
+                    "-D",
+                    "warnings",
+                ),
                 cwd=INNER,
             ),
             _step("wheel-smoke", ("make", "wheel-smoke"), cwd=INNER),
@@ -155,7 +187,9 @@ def build_steps(*, include_tests: bool = True) -> list[GateStep]:
                 cwd=INNER,
                 timeout_seconds=300,
             ),
-            _step("folder-docs", ("uv", "run", "python", "../tools/audit_folder_docs.py"), cwd=INNER),
+            _step(
+                "folder-docs", ("uv", "run", "python", "../tools/audit_folder_docs.py"), cwd=INNER
+            ),
             _step("stage-list", ("uv", "run", "python", "../tools/audit_stage_list.py"), cwd=INNER),
             _step("roadmap-truth", ("uv", "run", "python", "tools/audit_roadmap_truth.py")),
             _step(
@@ -163,23 +197,56 @@ def build_steps(*, include_tests: bool = True) -> list[GateStep]:
                 ("uv", "run", "python", "../tools/audit_test_names.py"),
                 cwd=INNER,
             ),
-            _step("manuscript-crossrefs", ("uv", "run", "python", "tools/audit_manuscript_crossrefs.py")),
-            _step("manuscript-citations", ("uv", "run", "python", "tools/audit_manuscript_citations.py")),
+            _step(
+                "manuscript-crossrefs",
+                ("uv", "run", "python", "tools/audit_manuscript_crossrefs.py"),
+            ),
+            _step(
+                "manuscript-citations",
+                ("uv", "run", "python", "tools/audit_manuscript_citations.py"),
+            ),
             _step(
                 "manuscript-module-refs",
                 ("uv", "run", "python", "../tools/audit_manuscript_module_refs.py", "--strict"),
                 cwd=INNER,
             ),
-            _step("manuscript-formalisms", ("uv", "run", "python", "tools/audit_manuscript_formalisms.py", "--strict")),
-            _step("manuscript-numbers", ("uv", "run", "python", "tools/audit_manuscript_numbers.py")),
-            _step("manuscript-links", ("uv", "run", "python", "tools/audit_manuscript_markdown_links.py")),
-            _step("manuscript-math", ("uv", "run", "python", "tools/audit_manuscript_math_adjacency.py")),
-            _step("manuscript-claim-scope", ("uv", "run", "python", "tools/audit_manuscript_claim_scope.py")),
+            _step(
+                "manuscript-formalisms",
+                ("uv", "run", "python", "tools/audit_manuscript_formalisms.py", "--strict"),
+            ),
+            _step(
+                "manuscript-numbers", ("uv", "run", "python", "tools/audit_manuscript_numbers.py")
+            ),
+            _step(
+                "manuscript-links",
+                ("uv", "run", "python", "tools/audit_manuscript_markdown_links.py"),
+            ),
+            _step(
+                "manuscript-math",
+                ("uv", "run", "python", "tools/audit_manuscript_math_adjacency.py"),
+            ),
+            _step(
+                "manuscript-claim-scope",
+                ("uv", "run", "python", "tools/audit_manuscript_claim_scope.py"),
+            ),
             _step("robustness-table", ("uv", "run", "python", "tools/audit_robustness_table.py")),
-            _step("synthetic-surfaces", ("uv", "run", "python", "tools/audit_synthetic_surfaces.py", "--strict")),
-            _step("figure-renderers", ("uv", "run", "python", "../tools/audit_figure_renderers.py"), cwd=INNER),
-            _step("publication-readiness", ("uv", "run", "python", "tools/audit_publication_readiness.py", "--strict")),
-            _step("metrics-freshness", ("uv", "run", "python", "tools/check_metrics_fresh.py", "--fail-on-dirty")),
+            _step(
+                "synthetic-surfaces",
+                ("uv", "run", "python", "tools/audit_synthetic_surfaces.py", "--strict"),
+            ),
+            _step(
+                "figure-renderers",
+                ("uv", "run", "python", "../tools/audit_figure_renderers.py"),
+                cwd=INNER,
+            ),
+            _step(
+                "publication-readiness",
+                ("uv", "run", "python", "tools/audit_publication_readiness.py", "--strict"),
+            ),
+            _step(
+                "metrics-freshness",
+                ("uv", "run", "python", "tools/check_metrics_fresh.py", "--fail-on-dirty"),
+            ),
         ]
     )
     return steps
@@ -231,6 +298,8 @@ def _run_step(step: GateStep) -> GateResult:
 
 def run_gate(*, include_tests: bool = True, dry_run: bool = False) -> tuple[list[GateResult], bool]:
     results: list[GateResult] = []
+    if not include_tests:
+        results.append(GateResult("package-tests", "skipped", None, 0.0, [], "--skip-tests"))
     for step in build_steps(include_tests=include_tests):
         printable = " ".join(step.command)
         print(f"[gate] {step.name}: {printable}")
@@ -258,8 +327,14 @@ def _write_report(results: list[GateResult], overall_pass: bool) -> None:
         "schema_version": "1.0",
         "generated_at": datetime.now(UTC).isoformat(),
         "root": str(ROOT),
-        "overall": "dry_run" if all(result.status == "skipped" for result in results) else (
-            "passed" if overall_pass else "failed"
+        "overall": (
+            "dry_run"
+            if all(result.status == "skipped" for result in results)
+            else "passed"
+            if overall_pass
+            else "incomplete"
+            if all(result.status in {"passed", "skipped"} for result in results)
+            else "failed"
         ),
         "results": [asdict(result) for result in results],
     }
@@ -268,8 +343,12 @@ def _write_report(results: list[GateResult], overall_pass: bool) -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--skip-tests", action="store_true", help="Skip the full package test stage")
-    parser.add_argument("--dry-run", action="store_true", help="Print commands without executing them")
+    parser.add_argument(
+        "--skip-tests", action="store_true", help="Skip the full package test stage"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Print commands without executing them"
+    )
     args = parser.parse_args(argv)
 
     results, overall_pass = run_gate(include_tests=not args.skip_tests, dry_run=args.dry_run)

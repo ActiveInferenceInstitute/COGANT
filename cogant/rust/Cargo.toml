@@ -13,16 +13,15 @@ members = [
 resolver = "2"
 
 [workspace.package]
-# Intentional independent versioning: the Rust crates version separately from
-# the Python package (`cogant.__version__`, currently 0.6.0). 0.1.0 reflects the
-# Rust workspace's own maturity and the distributed `cogant_rust-0.1.0` wheel;
-# this decoupling is deliberate, not drift.
 version = "0.1.0"
 edition = "2024"
 authors = ["COGANT Contributors"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ActiveInferenceInstitute/COGANT"
 homepage = "https://github.com/ActiveInferenceInstitute/COGANT"
+
+[profile.release]
+strip = "none"
 
 [workspace.dependencies]
 serde = { version = "1.0.229", features = ["derive"] }

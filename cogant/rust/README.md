@@ -21,6 +21,12 @@ Edition 2024, stable Rust 1.89 or newer. Key dependencies: PyO3 0.29,
 petgraph 0.8, thiserror 2, uuid 1.28; maturin `>=1.0,<2.0` builds the
 extension. See [`RUST_SETUP.md`](RUST_SETUP.md) for the full setup.
 
+The release profile explicitly disables stripping. Rust's debug-information
+stripping can misalign the Mach-O string pool and prevent the built extension
+from loading on recent macOS releases
+([Rust issue 157750](https://github.com/rust-lang/rust/issues/157750)). Keep the
+installed-extension import check alongside compilation tests.
+
 ## Build And Verification
 
 ```bash

@@ -5,6 +5,8 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+import pytest
+
 from cogant.cache import CacheEntry, CacheKey, CacheStore, get_cache_dir
 from cogant.cache.hasher import hash_file, hash_repo
 
@@ -13,11 +15,24 @@ from cogant.cache.hasher import hash_file, hash_repo
 # ---------------------------------------------------------------------------
 
 
-def test_cache_dir_default() -> None:
+def test_cache_dir_default(monkeypatch: pytest.MonkeyPatch) -> None:
     """get_cache_dir() returns a Path under the user's home directory."""
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
     cache_dir = get_cache_dir()
     assert isinstance(cache_dir, Path)
     assert cache_dir == Path.home() / ".cache" / "cogant"
+
+
+def test_cache_dir_honors_external_xdg_root(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    assert get_cache_dir() == tmp_path / "cogant"
+
+
+def test_relative_xdg_root_uses_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("XDG_CACHE_HOME", "relative-cache")
+    assert get_cache_dir() == Path.home() / ".cache" / "cogant"
 
 
 # ---------------------------------------------------------------------------

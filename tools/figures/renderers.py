@@ -244,7 +244,8 @@ def _render_publication_batch_timeline(
         color="#526070",
     )
     fig.tight_layout(rect=(0, 0.06, 1, 0.96))
-    fig.savefig(output, facecolor=fig.get_facecolor())
+    with matplotlib.rc_context({"savefig.bbox": None}):
+        fig.savefig(output, facecolor=fig.get_facecolor(), dpi=150)
     plt.close(fig)
 
     sidecar = {

@@ -715,8 +715,8 @@ class GNNMatrices:
             * ``"n_states_kept"``: n_states after truncation
             * ``"max_b_entries"``: the ``_MAX_B_ENTRIES`` threshold
             * ``"kept_state_indices"``: ascending indices into the full
-              A-column / D state axis; B index ``j`` is full state
-              ``kept_state_indices[j]``
+                A-column / D state axis; B index ``j`` is full state
+                ``kept_state_indices[j]``
             * ``"kept_state_ids"``: the matching state ids
             * ``"reason"``: human-readable explanation
 

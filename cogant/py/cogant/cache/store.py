@@ -23,8 +23,10 @@ _DEFAULT_TTL_SECONDS: int = 7 * 24 * 60 * 60  # 7 days
 
 
 def get_cache_dir() -> Path:
-    """Return the default cache directory: ``~/.cache/cogant``."""
-    return Path.home() / ".cache" / "cogant"
+    root = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    if not root.is_absolute():
+        root = Path.home() / ".cache"
+    return root / "cogant"
 
 
 @dataclass(frozen=True)
