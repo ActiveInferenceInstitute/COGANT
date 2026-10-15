@@ -5,7 +5,7 @@ Semantic Analysis & State Space Modeling
 
 ## What Is the StateSpace Module
 
-The `statespace/` module compiles **Active Inference state spaces** from semantic mappings and program graphs. It is stage 5 of the 10-stage COGANT pipeline. Given a `ProgramGraph` (with control flow and data dependencies) and `SemanticMappings` (which assign roles like HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONTEXT), this module extracts:
+The `statespace/` module compiles **Active Inference state spaces** from semantic mappings and program graphs. It is stage 7 of the 10-stage COGANT pipeline. Given a `ProgramGraph` (with control flow and data dependencies) and `SemanticMappings` (which assign roles like HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONTEXT), this module extracts:
 
 1. **Hidden State Variables** — latent program state (values of variables, execution flags, loop counters)
 2. **Observation Modalities** — outputs and side effects visible to agents
@@ -16,6 +16,14 @@ The `statespace/` module compiles **Active Inference state spaces** from semanti
 7. **Time Regime** — synchronous, asynchronous, event-driven, or hybrid execution
 
 The module produces a `StateSpaceModel` — a complete, self-contained IR ready for Active Inference simulation, free energy computation, policy learning, and GNN export.
+
+## Explicit finite-model interface
+
+For authored finite models, read `docs/api/finite_models.md` from the package
+root. `finite_spec.py` owns declaration admission, `finite_model.py` owns matrix
+compilation and immutable artifacts, and `finite_verification.py` owns exhaustive
+declaration checks. These models use explicit complete state configurations;
+they bypass the graph-derived heuristic matrix builder and its truncation policy.
 
 ## Pipeline Integration
 

@@ -1,0 +1,21 @@
+{
+  "name": "toggle",
+  "states": ["off", "on"],
+  "actions": ["hold", "toggle"],
+  "observations": ["dark", "lit"],
+  "transitions": [
+    {"state": "off", "action": "hold", "next_state": "off"},
+    {"state": "off", "action": "toggle", "next_state": "on"},
+    {"state": "on", "action": "hold", "next_state": "on"},
+    {"state": "on", "action": "toggle", "next_state": "off"}
+  ],
+  "likelihoods": [
+    {"state": "off", "observation": "dark"},
+    {"state": "on", "observation": "lit"}
+  ],
+  "prior": [{"state": "off", "probability": 1.0}],
+  "preferences": [
+    {"observation": "dark", "log_preference": 0.0},
+    {"observation": "lit", "log_preference": 1.0}
+  ]
+}

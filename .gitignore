@@ -31,6 +31,8 @@ cogant/out/
 !cogant/
 cogant/*
 !cogant/py/
+!cogant/tests/
+!cogant/examples/
 !cogant/benchmarks/
 cogant/benchmarks/*
 !cogant/benchmarks/results/

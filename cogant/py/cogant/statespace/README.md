@@ -16,7 +16,16 @@ TemporalAnalyzer determines time regime (synchronous, asynchronous, event-driven
 
 StateVariableExtractor identifies hidden state from hidden_state mappings, computing cardinality, domain, and factorization. FactorizationInfo tracks factor independence and dependencies for variable decomposition.
 
-## Usage
+## Explicit finite models
+
+`FiniteModelSpec`, `compile_finite_model`, and `verify_finite_model` provide an
+authored-model route with ordered complete states and total probability kernels.
+`FiniteModel` stores immutable A/B/C/D coefficients and can create a runtime with
+independent mutable copies. See the [finite-model guide](../../../docs/api/finite_models.md)
+for the schema, resource contract, CLI, and examples. This interface is separate
+from graph-based state-variable extraction.
+
+## Graph-derived usage
 
 ```python
 from cogant.statespace import StateSpaceCompiler

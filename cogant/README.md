@@ -22,6 +22,10 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
 
 - **Forward path**: source code → program dependence graph → fixpoint translation → semantic
   mappings → compiled state space → GNN markdown bundle (AII-spec compliant).
+- **Explicit finite models**: `cogant finite compile` lowers authored state/action
+  and observation tables into A/B/C/D matrices; `cogant finite verify` checks every
+  coefficient and its source identity. These models use declared complete states
+  and can run through `AgentRuntime`. See [the finite-model guide](docs/api/finite_models.md).
 - **Reverse path**: `py/cogant/reverse/` synthesizes a runnable Python package from any GNN
   bundle and is exposed through the top-level `cogant reverse` and `cogant roundtrip` CLI
   subcommands. The v0.7.0 contract reports `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`,
@@ -29,7 +33,7 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
   no strict structural-isomorphism matches.
 - **Incremental mode**: `cogant analyze --incremental <git-ref>` (or
   `PipelineConfig.incremental_since`) reuses the cached run when nothing changed and its outputs
-  exist (**19.6×** on the Flask benchmark; 25.2× re-measured 2026-10-14). Any source change
+  exist. The retained timing artifacts do not establish a current matched cold/warm speedup. Any source change
   re-analyses the full snapshot, so the model never drops unchanged files.
 - **Packaged demo server**: `cogant.server.app` exposes HTTP endpoints including `/health`
   and `/translate`; a packaged `Dockerfile` (python:3.12-slim + uv, `EXPOSE 8080`) and
@@ -113,7 +117,7 @@ from this package root or `./run_all.sh` from the COGANT project root.
 - **Principled state-space semantics** — Markov blanket partition, variational free energy
   computation, expected free energy optimization — not keyword heuristics.
 - **Incremental analysis mode** — `cogant analyze --incremental <git-ref>` or
-  `PipelineConfig.incremental_since` — 19.6× no-change (cached run) on Flask; a source change
+  `PipelineConfig.incremental_since` — caches unchanged complete runs; a source change
   re-analyses the full snapshot. Complements `cogant changed` git-diff helper for CI.
 - **Multi-episode Bayesian learning**: `AgentRuntime.run_multi_episode`, `run_episode`,
   `update_D_from_posterior`, `update_A_from_counts`.

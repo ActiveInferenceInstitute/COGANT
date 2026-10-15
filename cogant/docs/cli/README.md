@@ -5,6 +5,7 @@
 - [Quick Start](quick_start.md)
 - [Command index](command_index.md)
 - [Commands](commands.md)
+- [Finite-model compilation and verification](../api/finite_models.md)
 - [Usage Examples](usage_examples.md)
 - [Output Files](output_files.md)
 - [Environment variables](environment_variables.md)

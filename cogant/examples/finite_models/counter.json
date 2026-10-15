@@ -1,0 +1,21 @@
+{
+  "name": "saturating counter with aliased observations",
+  "states": ["zero", "one", "two"],
+  "actions": ["increment", "reset"],
+  "observations": ["low", "high"],
+  "transitions": [
+    {"state": "zero", "action": "increment", "next_state": "one"},
+    {"state": "one", "action": "increment", "next_state": "two"},
+    {"state": "two", "action": "increment", "next_state": "two"},
+    {"state": "zero", "action": "reset", "next_state": "zero"},
+    {"state": "one", "action": "reset", "next_state": "zero"},
+    {"state": "two", "action": "reset", "next_state": "zero"}
+  ],
+  "likelihoods": [
+    {"state": "zero", "observation": "low"},
+    {"state": "one", "observation": "low"},
+    {"state": "two", "observation": "high"}
+  ],
+  "prior": [{"state": "zero", "probability": 1.0}],
+  "preferences": [{"observation": "high", "log_preference": 1.0}]
+}

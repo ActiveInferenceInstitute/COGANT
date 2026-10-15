@@ -141,6 +141,7 @@ nav:
       - cogant.gnn: api/gnn.md
       - cogant.markov: api/markov.md
       - cogant.statespace: api/statespace.md
+      - Explicit Finite Models: api/finite_models.md
       - cogant.static: api/static.md
       - cogant.simulate: api/simulate.md
       - API Stability: api/api_stability.md
@@ -373,6 +374,7 @@ nav:
       - Calibration: rnd/calibration.md
       - Active Inference Mapping: rnd/active_inference_mapping.md
       - Organization State Spaces: rnd/organization_state_spaces.md
+      - Handwired Construction Patterns: rnd/handwired.md
   - Evaluation:
       - Overview: evaluation/README.md
       - "R&D Status": "evaluation/R&D_LOG.md"

@@ -42,6 +42,7 @@
 | [Dynamic Enrichment API](dynamic_enrichment_api.md) | Augment a static graph with dynamic facts | Advanced |
 | [Translate Package (`cogant.translate`)](translate.md) | Priority-ordered rule set + fixpoint, emits `SemanticMapping` records | Intermediate |
 | [State Space (`cogant.statespace`)](statespace.md) | Variables, actions, and transitions compiled from rule output | Intermediate |
+| [Explicit finite models](finite_models.md) | Authored probability kernels, exhaustive checks, and runtime handoff | Intermediate |
 | [Markov Blanket (`cogant.markov`)](markov.md) | Partition the graph into μ / s / a / η sets | Intermediate |
 | [GNN Package (`cogant.gnn`)](gnn.md) | `GNNPackageBuilder` + `GNNValidator` (0–100 score) | Intermediate |
 | [Reverse (`cogant.reverse`)](reverse.md) | GNN → runnable Python synthesis | Advanced |

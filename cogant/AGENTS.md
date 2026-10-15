@@ -43,7 +43,7 @@ cogant/                         ← package root (this directory)
 │   ├── runtime/                ← AgentRuntime: multi-episode Bayesian learning
 │   ├── api/                    ← PipelineConfig, orchestration, session management
 │   ├── server/                 ← FastAPI app (REST + WebSocket)
-│   ├── cli/                    ← 26 `@app.command` on `app` + `plugin`/`migrate` groups → 28 names on `cogant --help`; 29 leaf commands incl. `plugin list|info`, `migrate migrate`
+│   ├── cli/                    ← direct commands plus `finite`, `plugin`, and `migrate` groups; `cogant --help` is the live command index
 │   ├── protocols.py            ← 14 @runtime_checkable Protocols
 │   └── types.py                ← 15 TypedDicts, type aliases
 ├── rust/                       ← PyO3 Rust workspace (8 crates; optional acceleration)
@@ -79,7 +79,7 @@ cogant/                         ← package root (this directory)
 | Roundtrip reporting | `roundtrip_status` separates `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, and `FAILED`; role-preserved fixture counts and strict structural-isomorphism counts are reported separately in `evaluation/METRICS.yaml` |
 | Test suite | Large unit / integration / property / golden / fuzz suite; run `uv run pytest tests/ -q` for the live count |
 | Export formats | JSON, JSONLines, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT |
-| CLI surface | Typer app with direct commands plus `plugin` and `migrate` groups; `cogant --help` is the live source of truth |
+| CLI surface | Typer app with direct commands plus `finite`, `plugin`, and `migrate` groups; `cogant --help` is the live source of truth |
 | Type surface | Runtime-checkable protocols, TypedDict contracts, and `.pyi` stubs ship with `py.typed` |
 
 ---

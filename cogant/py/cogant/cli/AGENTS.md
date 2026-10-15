@@ -10,7 +10,10 @@ Implement command-line interface design and command routing. Provide user-facing
 
 ## Extending
 
-Add new commands to main.py as @app.command() functions. Each command should parse arguments, delegate to cogant.api (Session, PipelineRunner, ReviewAPI), and display results through Rich console. Follow naming convention cogant <verb> <target>. Use typer.Argument and typer.Option for parameters. Keep commands stateless and lightweight.
+Register direct command callbacks under `commands/`; wire command groups in
+`main.py` beside `plugin`, `migrate`, and `finite`. Callbacks parse arguments and
+delegate to the reusable domain interface. Use Typer arguments and options, and
+keep JSON output machine-readable on stdout with validation feedback on stderr.
 
 ## Coordination
 
@@ -18,7 +21,12 @@ Delegates all analysis work to cogant.api; CLI is purely a shell. Commands shoul
 
 ## Files
 
-main.py: Typer app with **26** `@app.command` registrations on `app` (including `name=` wrappers for `reverse`, `roundtrip`, `version`, hyphenated names like `analyze-static`, and four **preview** commands — `analyze-static`, `analyze-graph`, `visualize`, `export` — that print API pointers until wired). **`app.add_typer`** adds `plugin` (`list`, `info`) and `migrate` (`migrate`): **29** leaf commands. Fully wired commands delegate to `cogant.api` and render with Rich. Run `cogant --help` for the live list.
+main.py: Typer wiring for direct command modules and the `plugin`, `migrate`,
+and `finite` groups. Run `cogant --help` for the live list and each subcommand's
+help for its current options.
+
+finite.py: `compile` and `verify` callbacks for declared finite models; reusable
+admission, compilation, and checking live in `cogant.statespace`.
 
 diff.py: Helper module with load_bundle (reads output directory and loads graph, mappings, state_space) and diff_command (compares two bundles using DriftAnalyzer and CodebaseMetrics, generates markdown diff report).
 

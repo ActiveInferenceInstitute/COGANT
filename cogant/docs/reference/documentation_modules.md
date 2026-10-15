@@ -6,7 +6,7 @@ This directory contains the modular technical documentation for the Codebase-to-
 
 | Module | Description | Location |
 |--------|-------------|----------|
-| **API** | Python API references, Session, PipelineRunner, Bundle interfaces | [`api/`](../api/README.md) |
+| **API** | Session, PipelineRunner, Bundle, and [explicit finite models](../api/finite_models.md) | [`api/`](../api/README.md) |
 | **Architecture** | System layers, pipeline guide, graph engine deep-dives | [`architecture/`](../architecture/README.md) |
 | **CLI** | `cogant` command-line reference and usage examples | [`cli/`](../cli/README.md) |
 | **Evaluation** | R&D log, empirical reports, calibration notes | [`evaluation/`](../evaluation/README.md) |

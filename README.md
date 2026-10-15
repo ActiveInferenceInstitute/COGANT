@@ -21,6 +21,25 @@ discovery contract. The actual installable COGANT package remains the nested
 
 In this documentation, **COGANT project root** means the directory containing this README, `run_all.py`, `tools/`, `scripts/`, `manuscript/`, and the nested package directory. **COGANT package root** means the inner [`cogant/`](cogant/) directory containing `pyproject.toml`, `py/cogant/`, package tests, docs, and Rust crates.
 
+## Explicit finite state-space models
+
+Alongside repository analysis, COGANT compiles authored finite state/action and
+observation tables into A/B/C/D matrices and checks every declared coefficient.
+The [finite-model guide](cogant/docs/api/finite_models.md) explains complete state
+configurations, stochastic kernels, resource limits, and the agent-runtime handoff.
+Its construction and reference-checking design draws on a
+[pinned review of Handwired](cogant/docs/rnd/handwired.md).
+
+From this project root:
+
+```bash
+uv run --directory cogant cogant finite compile examples/finite_models/toggle.json -o output/finite/toggle.json
+uv run --directory cogant cogant finite verify examples/finite_models/toggle.json output/finite/toggle.json
+```
+
+These commands consume an explicit model declaration. The repository-analysis
+pipeline continues to produce evidence-bearing candidate models from source.
+
 ## Manuscript variables (madlib)
 
 Run these from the COGANT project root:

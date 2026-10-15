@@ -15,6 +15,9 @@ from cogant.statespace.compiler import (
     StateSpaceModel,
     Transition,
 )
+from cogant.statespace.finite_model import FiniteModel, compile_finite_model
+from cogant.statespace.finite_spec import FiniteModelSpec
+from cogant.statespace.finite_verification import FiniteVerification, verify_finite_model
 from cogant.statespace.temporal import (
     EventPattern,
     TemporalAnalyzer,
@@ -33,6 +36,11 @@ from cogant.statespace.variables import (
 )
 
 __all__ = [
+    "FiniteModel",
+    "FiniteModelSpec",
+    "FiniteVerification",
+    "compile_finite_model",
+    "verify_finite_model",
     "StateSpaceCompiler",
     "StateSpaceModel",
     "DegradedOutput",

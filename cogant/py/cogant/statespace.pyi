@@ -5,6 +5,11 @@ from cogant.statespace.compiler import Preference as Preference
 from cogant.statespace.compiler import StateSpaceCompiler as StateSpaceCompiler
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
 from cogant.statespace.compiler import Transition as Transition
+from cogant.statespace.finite_model import FiniteModel as FiniteModel
+from cogant.statespace.finite_model import compile_finite_model as compile_finite_model
+from cogant.statespace.finite_spec import FiniteModelSpec as FiniteModelSpec
+from cogant.statespace.finite_verification import FiniteVerification as FiniteVerification
+from cogant.statespace.finite_verification import verify_finite_model as verify_finite_model
 from cogant.statespace.temporal import EventPattern as EventPattern
 from cogant.statespace.temporal import TemporalAnalyzer as TemporalAnalyzer
 from cogant.statespace.temporal import TemporalMetrics as TemporalMetrics
@@ -17,6 +22,11 @@ from cogant.statespace.variables import StateVariableExtractor as StateVariableE
 from cogant.statespace.variables import StateVariableType as StateVariableType
 
 __all__ = [
+    "FiniteModel",
+    "FiniteModelSpec",
+    "FiniteVerification",
+    "compile_finite_model",
+    "verify_finite_model",
     "StateSpaceCompiler",
     "StateSpaceModel",
     "ObservationModality",

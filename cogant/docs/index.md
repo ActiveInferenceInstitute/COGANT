@@ -16,7 +16,7 @@ COGANT parses a repository, builds a typed program graph, assigns semantic mappi
 
 ## Why COGANT
 
-- **Structural, not heuristic.** Roles are assigned from `NodeKind`, `EdgeKind`, name keywords, and degree statistics — every decision is inspectable and reproducible.
+- **Inspectable rules.** Roles are assigned from `NodeKind`, `EdgeKind`, name keywords, and degree statistics. These structural heuristics produce reviewable candidate models with explicit provenance.
 - **Provenance-first.** Every node, edge, and mapping is traceable to a source span or a documented inference rule.
 - **Confidence-aware.** Every mapping carries an epistemic score; partial inputs degrade gracefully instead of halting.
 - **GNN-native.** Output follows the Active Inference Institute's Generalized Notation Notation bracket format and validates against a shipped schema.
@@ -35,7 +35,7 @@ From source:
 
 ```bash
 git clone https://github.com/ActiveInferenceInstitute/COGANT.git
-cd cogant
+cd COGANT/cogant
 uv sync --all-extras
 ```
 
@@ -65,6 +65,7 @@ The full Python API and CLI walkthrough live in [Quick Start](getting-started/qu
 - **[Flask app walkthrough](tutorials/flask.md)** — a 98-node / 597-edge real-world example with role counts and GNN output excerpts.
 - **[Active Inference mapping](theory/active_inference.md)** — the 22 translation rules and the seven **Active Inference** `MappingKind` labels counted in `METRICS.yaml` (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT). `SemanticRole` and rule outputs also use values such as PARAMETER separately; see the mapping page.
 - **[Round-trip verification](theory/roundtrip.md)** — `roundtrip_status`, `role_preservation_score`, strict invariant ledgers, and generated-code checks.
+- **[Explicit finite models](api/finite_models.md)** — declare state/action domains and probability kernels, compile A/B/C/D, verify every entry, and run the model.
 - **[GNN format](theory/gnn_format.md)** — bracket notation, A/B/C/D matrices, and an example export block.
 - **[CLI Reference](cli_reference.md)** — every subcommand, flag, and output artifact.
 - **[API Reference](api/translate.md)** — auto-generated module docs for `cogant.translate`, `cogant.gnn`, `cogant.markov`, `cogant.statespace`, `cogant.static`, and `cogant.simulate`.

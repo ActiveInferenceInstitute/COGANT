@@ -24,11 +24,13 @@ from cogant.cli._app import (
 from cogant.cli._app import (
     run_pipeline_with_progress as _run_pipeline_with_progress,
 )
+from cogant.cli.finite import finite_app
 from cogant.cli.migrate import migrate_app
 from cogant.cli.plugin import plugin_app
 
 app.add_typer(plugin_app, name="plugin")
 app.add_typer(migrate_app, name="migrate")
+app.add_typer(finite_app, name="finite")
 
 __all__ = [
     "_apply_upstream_pipeline_flags",
