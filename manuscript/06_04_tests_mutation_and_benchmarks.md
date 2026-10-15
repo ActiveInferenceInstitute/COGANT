@@ -49,7 +49,7 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 | `cogant.validate.integrity` | 140 | 96% |
 | `cogant.validate.schema_check` | 103 | 96% |
 | `cogant.validate.provenance_check` | 73 | 100% |
-| `cogant.viz.png.mermaid` | 505 | 78% |
+| `cogant.viz.png.mermaid` | 505 | 88% |
 | `cogant.viz.png.program_graph` | 284 | 89% |
 | `cogant.viz.png.state_space` | 452 | 92% |
 | `cogant.viz.matrix_view` | 324 | 92% |

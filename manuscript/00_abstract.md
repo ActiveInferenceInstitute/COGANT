@@ -8,15 +8,13 @@
 
 **Scope, front ends, and quality gate.** The v{{VERSION}} pipeline uses Python's standard-library `ast` as its primary front end. **JavaScript/TypeScript** and optional services (HTTP, container, incremental `cogant analyze --incremental <git-ref>`, multi-episode agent runtime) are documented in the package documentation under `cogant/docs/` and the package `README.md`; this manuscript focuses on IR theory, practice, and extension points (parsers, rules, validators, exporters). On the canonical run, the test suite reports **{{TEST_COUNT_PASSING}}** passing tests, **{{TEST_COUNT_FAILING}}** failing tests, **{{TEST_COUNT_SKIPPED}}** skipped tests, **{{TEST_COUNT_XFAILED}}** expected `xfail`, and **{{TEST_COUNT_XPASSED}}** `xpass` case; failures are treated as release blockers rather than silently excluded from the evidence record. The same run reports **{{COVERAGE_PCT}}%** line coverage of `cogant` (`uv run pytest tests/ --cov=py/cogant`, **{{METRICS_GENERATED_AT}}**) and **{{MYPY_STRICT_ERRORS}}** `mypy --strict` findings. These gates support implementation reliability, reproducibility, and regression detection; they do not by themselves establish semantic adequacy of a translated repository. Supported interpreters: Python 3.11–3.14.
 
-**External-validity caveat.** The {{TRANSLATION_RULES}} translation rules and the
-fixture-specific keyword vocabularies were authored with the shipped
-evaluation fixtures visible. There is **no held-out test split** and **no
-confidence interval** on any reported aggregate; in-sample scores
-*upper-bound*, and do not estimate, performance on never-tuned
-repositories. Claims phrased as "the pipeline runs end-to-end on
-repository X" carry no implied claim of role-recovery accuracy on
-repositories outside the shipped fixture set. See @sec:08-05-threats-to-validity
-for the full caveat.
+**External-validity caveat.** The {{TRANSLATION_RULES}} rules and fixture-specific
+keyword vocabularies were authored with the evaluation fixtures visible.
+There is **no held-out test split** and **no confidence interval** on reported
+aggregates. In-sample scores *upper-bound*, and do not estimate, performance
+on never-tuned repositories. End-to-end execution does not establish
+role-recovery accuracy outside the shipped fixtures; see
+@sec:08-05-threats-to-validity.
 
 [^gnn-note]: **GNN** here is Generalized Notation Notation, not graph neural networks; see the terminology block in @sec:01-introduction.
 
