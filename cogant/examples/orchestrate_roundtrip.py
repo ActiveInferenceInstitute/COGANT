@@ -489,7 +489,7 @@ class RoundtripOrchestrator:
             )
 
             # Save program graph for inspection
-            self._save_program_graph(graph)
+            self._save_enhanced_program_graph(graph)
 
             return graph
 
