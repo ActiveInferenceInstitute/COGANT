@@ -10,71 +10,71 @@ The notation surface is also validator-backed: `uv run python tools/audit_manusc
 
 ## Program graph symbols {#sec:98-program-graph-symbols}
 
-| Symbol | LaTeX | Meaning | First defined | Notes |
-|--------|-------|---------|---------------|-------|
-| $G$ | `$G$` | Program graph | @def:program-graph | Tuple $(V, E, \lambda_V, \lambda_E, \tau)$ |
-| $V$ | `$V$` | Finite set of program nodes | @def:program-graph | Modules, classes, methods, functions, … |
-| $E$ | `$E$` | Finite set of typed directed edges; $E \subseteq V \times V \times K$ | @def:program-graph | Drawn from edge-kind alphabet $K$ |
-| $K$ | `$K$` | Edge-kind alphabet (18 kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
-| $\mathcal{N}$ | `$\mathcal{N}$` | Node-kind alphabet (18 kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
-| $\lambda_V$ | `$\lambda_V$` | Node-kind labelling function; $\lambda_V : V \to \mathcal{N}$ | @def:program-graph | |
-| $\lambda_E$ | `$\lambda_E$` | Edge-kind labelling function; $\lambda_E : E \to K$ | @def:program-graph | Trivial projection onto edge kind |
-| $\tau$ | `$\tau$` | Type annotation map; $\tau : V \to (T \cup \{\bot\})$ | @def:program-graph | $\bot$ when no annotation available |
-| $T$ | `$T$` | Set of type strings recovered from front end | @def:program-graph | |
-| $\bot$ | `$\bot$` | Missing/unavailable type annotation | @def:program-graph | Lattice bottom |
-| $\phi$ | `$\phi$` | Graph isomorphism bijection; $\phi : V_1 \to V_2$ | @eq:typed-iso | Accepted when it preserves adjacency |
-| $G_1, G_2$ | `$G_1, G_2$` | Two program graphs under structural comparison | @eq:typed-iso | |
-| $N^{\text{in}}(v)$ | `$N^{\text{in}}(v)$` | In-neighbour set of node $v$; $\{u : (u,v,k) \in E\}$ | @def:markov-blanket-partition | Computed in $O(\|V\|+\|E\|)$ |
-| $N^{\text{out}}(v)$ | `$N^{\text{out}}(v)$` | Out-neighbour set of node $v$; $\{u : (v,u,k) \in E\}$ | @def:markov-blanket-partition | |
-| $S$ | `$S$` | Seed set for Markov blanket partition; $S \subseteq V$ | @def:markov-blanket-partition | Selected by one of five strategies |
-| $\Pi_{G,S}$ | `$\Pi_{G,S}$` | Structural Markov-blanket partition function; $\Pi_{G,S} : V \to \{\mu, s, a, \eta\}$ | @def:markov-blanket-partition (@eq:markov-partition) | Total and mutually exclusive; no conditional-independence claim (@inv:markov-blanket-partition-totality) |
-| $\mu$ | `$\mu$` | Internal (autonomous) node role | @def:markov-blanket-partition | In seed; all neighbours also in seed |
-| $s$ | `$s$` | Sensory node role | @def:markov-blanket-partition | In seed; receives input from outside seed |
-| $a$ | `$a$` | Active node role | @def:markov-blanket-partition | In seed; sends output outside seed |
-| $\eta$ | `$\eta$` | External node role | @def:markov-blanket-partition | Not in seed |
+| Symbol | Meaning | First defined | Notes |
+|---|---|---|---|
+| $G$ | Program graph | @def:program-graph | Tuple $(V, E, \lambda_V, \lambda_E, \tau)$ |
+| $V$ | Finite set of program nodes | @def:program-graph | Modules, classes, methods, functions, … |
+| $E$ | Finite set of typed directed edges; $E \subseteq V \times V \times K$ | @def:program-graph | Drawn from edge-kind alphabet $K$ |
+| $K$ | Edge-kind alphabet (18 kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
+| $\mathcal{N}$ | Node-kind alphabet (18 kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
+| $\lambda_V$ | Node-kind labelling function; $\lambda_V : V \to \mathcal{N}$ | @def:program-graph | |
+| $\lambda_E$ | Edge-kind labelling function; $\lambda_E : E \to K$ | @def:program-graph | Trivial projection onto edge kind |
+| $\tau$ | Type annotation map; $\tau : V \to (T \cup \{\bot\})$ | @def:program-graph | $\bot$ when no annotation available |
+| $T$ | Set of type strings recovered from front end | @def:program-graph | |
+| $\bot$ | Missing/unavailable type annotation | @def:program-graph | Lattice bottom |
+| $\phi$ | Graph isomorphism bijection; $\phi : V_1 \to V_2$ | @eq:typed-iso | Accepted when it preserves adjacency |
+| $G_1, G_2$ | Two program graphs under structural comparison | @eq:typed-iso | |
+| $N^{\text{in}}(v)$ | In-neighbour set of node $v$; $\{u : (u,v,k) \in E\}$ | @def:markov-blanket-partition | Computed in $O(\|V\|+\|E\|)$ |
+| $N^{\text{out}}(v)$ | Out-neighbour set of node $v$; $\{u : (v,u,k) \in E\}$ | @def:markov-blanket-partition | |
+| $S$ | Seed set for Markov blanket partition; $S \subseteq V$ | @def:markov-blanket-partition | Selected by one of five strategies |
+| $\Pi_{G,S}$ | Structural Markov-blanket partition function; $\Pi_{G,S} : V \to \{\mu, s, a, \eta\}$ | @def:markov-blanket-partition (@eq:markov-partition) | Total and mutually exclusive; no conditional-independence claim (@inv:markov-blanket-partition-totality) |
+| $\mu$ | Internal (autonomous) node role | @def:markov-blanket-partition | In seed; all neighbours also in seed |
+| $s$ | Sensory node role | @def:markov-blanket-partition | In seed; receives input from outside seed |
+| $a$ | Active node role | @def:markov-blanket-partition | In seed; sends output outside seed |
+| $\eta$ | External node role | @def:markov-blanket-partition | Not in seed |
 
 ---
 
 ## Translation engine symbols {#sec:98-translation-engine-symbols}
 
-| Symbol | LaTeX | Meaning | First defined | Notes |
-|--------|-------|---------|---------------|-------|
-| $r$ | `$r$` | Translation rule quadruple $({\varphi_r, \kappa_r, w_r, p_r})$ | @def:translation-rule | {{TRANSLATION_RULES}} shipped rules in 5 families (5+5+3+4+5); `METRICS.yaml` `pipeline.translation_rules` |
-| $\varphi_r$ | `$\varphi_r$` | Rule match predicate; $\varphi_r : \mathcal{G} \to 2^{\mathcal{F}}$ | @def:translation-rule | `matches(graph, query)` in code |
-| $\mathcal{G}$ | `$\mathcal{G}$` | Universe of finite program graphs | @def:translation-rule | |
-| $\mathcal{F}$ | `$\mathcal{F}$` | Fragment space (finite tuples of node/edge ids) | @def:translation-rule | |
-| $\kappa_r$ | `$\kappa_r$` | Mapping kind assigned by rule $r$ | @def:translation-rule | Element of $\mathcal{K}_M$; see @sec:98-active-inference-roles |
-| $\mathcal{K}_M$ | `$\mathcal{K}_M$` | Formal mapping-kind alphabet (11 kinds; code `MappingKind` enum has 14, incl. 3 non-formal implementation kinds) | @def:translation-rule | See @sec:98-active-inference-roles for full enumeration |
-| $w_r$ | `$w_r$` | Base confidence weight of rule $r$; $w_r \in (0, 1]$ | @def:translation-rule | |
-| $p_r$ | `$p_r$` | Rule priority; $p_r \in \mathbb{Z}$ | @def:translation-rule | Higher wins in conflict resolution |
-| $R$ | `$R$` | Finite rule set; $|R|$ equals the shipped rule count | @def:fixpoint-semantics | Injected as {{TRANSLATION_RULES}}; `METRICS.yaml` `pipeline.translation_rules` |
-| $\mathcal{M}$ | `$\mathcal{M}$` | Universe of possible semantic mappings on $G$ under $R$ | @def:fixpoint-semantics | $\|\mathcal{M}\| \leq n \cdot \|\mathcal{K}_M\|$ |
-| $F_{G,R}$ | `$F_{G,R}$` | Rule-application operator; $F_{G,R} : 2^{\mathcal{M}} \to 2^{\mathcal{M}}$ | @def:fixpoint-semantics (@eq:fixpoint-operator) | Monotone on $(2^{\mathcal{M}}, \subseteq)$ |
-| $T^{*}(G)$ | `$T^{*}(G)$` | Translation of $G$ under $R$; least fixpoint $\bigsqcup_{k \geq 0} F_{G,R}^k(\emptyset)$ | @def:fixpoint-semantics (@eq:least-fixpoint) | |
-| $K$ | `$K$` | Iteration cap; default $K = 10$ | @prop:fixpoint-termination | `max_iterations` in `engine.py` |
-| $n$ | `$n$` | Number of nodes in program graph; $n = \|V\|$ | @prop:fixpoint-termination | |
-| $k$ | `$k$` | Number of rules; $k = \|R\|$ | @prop:fixpoint-termination | |
-| $(p(\mu), c(\mu))$ | `$(p(\mu), c(\mu))$` | Conflict-resolution key: (priority, confidence) for mapping $\mu$ | @def:translation-rule, @alg:conflict-resolution | Higher priority wins; confidence breaks ties |
-| $\rho$ | `$\rho$` | Role-multiset functor $\rho : \mathbf{Prog} \to \mathbf{Mset}(\text{Roles})$ | @sec:S03-role-multiset-functor | Counts role assignments per node |
+| Symbol | Meaning | First defined | Notes |
+|---|---|---|---|
+| $r$ | Translation rule quadruple $({\varphi_r, \kappa_r, w_r, p_r})$ | @def:translation-rule | {{TRANSLATION_RULES}} shipped rules in 5 families (5+5+3+4+5); `METRICS.yaml` `pipeline.translation_rules` |
+| $\varphi_r$ | Rule match predicate; $\varphi_r : \mathcal{G} \to 2^{\mathcal{F}}$ | @def:translation-rule | `matches(graph, query)` in code |
+| $\mathcal{G}$ | Universe of finite program graphs | @def:translation-rule | |
+| $\mathcal{F}$ | Fragment space (finite tuples of node/edge ids) | @def:translation-rule | |
+| $\kappa_r$ | Mapping kind assigned by rule $r$ | @def:translation-rule | Element of $\mathcal{K}_M$; see @sec:98-active-inference-roles |
+| $\mathcal{K}_M$ | Formal mapping-kind alphabet (11 kinds; code `MappingKind` enum has 14, incl. 3 non-formal implementation kinds) | @def:translation-rule | See @sec:98-active-inference-roles for full enumeration |
+| $w_r$ | Base confidence weight of rule $r$; $w_r \in (0, 1]$ | @def:translation-rule | |
+| $p_r$ | Rule priority; $p_r \in \mathbb{Z}$ | @def:translation-rule | Higher wins in conflict resolution |
+| $R$ | Finite rule set; $|R|$ equals the shipped rule count | @def:fixpoint-semantics | Injected as {{TRANSLATION_RULES}}; `METRICS.yaml` `pipeline.translation_rules` |
+| $\mathcal{M}$ | Universe of possible semantic mappings on $G$ under $R$ | @def:fixpoint-semantics | $\|\mathcal{M}\| \leq n \cdot \|\mathcal{K}_M\|$ |
+| $F_{G,R}$ | Rule-application operator; $F_{G,R} : 2^{\mathcal{M}} \to 2^{\mathcal{M}}$ | @def:fixpoint-semantics (@eq:fixpoint-operator) | Monotone on $(2^{\mathcal{M}}, \subseteq)$ |
+| $T^{*}(G)$ | Translation of $G$ under $R$; least fixpoint $\bigsqcup_{k \geq 0} F_{G,R}^k(\emptyset)$ | @def:fixpoint-semantics (@eq:least-fixpoint) | |
+| $K$ | Iteration cap; default $K = 10$ | @prop:fixpoint-termination | `max_iterations` in `engine.py` |
+| $n$ | Number of nodes in program graph; $n = \|V\|$ | @prop:fixpoint-termination | |
+| $k$ | Number of rules; $k = \|R\|$ | @prop:fixpoint-termination | |
+| $(p(\mu), c(\mu))$ | Conflict-resolution key: (priority, confidence) for mapping $\mu$ | @def:translation-rule, @alg:conflict-resolution | Higher priority wins; confidence breaks ties |
+| $\rho$ | Role-multiset functor $\rho : \mathbf{Prog} \to \mathbf{Mset}(\text{Roles})$ | @sec:S03-role-multiset-functor | Counts role assignments per node |
 
 ---
 
 ## Confidence model symbols {#sec:98-confidence-symbols}
 
-| Symbol | LaTeX | Meaning | First defined | Notes |
-|--------|-------|---------|---------------|-------|
-| $c$ | `$c$` | Confidence score; $c \in [0, 1]$ | @sec:02-03-confidence-scoring (@eq:confidence-core) | `ConfidenceModel` in `translate/confidence.py` |
-| $\bar{e}$ | `$\bar{e}$` | Mean evidence confidence over provenance records | @sec:02-03-confidence-scoring (@eq:confidence-core) | |
-| $\delta_d$ | `$\delta_d$` | Evidence-diversity bonus (bounded, scaled) | @sec:02-03-confidence-scoring (@eq:confidence-core) | Raised by dynamic enrichment |
-| $\kappa$ | `$\kappa$` | Parser certainty factor; applied multiplicatively | @sec:02-03-confidence-scoring (@eq:confidence-core) | $\kappa \in [0, 1]$ |
-| $\pi$ | `$\pi$` | Aggregate conflict penalties (subtracted post-scaling) | @sec:02-03-confidence-scoring (@eq:confidence-core) | Not to be confused with policy $\pi$ in @sec:S04-appendix-inference-mathematics |
-| $\varepsilon$ | `$\varepsilon$` | Numerical tolerance for stochasticity checks; $\varepsilon = 10^{-9}$ (normalisation), $10^{-6}$ (validation) | @prop:matrix-validity | `validate_shapes()` in `gnn/matrices.py` |
-| $\xi$ | `$\xi$` | Evidence-labelled assertion tuple $(x, \kappa_\xi, c_\xi, \mathcal{P}_\xi)$ | @def:evidence-labelled-assertion | Operational assertion emitted by translation, validation, review, or provenance tooling |
-| $x$ | `$x$` | Target of an evidence-labelled assertion | @def:evidence-labelled-assertion | Node, edge, or finite fragment |
-| $\kappa_\xi$ | `$\kappa_\xi$` | Assertion kind for $\xi$ | @def:evidence-labelled-assertion | Mapping kind, validation predicate, or structural property |
-| $c_\xi$ | `$c_\xi$` | Confidence attached to assertion $\xi$ | @def:evidence-labelled-assertion | Computed by @eq:confidence-core |
-| $\mathcal{P}_\xi$ | `$\mathcal{P}_\xi$` | Finite provenance/evidence set for $\xi$ | @def:evidence-labelled-assertion | Rule names, parser outputs, dynamic traces, reviewer markers, schema checks |
-| $\preceq_e$ | `$\preceq_e$` | Evidence preorder over same-target assertions | @def:evidence-labelled-assertion (@eq:evidence-preorder) | More recorded evidence/support, not higher semantic truth probability |
+| Symbol | Meaning | First defined | Notes |
+|---|---|---|---|
+| $c$ | Confidence score; $c \in [0, 1]$ | @sec:02-03-confidence-scoring (@eq:confidence-core) | `ConfidenceModel` in `translate/confidence.py` |
+| $\bar{e}$ | Mean evidence confidence over provenance records | @sec:02-03-confidence-scoring (@eq:confidence-core) | |
+| $\delta_d$ | Evidence-diversity bonus (bounded, scaled) | @sec:02-03-confidence-scoring (@eq:confidence-core) | Raised by dynamic enrichment |
+| $\kappa$ | Parser certainty factor; applied multiplicatively | @sec:02-03-confidence-scoring (@eq:confidence-core) | $\kappa \in [0, 1]$ |
+| $\pi$ | Aggregate conflict penalties (subtracted post-scaling) | @sec:02-03-confidence-scoring (@eq:confidence-core) | Not to be confused with policy $\pi$ in @sec:S04-appendix-inference-mathematics |
+| $\varepsilon$ | Numerical tolerance for stochasticity checks; $\varepsilon = 10^{-9}$ (normalisation), $10^{-6}$ (validation) | @prop:matrix-validity | `validate_shapes()` in `gnn/matrices.py` |
+| $\xi$ | Evidence-labelled assertion tuple $(x, \kappa_\xi, c_\xi, \mathcal{P}_\xi)$ | @def:evidence-labelled-assertion | Operational assertion emitted by translation, validation, review, or provenance tooling |
+| $x$ | Target of an evidence-labelled assertion | @def:evidence-labelled-assertion | Node, edge, or finite fragment |
+| $\kappa_\xi$ | Assertion kind for $\xi$ | @def:evidence-labelled-assertion | Mapping kind, validation predicate, or structural property |
+| $c_\xi$ | Confidence attached to assertion $\xi$ | @def:evidence-labelled-assertion | Computed by @eq:confidence-core |
+| $\mathcal{P}_\xi$ | Finite provenance/evidence set for $\xi$ | @def:evidence-labelled-assertion | Rule names, parser outputs, dynamic traces, reviewer markers, schema checks |
+| $\preceq_e$ | Evidence preorder over same-target assertions | @def:evidence-labelled-assertion (@eq:evidence-preorder) | More recorded evidence/support, not higher semantic truth probability |
 
 **Confidence tier thresholds** (`determine_confidence_tier` in `translate/confidence.py`):
 
@@ -97,48 +97,48 @@ because threshold movement in that band can change the state-space surface.
 
 ## A/B/C/D matrix symbols {#sec:98-abcd-matrix-symbols}
 
-| Symbol | LaTeX | Meaning | First defined | Notes |
-|--------|-------|---------|---------------|-------|
-| $\mathbf{V}$ | `$\mathbf{V}$` | Set of hidden-state variables | @def:abcd-matrices | Identified from WRITES edges |
-| $\mathbf{O}$ | `$\mathbf{O}$` | Set of observation modalities | @def:abcd-matrices | From OBSERVATION-kind mappings |
-| $\mathbf{A}$ | `$\mathbf{A}$` | Set of actions (control states) | @def:abcd-matrices | From ACTION-kind mappings |
-| $A$ | `$A$` | Likelihood matrix; $A \in \mathbb{R}^{|\mathbf{O}| \times |\mathbf{V}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $A_{ij} = P(o_i \mid s_j)$; columns sum to 1 |
-| $B$ | `$B$` | State-transition tensor; $B \in \mathbb{R}^{|\mathbf{V}| \times |\mathbf{V}| \times |\mathbf{A}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $B_{ijk} = P(s'_i \mid s_j, a_k)$; columns sum to 1 |
-| $C$ | `$C$` | Log-preference vector; $C \in \mathbb{R}^{|\mathbf{O}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $C_i = \log \tilde{P}(o_i)$; not normalised |
-| $D$ | `$D$` | Prior over initial hidden states; $D \in \mathbb{R}^{|\mathbf{V}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $D_j = P(s_j \mid t=0)$; sums to 1 |
-| $s_j$ | `$s_j$` | Hidden state $j$ | @sec:S04-pomdp-formulation | Element of $S = \{s_1, \ldots, s_{|S|}\}$ |
-| $o_i$ | `$o_i$` | Observation $i$ | @sec:S04-pomdp-formulation | Element of $O = \{o_1, \ldots, o_{|O|}\}$ |
-| $a_k$ | `$a_k$` | Action / control state $k$ | @sec:S04-pomdp-formulation | Element of $A \subseteq \{1, \ldots, |A|\}$ |
-| $\pi$ | `$\pi$` | Policy; finite action sequence $(a_0, \ldots, a_{T-1}) \in A^T$ | @sec:S04-pomdp-formulation | Not to be confused with conflict penalty $\pi$ in @sec:98-confidence-symbols |
-| $T$ | `$T$` | Planning horizon (number of time steps) | @sec:S04-pomdp-formulation | |
-| $Q(s)$ | `$Q(s)$` | Approximate posterior over hidden states | @sec:S04-variational-free-energy | Variational distribution |
-| $P(o, s)$ | `$P(o, s)$` | Joint generative model; $= A[o,s] \cdot D[s]$ | @sec:S04-variational-free-energy | |
-| $F[Q]$ | `$F[Q]$` | Variational free energy (VFE) | @sec:S04-variational-free-energy | $F[Q] = \mathbb{E}_{Q(s)}[\log Q(s) - \log P(o,s)]$ |
-| $G(\pi)$ | `$G(\pi)$` | Expected free energy (EFE) for policy $\pi$ | @sec:S04-expected-free-energy | $G(\pi) = \sum_\tau [\text{risk}(\pi,\tau) + \text{ambiguity}(\pi,\tau)]$ |
-| $H[Q(s)]$ | `$H[Q(s)]$` | Shannon entropy of approximate posterior | @sec:S04-variational-free-energy | Ambiguity term in VFE decomposition |
-| $\alpha$ | `$\alpha$` | A-matrix count-update learning rate in the runtime helper | @sec:S04-d-update-convergence | `update_A_from_counts(learning_rate=...)`; D uses a running posterior mean |
-| $D^{(k)}$ | `$D^{(k)}$` | Prior after $k$ learning episodes | @sec:S04-d-update-convergence | Running arithmetic mean of normalized episode posteriors |
+| Symbol | Meaning | First defined | Notes |
+|---|---|---|---|
+| $\mathbf{V}$ | Set of hidden-state variables | @def:abcd-matrices | Identified from WRITES edges |
+| $\mathbf{O}$ | Set of observation modalities | @def:abcd-matrices | From OBSERVATION-kind mappings |
+| $\mathbf{A}$ | Set of actions (control states) | @def:abcd-matrices | From ACTION-kind mappings |
+| $A$ | Likelihood matrix; $A \in \mathbb{R}^{|\mathbf{O}| \times |\mathbf{V}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $A_{ij} = P(o_i \mid s_j)$; columns sum to 1 |
+| $B$ | State-transition tensor; $B \in \mathbb{R}^{|\mathbf{V}| \times |\mathbf{V}| \times |\mathbf{A}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $B_{ijk} = P(s'_i \mid s_j, a_k)$; columns sum to 1 |
+| $C$ | Log-preference vector; $C \in \mathbb{R}^{|\mathbf{O}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $C_i = \log \tilde{P}(o_i)$; not normalised |
+| $D$ | Prior over initial hidden states; $D \in \mathbb{R}^{|\mathbf{V}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $D_j = P(s_j \mid t=0)$; sums to 1 |
+| $s_j$ | Hidden state $j$ | @sec:S04-pomdp-formulation | Element of $S = \{s_1, \ldots, s_{|S|}\}$ |
+| $o_i$ | Observation $i$ | @sec:S04-pomdp-formulation | Element of $O = \{o_1, \ldots, o_{|O|}\}$ |
+| $a_k$ | Action / control state $k$ | @sec:S04-pomdp-formulation | Element of $A \subseteq \{1, \ldots, |A|\}$ |
+| $\pi$ | Policy; finite action sequence $(a_0, \ldots, a_{T-1}) \in A^T$ | @sec:S04-pomdp-formulation | Not to be confused with conflict penalty $\pi$ in @sec:98-confidence-symbols |
+| $T$ | Planning horizon (number of time steps) | @sec:S04-pomdp-formulation | |
+| $Q(s)$ | Approximate posterior over hidden states | @sec:S04-variational-free-energy | Variational distribution |
+| $P(o, s)$ | Joint generative model; $= A[o,s] \cdot D[s]$ | @sec:S04-variational-free-energy | |
+| $F[Q]$ | Variational free energy (VFE) | @sec:S04-variational-free-energy | $F[Q] = \mathbb{E}_{Q(s)}[\log Q(s) - \log P(o,s)]$ |
+| $G(\pi)$ | Expected free energy (EFE) for policy $\pi$ | @sec:S04-expected-free-energy | $G(\pi) = \sum_\tau [\text{risk}(\pi,\tau) + \text{ambiguity}(\pi,\tau)]$ |
+| $H[Q(s)]$ | Shannon entropy of approximate posterior | @sec:S04-variational-free-energy | Ambiguity term in VFE decomposition |
+| $\alpha$ | A-matrix count-update learning rate in the runtime helper | @sec:S04-d-update-convergence | `update_A_from_counts(learning_rate=...)`; D uses a running posterior mean |
+| $D^{(k)}$ | Prior after $k$ learning episodes | @sec:S04-d-update-convergence | Running arithmetic mean of normalized episode posteriors |
 
 ---
 
 ## Category-theory and Galois-style comparison symbols {#sec:98-category-theory-symbols}
 
-| Symbol | LaTeX | Meaning | First defined | Notes |
-|--------|-------|---------|---------------|-------|
-| **Prog** | `**Prog**` | Comparison category/preorder quotient of typed Python program graphs | @sec:S03-categories | Morphisms are label-preserving graph homomorphisms; approximate claims use the subset preorder quotient |
-| **GNN** | `**GNN**` | Comparison category/preorder quotient of current upstream GNN release artifacts | @sec:S03-categories | Morphisms are role-preserving bundle embeddings; approximate claims use bundle-section inclusion |
-| $\mathbf{Mset}$ | `$\mathbf{Mset}$` | Category of multisets | @sec:S03-role-multiset-functor | Target vocabulary for role-multiset map $\rho$ |
-| $F$ | `$F$` | Forward order-preserving map; $F : \mathbf{Prog} \to \mathbf{GNN}$ on preorder quotients | @sec:S03-forward-reverse-functors | Realised by `cogant translate` |
-| $R$ | `$R$` | Reverse order-preserving map; $R : \mathbf{GNN} \to \mathbf{Prog}$ on preorder quotients | @sec:S03-forward-reverse-functors | Realised by `cogant reverse` then re-parse |
-| $\rho$ | `$\rho$` | Role-multiset map; maps $G$ to its role distribution | @sec:S03-role-multiset-functor | $\rho : \mathbf{Prog} \to \mathbf{Mset}(\text{Roles})$ |
-| $\rho_\text{norm}$ | `$\rho_\text{norm}$` | Normalised role distribution (probability vector over Roles) | @sec:S03-role-preservation-theorem | Used in JS-distance formula |
-| $s_\text{role}(P, R(F(P)))$ | `$s_\text{role}(P, R(F(P)))$` | Roundtrip role-preservation score; multiset similarity between role distributions | @sec:S03-role-preservation-theorem (@inv:bounded-role-preservation-gap) | Higher is better; ROLE_PRESERVED when $s_\text{role} \ge {{THRESHOLD_ROLE_PRESERVED}}$ |
-| $\text{JS}$ | `$\text{JS}$` | Jensen–Shannon distance | @sec:S03-role-preservation-theorem | Symmetric; $\text{JS} \in [0, 1]$ |
-| $\text{multiset\_sim}(a, b)$ | `$\text{multiset\_sim}(a,b)$` | Per-role multiset similarity; $\min(a,b)/\max(a,b)$ | @sec:S03-approximate-adjunction | Averaged over roles to yield global score |
-| $\text{scaffold}_r$ | `$\text{scaffold}_r$` | Fixed role-$r$ count contributed by reverse synthesizer scaffolding | @sec:S03-approximate-adjunction, @sec:S03-role-preservation-theorem | POLICY/CONTEXT synthesis reduces this for policy-bearing targets |
-| $\varepsilon_\text{worst}$ | `$\varepsilon_\text{worst}$` | Worst-case approximation gap; depends only on rule table and synthesizer | @sec:S03-approximate-adjunction | Bounded; approaches 0 for large programs |
-| $\leq_\text{GNN}$ | `$\leq_\text{GNN}$` | Pointwise bundle subset order in **GNN** | @sec:S03-categories | Each bundle section is subset-ordered |
-| $\leq_\text{Prog}$ | `$\leq_\text{Prog}$` | Pointwise graph subset order in **Prog** | @sec:S03-categories | $G \leq G'$ iff $V \subseteq V'$, $E \subseteq E'$ |
+| Symbol | Meaning | First defined | Notes |
+|---|---|---|---|
+| **Prog** | Comparison category/preorder quotient of typed Python program graphs | @sec:S03-categories | Morphisms are label-preserving graph homomorphisms; approximate claims use the subset preorder quotient |
+| **GNN** | Comparison category/preorder quotient of current upstream GNN release artifacts | @sec:S03-categories | Morphisms are role-preserving bundle embeddings; approximate claims use bundle-section inclusion |
+| $\mathbf{Mset}$ | Category of multisets | @sec:S03-role-multiset-functor | Target vocabulary for role-multiset map $\rho$ |
+| $F$ | Forward order-preserving map; $F : \mathbf{Prog} \to \mathbf{GNN}$ on preorder quotients | @sec:S03-forward-reverse-functors | Realised by `cogant translate` |
+| $R$ | Reverse order-preserving map; $R : \mathbf{GNN} \to \mathbf{Prog}$ on preorder quotients | @sec:S03-forward-reverse-functors | Realised by `cogant reverse` then re-parse |
+| $\rho$ | Role-multiset map; maps $G$ to its role distribution | @sec:S03-role-multiset-functor | $\rho : \mathbf{Prog} \to \mathbf{Mset}(\text{Roles})$ |
+| $\rho_\text{norm}$ | Normalised role distribution (probability vector over Roles) | @sec:S03-role-preservation-theorem | Used in JS-distance formula |
+| $s_\text{role}(P, R(F(P)))$ | Roundtrip role-preservation score; multiset similarity between role distributions | @sec:S03-role-preservation-theorem (@inv:bounded-role-preservation-gap) | Higher is better; ROLE_PRESERVED when $s_\text{role} \ge {{THRESHOLD_ROLE_PRESERVED}}$ |
+| $\text{JS}$ | Jensen–Shannon distance | @sec:S03-role-preservation-theorem | Symmetric; $\text{JS} \in [0, 1]$ |
+| $\text{multiset\_sim}(a, b)$ | Per-role multiset similarity; $\min(a,b)/\max(a,b)$ | @sec:S03-approximate-adjunction | Averaged over roles to yield global score |
+| $\text{scaffold}_r$ | Fixed role-$r$ count contributed by reverse synthesizer scaffolding | @sec:S03-approximate-adjunction, @sec:S03-role-preservation-theorem | POLICY/CONTEXT synthesis reduces this for policy-bearing targets |
+| $\varepsilon_\text{worst}$ | Worst-case approximation gap; depends only on rule table and synthesizer | @sec:S03-approximate-adjunction | Bounded; approaches 0 for large programs |
+| $\leq_\text{GNN}$ | Pointwise bundle subset order in **GNN** | @sec:S03-categories | Each bundle section is subset-ordered |
+| $\leq_\text{Prog}$ | Pointwise graph subset order in **Prog** | @sec:S03-categories | $G \leq G'$ iff $V \subseteq V'$, $E \subseteq E'$ |
 
 **Roundtrip status thresholds** (from `METRICS.yaml`):
 
