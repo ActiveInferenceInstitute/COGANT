@@ -12,7 +12,10 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 from cogant.process.extractor import ProcessModel
+from cogant.runtime.inference import load_inference_trace, write_inference_trace_artifact
 from cogant.schemas.graph import (
     Edge,
     EdgeKind,
@@ -25,6 +28,8 @@ from cogant.statespace.compiler import StateSpaceModel
 from cogant.statespace.temporal import TimeRegime
 from cogant.validate.report import ValidationReport
 from cogant.viz.dashboard.generator import DashboardGenerator
+from cogant.viz.dashboard.inference import render_inference_tab
+from tests.gnn_execution_fixture import MODEL, package
 
 
 def _empty_state_space() -> StateSpaceModel:
@@ -184,6 +189,21 @@ class TestDashboardGeneratorEmptyState:
 class TestDashboardGeneratorPopulated:
     """Exercise the populated / non-empty rendering branches too."""
 
+    def test_inference_table_escapes_labels_and_discloses_display_limits(
+        self, tmp_path: Path
+    ) -> None:
+        package(tmp_path / "gnn_package")
+        write_inference_trace_artifact(tmp_path, steps=101)
+        trace = load_inference_trace(tmp_path)
+        labels = trace.labels.model_copy(update={"states": ("<script>injected</script>", "other")})
+        rendered = render_inference_tab(trace.model_copy(update={"labels": labels}))
+        assert "<script>injected</script>" not in rendered
+        assert "&lt;script&gt;injected&lt;/script&gt;" in rendered
+        assert "Showing 100 of 101 recorded observations" in rendered
+        assert "Table shows 20 of 101 observations" in rendered
+        assert rendered.count("<circle") == 100
+        assert rendered.count("<tr>") == 21
+
     def test_generate_chart_with_nodes_and_edges(self) -> None:
         dg = DashboardGenerator(
             graph=_graph_with_content(),
@@ -205,9 +225,8 @@ class TestDashboardGeneratorPopulated:
         assert "No edges to display" not in html
 
     def test_load_optional_data_reads_trace_json(self, tmp_path: Path) -> None:
-        """When output_dir contains active_inference_trace.json it must be loaded."""
-        trace_path = tmp_path / "active_inference_trace.json"
-        trace_path.write_text(json.dumps({"steps": [{"t": 0}]}))
+        package(tmp_path / "gnn_package")
+        write_inference_trace_artifact(tmp_path, steps=2)
         dg = DashboardGenerator(
             graph=_empty_graph(),
             state_space=_empty_state_space(),
@@ -219,12 +238,19 @@ class TestDashboardGeneratorPopulated:
             output_dir=tmp_path,
         )
         assert dg.trace_data is not None
-        assert dg.trace_data["steps"][0]["t"] == 0
+        assert dg.trace_data == load_inference_trace(tmp_path)
+        rendered = dg._generate_active_inference_tab()
+        assert dg.trace_data.source_sha256 in rendered
+        assert dg.trace_data.matrices_sha256 in rendered
+        assert "model_rollout" in rendered
+        assert "empirical adequacy" in rendered
+        assert f"{dg.trace_data.trace[0].free_energy:.4f}" in rendered
+        assert "<svg" in rendered and "<circle" in rendered
 
-    def test_load_optional_data_reads_simulation_trace(self, tmp_path: Path) -> None:
-        """Falls back to simulation_trace.json if active_inference_trace.json missing."""
-        sim_path = tmp_path / "simulation_trace.json"
-        sim_path.write_text(json.dumps({"events": [42]}))
+    def test_load_optional_data_reads_trace_from_data_layout(self, tmp_path: Path) -> None:
+        package(tmp_path / "gnn_package")
+        (tmp_path / "data").mkdir()
+        write_inference_trace_artifact(tmp_path, steps=1)
         dg = DashboardGenerator(
             graph=_empty_graph(),
             state_space=_empty_state_space(),
@@ -235,7 +261,8 @@ class TestDashboardGeneratorPopulated:
             repo_name="x",
             output_dir=tmp_path,
         )
-        assert dg.trace_data == {"events": [42]}
+        assert dg.trace_data == load_inference_trace(tmp_path)
+        assert "<circle" in dg._generate_active_inference_tab()
 
     def test_load_optional_data_reads_gnn_validation(self, tmp_path: Path) -> None:
         """GNN validation report JSON gets loaded into gnn_validation field."""
@@ -259,21 +286,32 @@ class TestDashboardGeneratorPopulated:
         assert "No GNN validation report available" not in html
         assert "Package Status" in html
 
-    def test_load_optional_data_tolerates_broken_trace_json(self, tmp_path: Path) -> None:
-        """Corrupt trace JSON must be swallowed (exception path)."""
-        (tmp_path / "active_inference_trace.json").write_text("{not: valid json")
-        dg = DashboardGenerator(
-            graph=_empty_graph(),
-            state_space=_empty_state_space(),
-            process_model=_empty_process_model(),
-            semantic_mappings={},
-            mermaid_diagrams={},
-            validation_report=_empty_validation_report(),
-            repo_name="x",
-            output_dir=tmp_path,
-        )
-        # Graceful: trace_data stays None, no exception raised
-        assert dg.trace_data is None
+    @pytest.mark.parametrize("mutation", ["json", "source", "posterior", "missing_source"])
+    def test_load_optional_data_rejects_corrupt_trace(self, tmp_path: Path, mutation: str) -> None:
+        package(tmp_path / "gnn_package")
+        trace_path = write_inference_trace_artifact(tmp_path, steps=2)
+        source = tmp_path / "gnn_package" / "model.gnn.md"
+        if mutation == "json":
+            trace_path.write_text("{not: valid json")
+        elif mutation == "source":
+            source.write_text(MODEL + "\n")
+        elif mutation == "missing_source":
+            source.rename(source.with_suffix(".preserved"))
+        else:
+            payload = json.loads(trace_path.read_text())
+            payload["trace"][0]["posterior"] = [0.5, 0.5]
+            trace_path.write_text(json.dumps(payload))
+        with pytest.raises((ValueError, OSError)):
+            DashboardGenerator(
+                graph=_empty_graph(),
+                state_space=_empty_state_space(),
+                process_model=_empty_process_model(),
+                semantic_mappings={},
+                mermaid_diagrams={},
+                validation_report=_empty_validation_report(),
+                repo_name="x",
+                output_dir=tmp_path,
+            )
 
     def test_load_optional_data_tolerates_broken_gnn_validation(self, tmp_path: Path) -> None:
         """Corrupt GNN validation JSON must be swallowed (exception path)."""
@@ -292,7 +330,8 @@ class TestDashboardGeneratorPopulated:
 
     def test_output_dir_as_string_is_accepted(self, tmp_path: Path) -> None:
         """String output_dir is coerced to Path in _load_optional_data."""
-        (tmp_path / "active_inference_trace.json").write_text("{}")
+        package(tmp_path / "gnn_package")
+        write_inference_trace_artifact(tmp_path, steps=1)
         dg = DashboardGenerator(
             graph=_empty_graph(),
             state_space=_empty_state_space(),
@@ -303,4 +342,4 @@ class TestDashboardGeneratorPopulated:
             repo_name="x",
             output_dir=str(tmp_path),
         )
-        assert dg.trace_data == {}
+        assert dg.trace_data == load_inference_trace(tmp_path)

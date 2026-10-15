@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from cogant.process.extractor import ProcessModel as ProcessModel
+from cogant.runtime.inference_records import InferenceTrace as InferenceTrace
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.schemas.semantic import SemanticMapping as SemanticMapping
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
@@ -18,7 +19,7 @@ class DashboardGenerator:
     validation_report: Any
     repo_name: Any
     output_dir: Any
-    trace_data: Any
+    trace_data: InferenceTrace | None
     gnn_validation: Any
     def __init__(
         self,
@@ -30,7 +31,6 @@ class DashboardGenerator:
         validation_report: ValidationReport,
         repo_name: str,
         output_dir: Path | None = None,
-        trace_data: dict[str, Any] | None = None,
         gnn_validation: dict[str, Any] | None = None,
     ) -> None: ...
     def generate(self) -> str: ...

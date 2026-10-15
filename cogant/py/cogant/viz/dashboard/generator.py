@@ -15,10 +15,13 @@ from pathlib import Path
 from typing import Any
 
 from cogant.process.extractor import ProcessModel
+from cogant.runtime.inference import load_inference_trace
+from cogant.runtime.inference_records import InferenceTrace
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import SemanticMapping
 from cogant.statespace.compiler import StateSpaceModel
 from cogant.validate.report import ValidationReport
+from cogant.viz.dashboard.inference import render_inference_tab
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +42,6 @@ class DashboardGenerator:
         validation_report: ValidationReport,
         repo_name: str,
         output_dir: Path | None = None,
-        trace_data: dict[str, Any] | None = None,
         gnn_validation: dict[str, Any] | None = None,
     ):
         """
@@ -54,7 +56,6 @@ class DashboardGenerator:
             validation_report: Validation report
             repo_name: Repository name for header
             output_dir: Optional path to output directory for loading trace/validation data
-            trace_data: Optional active inference trace data
             gnn_validation: Optional GNN validation report data
         """
         self.graph = graph
@@ -65,7 +66,7 @@ class DashboardGenerator:
         self.validation_report = validation_report
         self.repo_name = repo_name
         self.output_dir = output_dir
-        self.trace_data = trace_data
+        self.trace_data: InferenceTrace | None = None
         self.gnn_validation = gnn_validation
 
         # Load trace and validation data if available
@@ -220,17 +221,9 @@ class DashboardGenerator:
             Path(self.output_dir) if not isinstance(self.output_dir, Path) else self.output_dir
         )
 
-        # Load active inference trace
-        if not self.trace_data:
-            trace_file = output_path / "active_inference_trace.json"
-            if not trace_file.exists():
-                trace_file = output_path / "simulation_trace.json"
-            if trace_file.exists():
-                try:
-                    with open(trace_file) as f:
-                        self.trace_data = json.load(f)
-                except Exception as e:
-                    logger.warning(f"Failed to load trace data: {e}")
+        data_path = output_path / "data" if (output_path / "data").is_dir() else output_path
+        if (data_path / "inference_trace.json").exists():
+            self.trace_data = load_inference_trace(output_path)
 
         # Load GNN validation report
         if not self.gnn_validation:
@@ -937,160 +930,7 @@ class DashboardGenerator:
         return "".join(svg_parts)
 
     def _generate_active_inference_tab(self) -> str:
-        """Generate Active Inference tab with free energy trajectory and belief evolution."""
-        if not self.trace_data:
-            return """
-    <div id="active-inference" class="tab-content">
-        <div class="container">
-            <h2>Active Inference Simulation</h2>
-            <p>No active inference trace data available</p>
-        </div>
-    </div>
-"""
-
-        # Parse trace data
-        trace_list: list[Any] = self.trace_data if isinstance(self.trace_data, list) else []
-
-        # Generate free energy chart
-        fe_svg = self._generate_free_energy_chart(trace_list)
-
-        # Generate belief evolution table
-        beliefs_table = self._generate_belief_evolution_table(trace_list)
-
-        return f"""
-    <div id="active-inference" class="tab-content">
-        <div class="container">
-            <h2>Active Inference Simulation</h2>
-
-            <h3>Free Energy Trajectory</h3>
-            <div class="chart-container">
-                {fe_svg}
-            </div>
-
-            <h3>Belief Evolution</h3>
-            {beliefs_table}
-        </div>
-    </div>
-"""
-
-    def _generate_free_energy_chart(self, trace_list: list[dict[str, Any]]) -> str:
-        """Generate free energy trajectory line chart."""
-        if not trace_list:
-            return "<p>No trace data</p>"
-
-        [t.get("step", i) for i, t in enumerate(trace_list[:100])]
-        free_energies = [t.get("free_energy", 0.0) for t in trace_list[:100]]
-
-        if not free_energies:
-            return "<p>No free energy data</p>"
-
-        max_fe = max(free_energies) if free_energies else 1.0
-        min_fe = min(free_energies) if free_energies else 0.0
-        fe_range = max_fe - min_fe if max_fe > min_fe else 1.0
-
-        width, height = 800, 300
-        padding = 50
-        chart_width = width - 2 * padding
-        chart_height = height - 2 * padding
-
-        svg_parts = [f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}">']
-        svg_parts.append(
-            f'<rect width="{width}" height="{height}" fill="rgba(20,20,30,0.8)" rx="4"/>'
-        )
-
-        # Axes
-        svg_parts.append(
-            f'<line x1="{padding}" y1="{padding}" x2="{padding}" y2="{height - padding}" stroke="#667eea" stroke-width="2"/>'
-        )
-        svg_parts.append(
-            f'<line x1="{padding}" y1="{height - padding}" x2="{width - padding}" y2="{height - padding}" stroke="#667eea" stroke-width="2"/>'
-        )
-
-        # Plot line
-        if len(free_energies) > 1:
-            points = []
-            for i, fe in enumerate(free_energies):
-                x = (
-                    padding + (i / (len(free_energies) - 1)) * chart_width
-                    if len(free_energies) > 1
-                    else padding
-                )
-                y = (
-                    height - padding - ((fe - min_fe) / fe_range) * chart_height
-                    if fe_range > 0
-                    else height - padding
-                )
-                points.append(f"{x},{y}")
-
-            svg_parts.append(
-                f'<polyline points="{" ".join(points)}" fill="none" stroke="#667eea" stroke-width="2" stroke-linejoin="round"/>'
-            )
-
-            # Add points
-            for i, fe in enumerate(free_energies):
-                x = (
-                    padding + (i / (len(free_energies) - 1)) * chart_width
-                    if len(free_energies) > 1
-                    else padding
-                )
-                y = (
-                    height - padding - ((fe - min_fe) / fe_range) * chart_height
-                    if fe_range > 0
-                    else height - padding
-                )
-                svg_parts.append(f'<circle cx="{x}" cy="{y}" r="3" fill="#764ba2" opacity="0.6"/>')
-
-        # Labels
-        svg_parts.append(
-            f'<text x="{width / 2}" y="{height - 10}" text-anchor="middle" font-size="12" fill="#b0b0b0">Simulation Steps</text>'
-        )
-        svg_parts.append(
-            f'<text x="20" y="{height / 2}" text-anchor="middle" font-size="12" fill="#b0b0b0" transform="rotate(-90 20 {height / 2})">Free Energy</text>'
-        )
-
-        svg_parts.append("</svg>")
-        return "".join(svg_parts)
-
-    def _generate_belief_evolution_table(self, trace_list: list[dict[str, Any]]) -> str:
-        """Generate belief evolution table."""
-        if not trace_list:
-            return "<p>No trace data</p>"
-
-        rows = ""
-        for trace in trace_list[:20]:
-            step = trace.get("step", "?")
-            action = trace.get("action", "None")
-            observation = trace.get("observation", "None")
-            free_energy = trace.get("free_energy", 0.0)
-            beliefs = trace.get("beliefs", {})
-            belief_summary = ", ".join(f"{k[:10]}: {v:.2f}" for k, v in list(beliefs.items())[:3])
-
-            rows += f"""
-            <tr>
-                <td>{step}</td>
-                <td><code>{html.escape(str(observation)[:15])}</code></td>
-                <td><code>{html.escape(str(action)[:15])}</code></td>
-                <td>{free_energy:.4f}</td>
-                <td><small>{belief_summary}</small></td>
-            </tr>
-"""
-
-        return f"""
-<table>
-    <thead>
-        <tr>
-            <th>Step</th>
-            <th>Observation</th>
-            <th>Action</th>
-            <th>Free Energy</th>
-            <th>Beliefs</th>
-        </tr>
-    </thead>
-    <tbody>
-        {rows}
-    </tbody>
-</table>
-"""
+        return render_inference_tab(self.trace_data)
 
     def _generate_gnn_package_tab(self) -> str:
         """Generate GNN Package tab showing validation results and files."""

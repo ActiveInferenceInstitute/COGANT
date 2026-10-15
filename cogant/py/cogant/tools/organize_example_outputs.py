@@ -49,7 +49,6 @@ _DEST: dict[str, str] = {
     "inference_trace.json": "data",
     "bundle.json": "data",
     "syntax_tree.json": "data",
-    "simulation_trace.json": "data",
     "model.gnn.md": "reports",
     "summary.md": "reports",
     "graph.dot": "diagrams",
