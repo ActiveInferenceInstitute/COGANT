@@ -74,11 +74,7 @@ server = [
     "uvicorn[standard]>=0.54",
 ]
 upstream = [
-    # GNN 4.1.0 release line: main@b4a583a5 (2026-10-14), 12 commits past the
-    # v4.1.0 tag (9255e19f). GNN >= 4.0 ships the top-level ``gnn`` package;
-    # tools/gnn_upstream_audit_surface.py and tools/audit_release_integrity.py
-    # check this pin against uv.lock.
-    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@b4a583a5851021612a9a5df94e428f78aa6f76a0",
+    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@46459949944e3217f8a6a804d4ff8c52829ef275",
 ]
 all = [
     "pytest>=9.1",

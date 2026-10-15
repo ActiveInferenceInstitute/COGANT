@@ -9,9 +9,9 @@ results recorded against the currently pinned upstream release.
 | Field | Value |
 | --- | --- |
 | Distribution | `generalized-notation-notation` (optional `cogant[upstream]` extra; not part of `all`) |
-| Pin (`cogant/pyproject.toml`, mirrored in `cogant/uv.lock`) | `b4a583a5851021612a9a5df94e428f78aa6f76a0` (upstream `main` on 2026-10-14) |
+| Pin (`cogant/pyproject.toml`, mirrored in `cogant/uv.lock`) | `46459949944e3217f8a6a804d4ff8c52829ef275` (upstream `main` on 2026-10-15) |
 | Distribution version / `gnn.__version__` | `4.1.0` / `4.1.0` |
-| Release tag | `v4.1.0` at `9255e19f951d4c9c1461514464d420bd3fc8b912`; the pin is 12 commits past the tag |
+| Release tag | `v4.1.0` at `9255e19f951d4c9c1461514464d420bd3fc8b912`; the pin is 13 commits past the tag |
 | Import package | top-level `gnn` (GNN >= 4.0; the GNN 2.x `src.gnn` surface no longer exists) |
 | License | CC-BY-NC-SA-4.0 (see [`LICENSES.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/LICENSES.md)) |
 
@@ -54,7 +54,7 @@ surface. Collection needs an interpreter that imports `cogant` with the
 
 ```bash
 uv run --directory cogant --extra upstream python ../tools/gnn_upstream_audit_surface.py \
-  --collect --audit-dir /tmp/cogant_gnn_upstream_audit
+  --collect --audit-dir output/gnn_upstream_audit
 ```
 
 `--collect` writes, in order:
@@ -72,8 +72,8 @@ Summarize an existing audit directory without re-collecting:
 
 ```bash
 uv run python tools/gnn_upstream_audit_surface.py \
-  --audit-dir /tmp/cogant_gnn_upstream_audit \
-  --output-dir /tmp/cogant_gnn_upstream_audit/published_surface
+  --audit-dir output/gnn_upstream_audit \
+  --output-dir output/gnn_upstream_audit/published_surface
 ```
 
 The helper writes:
@@ -86,7 +86,9 @@ The helper writes:
 
 Strict flags are independent: `--strict-version` fails when the version/bridge
 claim fails, `--strict-upstream` fails on any selected upstream step failure,
-and `--strict-supply-chain` fails on pip-audit findings. `--pyproject` and
+and `--strict-supply-chain` fails on pip-audit findings or an absent/incomplete scan.
+Collection requires a new or empty audit directory and preserves previous runs.
+`--pyproject` and
 `--lock` point the expectation at other pin sources, and `--no-ls-remote`
 skips the network probe.
 
@@ -102,7 +104,8 @@ say that COGANT's package fully executes through every selected upstream step.
 
 ## Recorded Result (2026-10-14)
 
-Collected on 2026-10-14 with Python 3.13 against the pin above, using the
+Historical result collected on 2026-10-14 with Python 3.13 against
+`b4a583a5851021612a9a5df94e428f78aa6f76a0`, using the
 default selection and `skip_llm=True`, in an environment synced from the
 committed `cogant/uv.lock` (`uv sync --frozen --extra upstream --extra dev`):
 
