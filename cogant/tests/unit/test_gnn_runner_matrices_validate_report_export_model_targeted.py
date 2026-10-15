@@ -107,106 +107,23 @@ def _make_process():
 
 
 class TestGNNModelRunnerRich:
-    def _setup_runner(self, tmp_path, with_state_space=True, with_observations=True):
-        from cogant.gnn.runner import GNNModelRunner
+    def test_exported_model_statistics_and_belief_trace(self, tmp_path):
+        from tests.gnn_execution_fixture import runner
 
-        manifest = {"version": "1.0.0", "name": "rich_model", "schema_name": "test"}
-        (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-        if with_state_space:
-            state_space = {
-                "variables": [
-                    {"name": "position", "type": "discrete", "cardinality": 3},
-                    {"name": "velocity", "type": "discrete", "cardinality": 2},
-                    {"name": "heading", "type": "discrete", "cardinality": 4},
-                ],
-                "observations": [{"name": "obs_pos"}, {"name": "obs_vel"}]
-                if with_observations
-                else [],
-                "actions": [
-                    {"name": "move_forward"},
-                    {"name": "turn_left"},
-                    {"name": "turn_right"},
-                    {"name": "stop"},
-                ],
-            }
-            (tmp_path / "state_space.json").write_text(json.dumps(state_space))
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        return runner
-
-    def test_run_with_state_space(self, tmp_path):
-        runner = self._setup_runner(tmp_path)
-        result = runner.run(steps=8)
-        assert result["success"] is True
+        model = runner(tmp_path)
+        result = model.run(8)
         assert result["steps_completed"] == 8
-        assert len(result["traces"]) == 8
+        assert len(result["free_energy_trajectory"]) == 8
+        assert result["statistics"]["mean_free_energy"] == pytest.approx(
+            sum(result["free_energy_trajectory"]) / 8
+        )
+        assert result["statistics"]["unique_actions"] == len(result["action_distribution"])
+        assert "Steps completed: 8" in model.generate_execution_report(result)
 
-    def test_run_action_distribution(self, tmp_path):
-        runner = self._setup_runner(tmp_path)
-        result = runner.run(steps=10)
-        ad = result["action_distribution"]
-        assert isinstance(ad, dict)
-        assert sum(ad.values()) == 10
+    def test_report_empty_before_execution(self, tmp_path):
+        from tests.gnn_execution_fixture import runner
 
-    def test_run_statistics(self, tmp_path):
-        runner = self._setup_runner(tmp_path)
-        result = runner.run(steps=5)
-        stats = result["statistics"]
-        assert "min_reward" in stats or len(stats) == 0  # ok if empty
-
-    def test_run_free_energy_trajectory(self, tmp_path):
-        runner = self._setup_runner(tmp_path)
-        result = runner.run(steps=6)
-        fe = result["free_energy_trajectory"]
-        assert isinstance(fe, list)
-        assert len(fe) == 6
-
-    def test_generate_execution_report_with_rich_trace(self, tmp_path):
-        runner = self._setup_runner(tmp_path)
-        result = runner.run(steps=5)
-        report = runner.generate_execution_report(result)
-        assert "GNN Model Execution Report" in report
-        assert "Steps Completed" in report
-
-    def test_generate_execution_report_empty(self, tmp_path):
-        runner = self._setup_runner(tmp_path)
-        report = runner.generate_execution_report()
-        assert "No traces" in report
-
-    def test_run_without_observations(self, tmp_path):
-        runner = self._setup_runner(tmp_path, with_observations=False)
-        result = runner.run(steps=3)
-        assert result["success"] is True
-
-    def test_load_package_returns_manifest(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        manifest = {"version": "1.0.0", "name": "test", "schema_name": "ts"}
-        (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-        runner = GNNModelRunner()
-        result = runner.load_package(str(tmp_path))
-        assert isinstance(result, dict)
-        assert "version" in result
-
-    def test_run_not_loaded_raises(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        with pytest.raises(RuntimeError, match="not loaded"):
-            runner.run(steps=1)
-
-    def test_traces_are_dicts(self, tmp_path):
-        runner = self._setup_runner(tmp_path)
-        result = runner.run(steps=3)
-        for trace in result["traces"]:
-            assert "step" in trace
-            assert "action" in trace
-            assert "state" in trace
-
-
-# ---------------------------------------------------------------------------
-# gnn/matrices.py — GNNMatrices
-# ---------------------------------------------------------------------------
+        assert "No traces" in runner(tmp_path).generate_execution_report()
 
 
 class TestGNNMatrices:
@@ -876,10 +793,10 @@ class TestConfigLoaders:
         config = ConfigLoader.build_validation_config()
         assert config is not None
 
-    def test_load_all_configs(self):
+    def test_load_project_config(self):
         from cogant.config.loaders import ConfigLoader
 
-        configs = ConfigLoader.load_all_configs()
+        configs = ConfigLoader.load_project_config()
         assert configs is not None
 
 
@@ -1003,11 +920,10 @@ class TestLanguageDetectorRemaining:
         assert ".go" in em
         assert ".rs" in em
 
-    def test_lazy_load_then_extension_map(self):
+    def test_parser_selection_preserves_extension_map(self):
         from cogant.ingest.language_detect import LanguageDetector
 
-        LanguageDetector._lazy_load_parsers()
-        # Still has the extension map after lazy load
+        assert callable(LanguageDetector.get_parser("python").parse)
         assert ".py" in LanguageDetector.EXTENSION_MAP
 
 

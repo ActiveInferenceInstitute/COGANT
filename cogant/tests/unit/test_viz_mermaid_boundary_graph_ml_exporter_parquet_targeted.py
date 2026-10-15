@@ -5,7 +5,7 @@ Covers:
 - export: GraphMLExporter (export), ParquetExporter (export), TypedExporter
   (export_adjacency_matrix, export_cytoscape_json, export_graphviz_dot,
    export_typed_graph)
-- config: ConfigLoader (load_default, load_all_configs, build_cogant_config),
+- config: ConfigLoader (load_default, load_project_config, build_cogant_config),
   list_presets, get_preset, get_named_preset, CogantConfig, PipelineConfig,
   ExportFormat, LogLevel, ValidationLevel
 - viz/mermaid: MermaidGenerator (generate_flowchart, generate_class_diagram,
@@ -193,18 +193,18 @@ class TestConfigLoader:
         result = ConfigLoader.load_default()
         assert isinstance(result, ProjectConfig)
 
-    def test_load_all_configs_no_path(self):
+    def test_load_project_config_no_path(self):
         from cogant.config import ConfigLoader
         from cogant.config.schema import ProjectConfig
 
-        result = ConfigLoader.load_all_configs()
+        result = ConfigLoader.load_project_config()
         assert isinstance(result, ProjectConfig)
 
-    def test_load_all_configs_with_preset(self):
+    def test_load_project_config_with_preset(self):
         from cogant.config import ConfigLoader
         from cogant.config.schema import ProjectConfig
 
-        result = ConfigLoader.load_all_configs(preset="minimal")
+        result = ConfigLoader.load_project_config(preset="minimal")
         assert isinstance(result, ProjectConfig)
 
     def test_build_cogant_config_default(self):
@@ -218,7 +218,7 @@ class TestConfigLoader:
         from cogant.config import ConfigLoader
         from cogant.config.schema import CogantConfig
 
-        cfg = ConfigLoader.build_cogant_config({"max_workers": 4})
+        cfg = ConfigLoader.build_cogant_config({"cogant": {"max_workers": 4}})
         assert isinstance(cfg, CogantConfig)
 
 

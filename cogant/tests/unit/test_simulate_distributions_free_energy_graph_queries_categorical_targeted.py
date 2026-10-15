@@ -374,26 +374,22 @@ class TestFreeEnergyFunctions:
     def test_variational_free_energy_empty_beliefs(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        result = variational_free_energy([], [], [[]])
-        assert result == 0.0
+        with pytest.raises(ValueError, match="nonempty"):
+            variational_free_energy([], [], [[1.0]], [1.0])
 
     def test_variational_free_energy_kl_only_no_obs(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        beliefs = [0.8, 0.2]
-        prior = [0.5, 0.5]
-        vfe = variational_free_energy(beliefs, prior, [])
-        # KL > 0 since beliefs != prior
-        assert vfe > 0
+        with pytest.raises(ValueError, match="likelihood"):
+            variational_free_energy([0.8, 0.2], [0.5, 0.5], [], [])
 
     def test_variational_free_energy_with_uniform_obs(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        beliefs = [0.6, 0.4]
-        prior = [0.5, 0.5]
-        A = [[0.9, 0.1], [0.1, 0.9]]  # 2 obs x 2 states
-        vfe = variational_free_energy(beliefs, prior, A)
-        assert isinstance(vfe, float)
+        q = [0.6, 0.4]
+        value = variational_free_energy(q, [0.5, 0.5], [[0.9, 0.1], [0.1, 0.9]], [0.5, 0.5])
+        expected = sum(p * math.log(p / 0.5) for p in q) - 0.5 * math.log(0.09)
+        assert value == pytest.approx(expected)
 
     def test_variational_free_energy_with_observation(self):
         from cogant.simulate.free_energy import variational_free_energy
@@ -408,21 +404,20 @@ class TestFreeEnergyFunctions:
     def test_variational_free_energy_prior_mismatch_raises(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        with pytest.raises(ValueError, match="prior length"):
-            variational_free_energy([0.5, 0.5], [0.5], [[0.9, 0.1]])
+        with pytest.raises(ValueError, match="incompatible dimensions"):
+            variational_free_energy([0.5, 0.5], [1.0], [[0.9, 0.1], [0.1, 0.9]], [1.0, 0.0])
 
     def test_variational_free_energy_obs_length_mismatch_raises(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        with pytest.raises(ValueError, match="observation length"):
-            variational_free_energy([0.5, 0.5], [0.5, 0.5], [[0.9, 0.1]], [1.0, 0.0, 0.0])
+        with pytest.raises(ValueError, match="observation distribution"):
+            variational_free_energy([0.5, 0.5], [0.5, 0.5], [[1.0, 1.0]], [1.0, 0.0, 0.0])
 
     def test_variational_free_energy_A_row_mismatch_raises(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        A = [[0.9]]  # 1 state but beliefs has 2
-        with pytest.raises(ValueError, match="n_states entries"):
-            variational_free_energy([0.5, 0.5], [0.5, 0.5], A)
+        with pytest.raises(ValueError, match="likelihood"):
+            variational_free_energy([0.5, 0.5], [0.5, 0.5], [[1.0]], [1.0])
 
     def test_bayesian_belief_update_basic(self):
         from cogant.simulate.free_energy import bayesian_belief_update
@@ -437,54 +432,47 @@ class TestFreeEnergyFunctions:
     def test_bayesian_belief_update_empty_prior(self):
         from cogant.simulate.free_energy import bayesian_belief_update
 
-        result = bayesian_belief_update([], [[]], 0)
-        assert result == []
+        with pytest.raises(ValueError, match="nonempty"):
+            bayesian_belief_update([], [[1.0]], 0)
 
     def test_bayesian_belief_update_out_of_range_raises(self):
         from cogant.simulate.free_energy import bayesian_belief_update
 
-        with pytest.raises(IndexError, match="out of range"):
-            bayesian_belief_update([0.5, 0.5], [[0.9, 0.1]], 5)
+        with pytest.raises(ValueError, match="observation index"):
+            bayesian_belief_update([0.5, 0.5], [[0.9, 0.1], [0.1, 0.9]], 5)
 
-    def test_bayesian_belief_update_zero_likelihood_falls_back(self):
+    def test_bayesian_belief_update_zero_likelihood_rejects_invalid_input(self):
         from cogant.simulate.free_energy import bayesian_belief_update
 
-        prior = [0.5, 0.5]
-        A = [[0.0, 0.0]]  # zero likelihood for all states
-        posterior = bayesian_belief_update(prior, A, 0)
-        # Falls back to prior
-        assert abs(posterior[0] - 0.5) < 1e-9
+        with pytest.raises(ValueError, match="zero evidence"):
+            bayesian_belief_update([0.5, 0.5], [[0.0, 0.0], [1.0, 1.0]], 0)
 
     def test_expected_free_energy_empty_beliefs(self):
         from cogant.simulate.free_energy import expected_free_energy
 
-        result = expected_free_energy([], [], [[]], [[[0.0]]], [])
-        assert result == 0.0
+        with pytest.raises(ValueError, match="nonempty"):
+            expected_free_energy([0], [], [[1.0]], [[[1.0]]], [0.0])
 
-    def test_expected_free_energy_no_obs_returns_zero(self):
+    def test_expected_free_energy_no_obs_rejects_invalid_input(self):
         from cogant.simulate.free_energy import expected_free_energy
 
-        result = expected_free_energy([0], [0.5], [], [[[1.0]]], [])
-        assert result == 0.0
+        with pytest.raises(ValueError, match="likelihood"):
+            expected_free_energy([0], [1.0], [], [[[1.0]]], [])
 
     def test_expected_free_energy_single_step(self):
         from cogant.simulate.free_energy import expected_free_energy
 
-        # 2 states, 1 obs, 1 action
-        beliefs = [0.5, 0.5]
-        A = [[0.9, 0.1]]  # 1 obs x 2 states
-        # B[s'][s][a]: 2x2x1
-        B = [[[1.0], [0.0]], [[0.0], [1.0]]]  # identity
-        C = [0.5]  # prefer obs 0
-        efe = expected_free_energy([0], beliefs, A, B, C)
-        assert isinstance(efe, float)
+        value = expected_free_energy(
+            [0], [0.5, 0.5], [[1.0, 1.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], [0.5]
+        )
+        assert value == pytest.approx(0.0)
 
     def test_expected_free_energy_log_prefs_mismatch_raises(self):
         from cogant.simulate.free_energy import expected_free_energy
 
-        with pytest.raises(ValueError, match="log_preferences length"):
+        with pytest.raises(ValueError, match="preferences"):
             expected_free_energy(
-                [0], [0.5, 0.5], [[0.9, 0.1]], [[[1.0], [0.0]], [[0.0], [1.0]]], [0.1, 0.2]
+                [0], [0.5, 0.5], [[1.0, 1.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], [0.1, 0.2]
             )
 
     def test_uniform_distribution(self):
@@ -495,10 +483,12 @@ class TestFreeEnergyFunctions:
         assert abs(sum(d) - 1.0) < 1e-9
         assert all(abs(x - 0.25) < 1e-9 for x in d)
 
-    def test_uniform_distribution_zero_returns_empty(self):
+    def test_uniform_distribution_zero_raises(self):
         from cogant.simulate.free_energy import uniform_distribution
 
-        assert uniform_distribution(0) == []
+        for dimension in (0, -1):
+            with pytest.raises(ValueError, match="positive"):
+                uniform_distribution(dimension)
 
 
 # ---------------------------------------------------------------------------
@@ -510,13 +500,27 @@ class TestFreeEnergyCalculator:
     """Tests for the FreeEnergyCalculator class."""
 
     def _make_calc(self):
+        from cogant.runtime.categorical import CategoricalModel
         from cogant.simulate.free_energy import FreeEnergyCalculator
+        from cogant.statespace.compiler import ObservationModality
 
         v1 = _make_variable("v1")
         v2 = _make_variable("v2")
         a1 = _make_action("a1")
         ss = _make_state_space(variables={"v1": v1, "v2": v2}, actions={"a1": a1})
-        return FreeEnergyCalculator(ss)
+        ss.observations = {
+            name: ObservationModality(
+                id=name, name=name, source_node_id=name, modality_type="event"
+            )
+            for name in ("v1", "v2")
+        }
+        matrices = CategoricalModel(
+            [[0.9, 0.1], [0.1, 0.9]],
+            [[[1.0], [0.0]], [[0.0], [1.0]]],
+            [0.0, 0.0],
+            [0.5, 0.5],
+        )
+        return FreeEnergyCalculator(ss, matrices=matrices)
 
     def test_calc_init(self):
         calc = self._make_calc()

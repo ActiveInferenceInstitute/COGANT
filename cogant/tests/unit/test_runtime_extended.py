@@ -10,6 +10,8 @@ from __future__ import annotations
 import math
 import types
 
+import pytest
+
 from cogant.runtime.config import AgentConfig
 from cogant.runtime.loop import AgentRuntime
 from cogant.runtime.metrics import free_energy, kl_divergence
@@ -176,23 +178,15 @@ def test_agent_runtime_reproducible_with_same_seed() -> None:
             assert abs(a - b) < 1e-12
 
 
-def test_free_energy_lower_for_better_prediction() -> None:
-    """Concentrated A (good predictor) yields lower FE than uniform A."""
+def test_free_energy_matches_expected_log_likelihood() -> None:
     state = [0.7, 0.3]
     D = [0.5, 0.5]
-    C = [0.0, 0.0]
-
-    # Good predictor: obs 0 strongly linked to state 0
-    A_good = [[0.95, 0.05], [0.05, 0.95]]
-    # Bad predictor: uniform likelihood (no information)
-    A_bad = [[0.5, 0.5], [0.5, 0.5]]
-
-    fe_good = free_energy(state, obs_idx=0, A=A_good, C=C, D=D)
-    fe_bad = free_energy(state, obs_idx=0, A=A_bad, C=C, D=D)
-
-    # Good predictor has higher P(obs=0|state) when state is biased to s0
-    # -> lower surprise -> lower FE
-    assert fe_good < fe_bad, f"FE(good A)={fe_good} should be < FE(bad A)={fe_bad}"
+    A = [[0.95, 0.05], [0.05, 0.95]]
+    actual = free_energy(state, 0, A, [0.0, 0.0], D)
+    expected = sum(q * math.log(q / p) for q, p in zip(state, D, strict=True)) - sum(
+        q * math.log(a) for q, a in zip(state, A[0], strict=True)
+    )
+    assert actual == pytest.approx(expected)
 
 
 def test_convergence_metric_kl_non_negative() -> None:

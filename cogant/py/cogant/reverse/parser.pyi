@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Literal
 
 __all__ = ["MAX_REVERSE_MATRIX_ELEMENTS", "ReverseGNNModel", "ReverseModelError", "parse_gnn"]
 
@@ -28,6 +29,7 @@ class ReverseGNNModel:
     human_names: dict[str, str] = field(default_factory=dict)
     degraded: bool = False
     diagnostics: list[str] = field(default_factory=list)
+    matrix_source: Literal["parameterization", "fenced"] = "parameterization"
     @property
     def n_hidden_factors(self) -> int: ...
     @property
@@ -39,3 +41,4 @@ class ReverseGNNModel:
     def validate(self) -> list[str]: ...
 
 def parse_gnn(gnn: str | Path) -> ReverseGNNModel: ...
+def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None: ...

@@ -7,6 +7,7 @@ argparse entrypoint.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -17,9 +18,9 @@ import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
-from cogant.config import ConfigLoadError, ConfigLoader, ProjectConfig
+from cogant.config import ConfigLoader, ConfigLoadError, ProjectConfig
 
 STAGING_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CONFIG_PATH = STAGING_ROOT / "run_all.json"
@@ -92,6 +93,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "graph_stdout": True,
         "export_gnn": True,
         "export_gnn_format": "all",
+        "inference": True,
         "render_site": True,
         "viz_png": True,
         "validate_run_dir": True,
@@ -229,7 +231,10 @@ def run_cmd_capture(
         )
     except subprocess.TimeoutExpired as exc:
         dt = time.monotonic() - t0
-        partial = f"{exc.stdout or ''}{exc.stderr or ''}"
+        partial = "".join(
+            value.decode("utf-8", errors="replace") if isinstance(value, bytes) else value or ""
+            for value in (exc.stdout, exc.stderr)
+        )
         out_path.write_text(partial, encoding="utf-8")
         report(f"  [{step}] TIMEOUT after {timeout}s", log_fp=log_fp)
         return CommandResult(124, dt)
@@ -453,7 +458,7 @@ def _validate_gnn_package_summary(
     try:
         from cogant.gnn.validator import GNNValidator
 
-        result = GNNValidator().validate_package(package_dir)
+        result = GNNValidator().validate_package(str(package_dir))
         return {
             "score": result.score,
             "valid": result.valid,
@@ -466,6 +471,32 @@ def _validate_gnn_package_summary(
             log_fp=log_fp,
         )
         raise BundleSummaryError(f"validator failed for {package_dir}: {exc}") from exc
+
+
+class InferenceEvidence(TypedDict):
+    source_sha256: str
+    matrices_sha256: str
+    trace_sha256: str
+    steps: int
+    mode: str
+    policy_horizon: int
+
+
+def _inference_evidence(run_dir: Path) -> InferenceEvidence:
+    from cogant.runtime.inference import load_inference_trace
+
+    trace = load_inference_trace(run_dir)
+    if len(trace.trace) != 8 or trace.mode != "model_rollout":
+        raise ValueError("batch inference requires an eight-step model rollout")
+    data = run_dir / "data" if (run_dir / "data").is_dir() else run_dir
+    return InferenceEvidence(
+        source_sha256=trace.source_sha256,
+        matrices_sha256=trace.matrices_sha256,
+        trace_sha256=hashlib.sha256((data / "inference_trace.json").read_bytes()).hexdigest(),
+        steps=len(trace.trace),
+        mode=trace.mode,
+        policy_horizon=trace.policy_horizon,
+    )
 
 
 def _write_cross_target_summary(
@@ -510,7 +541,20 @@ def _write_cross_target_summary(
             "validator_result": None,
             "artifact_presence": {},
             "failure_reason": None,
+            "inference": None,
+            "source_admitted": t.get("source_admitted", True),
         }
+        if not row["source_admitted"]:
+            row.update(
+                status="failed", valid=False, score=None,
+                failure_reason=t.get("failure_reason") or "source artifacts were not admitted",
+                artifact_presence={"inference_trace": False},
+            )
+            t["status"] = "failed"
+            t["failed_steps"] = list(target_failures)
+            t["artifact_presence"] = {"inference_trace": False}
+            rows.append(row)
+            continue
         try:
             bundle = _read_bundle(run_dir)
             sr = bundle.get("stage_results", {}) or {}
@@ -533,7 +577,22 @@ def _write_cross_target_summary(
                 "gnn_package": package_dir.is_dir(),
                 "validation": bool(package_validation.get("valid")),
                 "dashboard": (run_dir / "site" / "inspection_dashboard.html").is_file(),
+                "inference_trace": False,
             }
+            if t.get("inference_requested"):
+                try:
+                    if not t.get("inference_completed"):
+                        raise ValueError("inference did not complete in this batch attempt")
+                    row["inference"] = _inference_evidence(run_dir)
+                    row["artifact_presence"]["inference_trace"] = True
+                    t["inference"] = row["inference"]
+                except (OSError, UnicodeError, ValueError) as exc:
+                    label = f"summary_inference:{t.get('id')}"
+                    if label not in failures:
+                        failures.append(label)
+                    summary_validation_failures.append(label)
+                    target_failures.append(label)
+                    row["inference_error"] = str(exc)
             if package_validation.get("valid") is False:
                 label = f"summary_validate:{t.get('id')}"
                 if label not in failures:
@@ -720,6 +779,12 @@ def _write_cross_target_summary(
         lines.append(f"| mappings | {r.get('mapping_count', 0)} |")
         lines.append(f"| gnn_package files | {r.get('gnn_package_files', 0)} |")
         lines.append(f"| warnings | {r.get('warnings_count', 0)} |")
+        if r.get("inference"):
+            inference = r["inference"]
+            lines.append(f"| inference steps | {inference['steps']} |")
+            lines.append(f"| GNN source SHA256 | `{inference['source_sha256']}` |")
+            lines.append(f"| matrix SHA256 | `{inference['matrices_sha256']}` |")
+            lines.append(f"| inference trace SHA256 | `{inference['trace_sha256']}` |")
         if r.get("validator_warnings"):
             lines.append(f"| validator warnings | {'; '.join(r['validator_warnings'])} |")
         if r.get("validator_errors"):
@@ -857,6 +922,10 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 "validator_result": None,
                 "artifact_presence": {},
                 "failure_reason": None,
+                "source_admitted": False,
+                "inference_requested": bool(steps.get("inference", True)),
+                "inference_completed": False,
+                "inference": None,
             }
 
             if git_url:
@@ -906,6 +975,10 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     command_record("git clone", step=f"git_clone:{tid}", result=result)
                 )
                 check(result, f"git_clone:{tid}")
+                if result.returncode != 0:
+                    entry["status"] = "failed"
+                    entry["failure_reason"] = "source clone failed; existing artifacts not admitted"
+                    continue
 
             if not options.dry_run and not target_path.exists():
                 print(f"error: missing target path {target_path}", file=sys.stderr)
@@ -963,6 +1036,10 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     command_record(tr, step=f"translate:{tid}", result=result)
                 )
                 check(result, f"translate:{tid}")
+                if result.returncode != 0:
+                    entry["status"] = "failed"
+                    entry["failure_reason"] = "translation failed; existing artifacts not admitted"
+                    continue
                 # Re-resolve after translate so downstream gates see the real path.
                 bundle_json = _bundle_path()
                 if not options.dry_run and not bundle_json.is_file():
@@ -971,7 +1048,11 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                         file=sys.stderr,
                     )
                     label = f"bundle_missing:{tid}"
-                    failures.append(label)
+                    entry["status"] = "failed"
+                    entry["failure_reason"] = "translation produced no bundle"
+                    check(1, label)
+                    continue
+            entry["source_admitted"] = True
 
             if steps.get("scan_json"):
                 scan_cmd = ["uv", "run", "cogant", "scan", str(target_path), "-f", "json"]
@@ -1029,7 +1110,58 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(ex, step=f"export_gnn:{tid}", result=result)
                 )
+                if result.returncode != 0:
+                    entry["source_admitted"] = False
                 check(result, f"export_gnn:{tid}")
+                if result.returncode != 0:
+                    entry["status"] = "failed"
+                    entry["source_admitted"] = False
+                    entry["failure_reason"] = "GNN export failed; existing artifacts not admitted"
+                    continue
+
+            if steps.get("inference", True):
+                inference_source = run_dir / "gnn_package" / "model.gnn.md"
+                inference_data = run_dir / "data"
+                if not inference_data.is_dir() and not (
+                    options.dry_run and steps.get("layout_output")
+                ):
+                    inference_data = run_dir
+                inference_command = [
+                    "uv",
+                    "run",
+                    "cogant",
+                    "infer",
+                    str(inference_source),
+                    "--output",
+                    str(inference_data / "inference_trace.json"),
+                    "--overwrite",
+                    "--steps",
+                    "8",
+                ]
+                result = run_cmd(
+                    inference_command,
+                    cwd=package_root,
+                    dry_run=options.dry_run,
+                    log_fp=log_fp,
+                    step=f"inference:{tid}",
+                )
+                entry["commands"].append(
+                    command_record(inference_command, step=f"inference:{tid}", result=result)
+                )
+                check(result, f"inference:{tid}")
+                if result.returncode != 0:
+                    entry["status"] = "failed"
+                    entry["failure_reason"] = "inference command failed"
+                    continue
+                if not options.dry_run:
+                    try:
+                        entry["inference"] = _inference_evidence(run_dir)
+                    except (OSError, UnicodeError, ValueError) as exc:
+                        entry["status"] = "failed"
+                        entry["failure_reason"] = str(exc)
+                        check(1, f"inference_evidence:{tid}")
+                        continue
+                    entry["inference_completed"] = True
 
             if steps.get("render_site") and (options.dry_run or bundle_json.is_file()):
                 site_dir = run_dir / "site"
@@ -1264,6 +1396,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
             entry["artifact_presence"] = {
                 "bundle": _bundle_path().is_file(),
                 "gnn_package": (run_dir / "gnn_package").is_dir(),
+                "inference_trace": bool(entry["inference_completed"]),
                 "validation": (run_dir / "validate.txt").is_file(),
                 "dashboard": (run_dir / "dashboard").is_dir()
                 or (run_dir / "site" / "inspection_dashboard.html").is_file(),

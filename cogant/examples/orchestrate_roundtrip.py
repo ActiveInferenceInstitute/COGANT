@@ -3213,7 +3213,7 @@ def main():
                     logger.error(f"Configuration file not found: {config_path}")
                     sys.exit(1)
                 logger.info(f"Loading configuration from: {config_path}")
-                config = ConfigLoader.load_all_configs(str(config_path))
+                config = ConfigLoader.load_project_config(str(config_path))
                 logger.info("Configuration loaded successfully")
         except Exception as e:
             logger.error(f"Failed to load configuration: {e}")

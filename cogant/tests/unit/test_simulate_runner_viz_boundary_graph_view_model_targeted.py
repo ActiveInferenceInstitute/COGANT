@@ -93,117 +93,102 @@ def _make_process_model():
 # ---------------------------------------------------------------------------
 
 
+def _categorical_runner(states=("s0", "s1"), actions=("a1",)):
+    from cogant.simulate.runner import ModelRunner
+    from cogant.statespace.compiler import Action, ObservationModality, StateSpaceModel
+    from cogant.statespace.temporal import TimeRegime
+    from cogant.statespace.variables import StateVariable, StateVariableType
+
+    model = StateSpaceModel(
+        id="categorical",
+        schema_name="test",
+        time_regime=TimeRegime.SYNCHRONOUS,
+        variables={
+            s: StateVariable(id=s, name=s, node_id=s, var_type=StateVariableType.CATEGORICAL)
+            for s in states
+        },
+        observations={
+            s: ObservationModality(id=s, name=s, source_node_id=s, modality_type="event")
+            for s in states
+        },
+        actions={a: Action(id=a, name=a, controller_id=a) for a in actions},
+        transitions={},
+        likelihoods={},
+        preferences={},
+    )
+    size = len(states)
+    A = [
+        [1.0 if size == 1 else (0.8 if i == j else 0.2 / (size - 1)) for j in range(size)]
+        for i in range(size)
+    ]
+    B = [[[float(i == j) for _ in actions] for j in range(size)] for i in range(size)]
+    return ModelRunner(model=model, A=A, B=B, C=[0.0] * size, D=[1.0 / size] * size)
+
+
 class TestModelRunnerBeliefUpdate:
     def test_basic(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner(seed=42)
-        beliefs = {"s0": 0.6, "s1": 0.4}
-        posterior = runner.belief_update(beliefs, "s0")
-        assert isinstance(posterior, dict)
-        assert abs(sum(posterior.values()) - 1.0) < 1e-9
+        result = _categorical_runner().belief_update({"s0": 0.6, "s1": 0.4}, "s0")
+        assert result == pytest.approx({"s0": 0.48 / 0.56, "s1": 0.08 / 0.56})
 
     def test_empty_beliefs(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        result = runner.belief_update({}, "s0")
-        assert result == {}
+        with pytest.raises(ValueError, match="belief keys"):
+            _categorical_runner().belief_update({}, "s0")
 
     def test_single_state(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        result = runner.belief_update({"only": 1.0}, "only")
-        assert "only" in result
-        assert abs(result["only"] - 1.0) < 1e-9
+        result = _categorical_runner(states=("only",)).belief_update({"only": 1.0}, "only")
+        assert result == {"only": 1.0}
 
     def test_nonmatching_observation(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        # observation must be one of the belief states, else ValueError from underlying distribution
-        beliefs = {"a": 0.5, "b": 0.5}
-        result = runner.belief_update(beliefs, "b")
-        assert isinstance(result, dict)
-        assert len(result) == 2
+        with pytest.raises(ValueError):
+            _categorical_runner().belief_update({"s0": 0.5, "s1": 0.5}, "unknown")
 
     def test_skewed_beliefs(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        beliefs = {"s0": 0.9, "s1": 0.05, "s2": 0.05}
-        result = runner.belief_update(beliefs, "s0")
-        assert result["s0"] > result["s1"]
+        result = _categorical_runner(states=("s0", "s1", "s2")).belief_update(
+            {"s0": 0.9, "s1": 0.05, "s2": 0.05}, "s0"
+        )
+        assert result == pytest.approx({"s0": 0.72 / 0.73, "s1": 0.005 / 0.73, "s2": 0.005 / 0.73})
 
 
 class TestModelRunnerPolicyEvaluation:
     def test_basic(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner(seed=42)
-        beliefs = {"s0": 0.7, "s1": 0.3}
-        ranking = runner.policy_evaluation(beliefs, ["move_left", "move_right"])
-        assert len(ranking) == 2
-        assert all(isinstance(v, float) for _, v in ranking)
+        runner = _categorical_runner(actions=("move_left", "move_right"))
+        ranking = runner.policy_evaluation({"s0": 0.7, "s1": 0.3}, ["move_left", "move_right"])
+        assert [a for a, _ in ranking] == ["move_left", "move_right"]
+        assert ranking[0][1] == pytest.approx(ranking[1][1])
 
     def test_empty_actions(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        result = runner.policy_evaluation({"s0": 1.0}, [])
-        assert result == []
+        assert _categorical_runner(states=("s0",)).policy_evaluation({"s0": 1.0}, []) == []
 
     def test_empty_beliefs(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        result = runner.policy_evaluation({}, ["move"])
-        # empty beliefs — returns [(action, 0.0)] for each action
-        assert len(result) == 1
-        assert result[0] == ("move", 0.0)
+        with pytest.raises(ValueError, match="belief keys"):
+            _categorical_runner(actions=("move",)).policy_evaluation({}, ["move"])
 
     def test_multiple_actions(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner(seed=1)
-        beliefs = {"s0": 0.4, "s1": 0.4, "s2": 0.2}
-        actions = ["a1", "a2", "a3", "a4"]
-        ranking = runner.policy_evaluation(beliefs, actions)
-        assert len(ranking) == 4
-        # Sorted by EFE ascending
-        scores = [s for _, s in ranking]
-        assert scores == sorted(scores)
+        actions = ("a1", "a2", "a3", "a4")
+        runner = _categorical_runner(states=("s0", "s1", "s2"), actions=actions)
+        ranking = runner.policy_evaluation({"s0": 0.4, "s1": 0.4, "s2": 0.2}, list(actions))
+        assert [a for a, _ in ranking] == list(actions)
+        assert [score for _, score in ranking] == sorted(score for _, score in ranking)
 
 
 class TestModelRunnerComputeFreeEnergy:
     def test_state_matching_observation(self):
-        from cogant.simulate.runner import ModelRunner
+        import math
 
-        runner = ModelRunner()
-        fe = runner.compute_free_energy({"s0": 0.8, "s1": 0.2}, "s0")
-        assert isinstance(fe, float)
+        value = _categorical_runner().compute_free_energy({"s0": 0.8, "s1": 0.2}, "s0")
+        assert value == pytest.approx(math.log(2.0))
 
     def test_state_not_matching_observation(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        fe = runner.compute_free_energy({"s0": 0.5, "s1": 0.5}, "unknown_obs")
-        assert isinstance(fe, float)
+        with pytest.raises(ValueError, match="sum to 1"):
+            _categorical_runner().compute_free_energy({"s0": 0.5, "s1": 0.5}, "unknown_obs")
 
     def test_empty_state(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        fe = runner.compute_free_energy({}, "s0")
-        assert fe == 0.0
+        with pytest.raises(ValueError, match="belief keys"):
+            _categorical_runner().compute_free_energy({}, "s0")
 
     def test_single_state(self):
-        from cogant.simulate.runner import ModelRunner
-
-        runner = ModelRunner()
-        fe = runner.compute_free_energy({"s0": 1.0}, "s0")
-        assert isinstance(fe, float)
+        value = _categorical_runner(states=("s0",)).compute_free_energy({"s0": 1.0}, "s0")
+        assert value == 0.0
 
 
 class TestModelRunnerVfeEfe:
@@ -228,8 +213,8 @@ class TestModelRunnerVfeEfe:
 
     def test_vfe_from_beliefs_no_obs(self):
         runner = self._runner_with_matrices()
-        vfe = runner.vfe_from_beliefs([0.8, 0.2])
-        assert isinstance(vfe, float)
+        with pytest.raises(ValueError, match="explicit observation"):
+            runner.vfe_from_beliefs([0.8, 0.2])
 
     def test_vfe_from_beliefs_with_obs(self):
         runner = self._runner_with_matrices()
@@ -238,7 +223,7 @@ class TestModelRunnerVfeEfe:
 
     def test_vfe_from_beliefs_with_prior(self):
         runner = self._runner_with_matrices()
-        vfe = runner.vfe_from_beliefs([0.7, 0.3], prior=[0.5, 0.5])
+        vfe = runner.vfe_from_beliefs([0.7, 0.3], observation=[1.0, 0.0], prior=[0.5, 0.5])
         assert isinstance(vfe, float)
 
     def test_vfe_no_A_raises(self):
@@ -257,7 +242,7 @@ class TestModelRunnerVfeEfe:
         from cogant.simulate.runner import ModelRunner
 
         runner = ModelRunner()
-        with pytest.raises(RuntimeError, match="requires A, B, and C"):
+        with pytest.raises(RuntimeError, match="requires A, B, C, and D"):
             runner.efe_for_policy([0, 1])
 
     def test_update_beliefs_from_observation(self):
@@ -278,14 +263,16 @@ class TestModelRunnerActiveInference:
     def _make_runner_and_ssm(self):
         from cogant.simulate.runner import ModelRunner
 
-        runner = ModelRunner(seed=42)
         ssm = _make_state_space()
+        runner = ModelRunner(
+            model=ssm, A=[[1.0, 1.0]], B=[[[0.8], [0.3]], [[0.2], [0.7]]], C=[0.0], D=[0.5, 0.5]
+        )
         return runner, ssm
 
     def test_active_inference_step_basic(self):
         runner, ssm = self._make_runner_and_ssm()
         beliefs = {"v1": 0.6, "v2": 0.4}
-        result = runner.active_inference_step(beliefs, "v1", ssm)
+        result = runner.active_inference_step(beliefs, "o1", ssm)
         assert "new_beliefs" in result
         assert "selected_action" in result
         assert "predicted_next_state" in result
@@ -295,7 +282,7 @@ class TestModelRunnerActiveInference:
     def test_active_inference_step_updates_beliefs(self):
         runner, ssm = self._make_runner_and_ssm()
         beliefs = {"v1": 0.5, "v2": 0.5}
-        result = runner.active_inference_step(beliefs, "v1", ssm)
+        result = runner.active_inference_step(beliefs, "o1", ssm)
         new_beliefs = result["new_beliefs"]
         assert isinstance(new_beliefs, dict)
         assert abs(sum(new_beliefs.values()) - 1.0) < 1e-9
@@ -333,9 +320,8 @@ class TestModelRunnerActiveInference:
             preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
-        trace = runner.run_active_inference(empty_ssm, steps=3)
-        assert len(trace) >= 1
-        assert trace[0]["beliefs"] == {}
+        with pytest.raises(RuntimeError, match="requires A"):
+            runner.run_active_inference(empty_ssm, steps=3)
 
     def test_generate_report_from_trace(self):
         runner, ssm = self._make_runner_and_ssm()

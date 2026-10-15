@@ -687,12 +687,10 @@ class TestLanguageDetector:
         result = LanguageDetector.detect_repo_languages(tmp_path)
         assert "javascript" in result
 
-    def test_lazy_load_parsers(self):
+    def test_registered_parser_selection(self):
         from cogant.ingest.language_detect import LanguageDetector
 
-        # Exercise the lazy-load path and assert its documented return (None)
-        # rather than a vacuous `assert True` — RedTeam 2026-06-09.
-        assert LanguageDetector._lazy_load_parsers() is None
+        assert callable(LanguageDetector.get_parser("python").parse)
 
     def test_get_parser_unknown(self):
         from cogant.ingest.language_detect import LanguageDetector

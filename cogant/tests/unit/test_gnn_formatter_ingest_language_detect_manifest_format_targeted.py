@@ -420,31 +420,28 @@ class TestLanguageDetector:
 
 class TestGetParserForExtension:
     def test_dot_py_returns_something_or_none(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
-        # Should return a parser or None; never raise
         result = get_parser_for_extension(".py")
-        # Python is supported, so should return a parser
-        assert result is not None or result is None  # just verify no exception
+        assert callable(result.parse)
 
     def test_no_dot_prefix_works(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
         result = get_parser_for_extension("py")
-        # Same as .py
-        assert result is not None or result is None
+        assert callable(result.parse)
 
-    def test_unknown_extension_returns_none(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+    def test_unknown_extension_raises(self):
+        from cogant.parsers import LanguageParserUnavailable, get_parser_for_extension
 
-        result = get_parser_for_extension(".zzzunknown")
-        assert result is None
+        with pytest.raises(LanguageParserUnavailable):
+            get_parser_for_extension(".zzzunknown")
 
-    def test_empty_extension_returns_none(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+    def test_empty_extension_raises(self):
+        from cogant.parsers import LanguageParserUnavailable, get_parser_for_extension
 
-        result = get_parser_for_extension("")
-        assert result is None
+        with pytest.raises(LanguageParserUnavailable):
+            get_parser_for_extension("")
 
 
 # ---------------------------------------------------------------------------

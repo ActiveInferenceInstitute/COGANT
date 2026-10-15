@@ -32,30 +32,14 @@ pytestmark = pytest.mark.unit
 # --------------------------------------------------------------------------- #
 
 
-def test_free_energy_negative_obs_idx_clamps_to_zero() -> None:
-    """obs_idx<0 is silently rewritten to 0 (line 78 branch)."""
-    A = [[0.9, 0.1], [0.1, 0.9]]
-    C = [0.0, 0.0]
-    D = [0.5, 0.5]
-    state = [0.5, 0.5]
-
-    fe_neg = free_energy(state, obs_idx=-1, A=A, C=C, D=D)
-    fe_zero = free_energy(state, obs_idx=0, A=A, C=C, D=D)
-    assert math.isfinite(fe_neg)
-    assert abs(fe_neg - fe_zero) < 1e-12
+def test_free_energy_rejects_negative_observation() -> None:
+    with pytest.raises(ValueError, match="observation"):
+        free_energy([0.5, 0.5], -1, [[0.9, 0.1], [0.1, 0.9]], [0.0, 0.0], [0.5, 0.5])
 
 
-def test_free_energy_obs_idx_beyond_range_clamps() -> None:
-    """obs_idx>=n_obs falls back to the obs_idx=0 row."""
-    A = [[0.9, 0.1], [0.1, 0.9]]
-    C = [0.0, 0.0]
-    D = [0.5, 0.5]
-    state = [0.5, 0.5]
-
-    fe_high = free_energy(state, obs_idx=99, A=A, C=C, D=D)
-    fe_zero = free_energy(state, obs_idx=0, A=A, C=C, D=D)
-    assert math.isfinite(fe_high)
-    assert abs(fe_high - fe_zero) < 1e-12
+def test_free_energy_rejects_large_observation() -> None:
+    with pytest.raises(ValueError, match="observation"):
+        free_energy([0.5, 0.5], 99, [[0.9, 0.1], [0.1, 0.9]], [0.0, 0.0], [0.5, 0.5])
 
 
 def test_kl_divergence_skips_zero_p() -> None:

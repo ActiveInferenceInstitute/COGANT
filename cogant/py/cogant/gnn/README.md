@@ -54,19 +54,34 @@ Validates GNN packages and scores 0-100. Checks:
 Method validate_package(package_dir: str, *, upstream_gnn: bool | None = None) -> ValidationResult. ValidationResult has valid: bool, score: float (0-100), errors: List[str], warnings: List[str]. Upstream `gnn.validate_gnn_syntax` runs only for `upstream_gnn=True`, or for `upstream_gnn=None` when `COGANT_ENABLE_UPSTREAM_GNN` is truthy (see [`AGENTS.md`](AGENTS.md)).
 
 ### GNNModelRunner (runner.py)
-Loads GNN package and executes Active Inference simulation. Maintains beliefs (probability distribution over hidden states) and performs Bayesian update on observation, then evaluates policies via Expected Free Energy (EFE) and selects action.
+Loads the complete A/B/C/D matrices from `model.gnn.md` and executes the shared
+categorical inference kernel. Missing, malformed, or degraded matrices fail
+before execution. Every run starts from D, filters the current belief through A,
+scores one-step policies by risk plus ambiguity, and predicts the next belief
+through the selected B slice.
 
 ExecutionTrace records each step with:
 - step: int
-- state, action, observation, reward
+- state: incoming belief; action and observation: declared axis labels
 - beliefs: Dict[str, float] — posterior over hidden states
 - beliefs_prior: Dict[str, float] — prior before update
-- free_energy_before, free_energy_after — VFE before/after belief update
+- free_energy_after — posterior VFE evaluated against the incoming prior
 - policy_scores: List[Tuple[str, float]] — (action, efe_score) for each candidate
-- action_rationale: str — why action was selected
-- predicted_state: Dict — predicted next state
+- predicted_state: Dict — next belief after applying B
 
-GNNModelRunner(package_dir: str) loads package. run(observations: List, num_steps: int, policies: Optional[List]) -> List[ExecutionTrace] executes simulation and returns trace.
+`GNNModelRunner().load_package(package_dir)` admits a source snapshot.
+`run(steps=10)` returns JSON-ready records, source and matrix SHA256 identities,
+action counts, and posterior VFE. Observations are deterministic modes of the
+predicted observation distribution; this is a model rollout, not measured
+program execution. It does not establish globally optimal control or the
+behavioral adequacy of source-to-model extraction. For externally supplied
+observations use `cogant.runtime.inference.run_gnn_inference` with
+`InferenceOptions(observations=..., steps=...)`.
+
+`run_with_profiling(num_steps=10, num_trials=1)` returns records annotated by
+trial and measured total elapsed milliseconds. Each trial restarts from D.
+Counts must be positive integers; each run and the combined profiling workload
+are bounded to 10,000 steps, with additional matrix-work admission limits.
 
 ### GNNMarkdownFormatter (formatter.py)
 Formats GNN markdown with all 19 canonical sections in order. Outputs human-readable GNN markdown suitable for documentation and review.
@@ -121,17 +136,18 @@ if result.errors:
     print("Errors:", result.errors)
 
 # Run Active Inference simulation
-runner = GNNModelRunner("/path/to/output")
-observations = [{"sensor_1": 0.5, "sensor_2": 0.3}, ...]
-traces = runner.run(observations, num_steps=100)
-for trace in traces:
+runner = GNNModelRunner()
+runner.load_package("/path/to/output")
+execution = runner.run(steps=100)
+for trace in execution["traces"]:
     print(
-        f"Step {trace.step}: action={trace.action}, reward={trace.reward}, free_energy={trace.free_energy_after}"
+        f"Step {trace['step']}: action={trace['action']}, "
+        f"posterior VFE={trace['free_energy_after']}"
     )
 ```
 
 ## Dependencies
 - schemas/ — ProgramGraph, StateSpaceModel, ProcessModel, SemanticMapping
 - gnn_export (internal) — 19 canonical section schemas
-- simulate/ — CategoricalDistribution, FreeEnergyCalculator (Active Inference)
+- runtime/ — shared categorical Bayesian filtering and one-step EFE
 - Optional: the Active Inference Institute `generalized-notation-notation` package (`cogant[upstream]` extra, GNN 4.1.0 release line, import package `gnn`), reached only through [`upstream_bridge/`](upstream_bridge/README.md). Core GNN building, validation, and execution do not require it.

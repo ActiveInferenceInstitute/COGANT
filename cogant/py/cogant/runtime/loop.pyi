@@ -12,15 +12,17 @@ __all__ = [
     "run_until_convergence",
 ]
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class AgentStep:
     t: int
     state_dist: list[float]
     obs: int
     action: int
     free_energy: float
+    posterior: list[float] = ...
+    policy_scores: list[float] = ...
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class EpisodeResult:
     steps: list[AgentStep]
     final_posterior: list[float]
@@ -29,7 +31,7 @@ class EpisodeResult:
     mean_free_energy: float
     final_free_energy: float
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class MultiEpisodeResult:
     episodes: list[EpisodeResult]
     vfe_trajectory: list[float]

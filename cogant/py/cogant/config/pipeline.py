@@ -9,12 +9,6 @@ handler reads them yet; :class:`cogant.config.loaders.ConfigLoader` emits a
 :class:`~cogant.config.loaders.ReservedConfigWarning` when a config file,
 the environment or the CLI sets one.
 
-This class is a *superset* of the compatibility
-``cogant.api.pipeline.PipelineConfig`` dataclass: any kwargs that used
-to work on the dataclass also work here, so existing call-sites such
-as ``PipelineConfig(stages=[...], skip_dynamic=True)`` keep behaving
-the same way.
-
 Pipeline configs are validated models. Entry points may derive a run-specific
 instance after applying their final CLI values, while all external sources are
 validated before execution.
@@ -67,10 +61,6 @@ def _validate_path_text(value: str) -> str:
 
 class PipelineConfig(BaseModel):
     """Composite config — one per pipeline run.
-
-    Top-level execution fields mirror the compatibility
-    ``cogant.api.pipeline.PipelineConfig`` dataclass so existing
-    call-sites continue to work unchanged.
 
     Nested fields (``ingest``, ``graph``, ``translate``, ``statespace``,
     ``gnn``, ``reverse``) are reserved per-stage parameters held as frozen
@@ -261,13 +251,7 @@ class PipelineConfig(BaseModel):
         )
 
     def validate(self) -> list[str]:
-        """Return non-throwing run-time checks for legacy callers.
-
-        Construction remains the fail-fast boundary for schema, type, path,
-        and stage-name errors.  This method is retained as a compatibility
-        diagnostic surface for callers that historically validated an already
-        constructed config before dispatching a run.
-        """
+        """Check mutable execution fields and filesystem inputs before a run."""
         errors: list[str] = []
         unknown = sorted(set(self.stages) - _VALID_STAGES)
         errors.extend(f"Unknown stage: {stage}" for stage in unknown)

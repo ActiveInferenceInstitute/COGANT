@@ -1,6 +1,7 @@
 # CLI Reference
 
-COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/main.py`) with **26** `@app.command` registrations on the root app, plus **`plugin`** and **`migrate`** Typer groups — **28** names on `cogant --help`, and **29** leaf subcommands when counting `plugin list`, `plugin info`, and `migrate migrate`. Every subcommand supports `--help`; the list below covers the ones most commonly used day-to-day.
+COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/main.py`).
+Every subcommand supports `--help`; the list below covers common workflows.
 
 Run `cogant --help` to see the authoritative, in-tree list (counts change when new commands ship).
 
@@ -14,6 +15,19 @@ These four top-level commands are real package entry points. Each one can print 
 | `cogant analyze-graph PATH_OR_BUNDLE --output graph.json --format json|table` | Loads or builds a `ProgramGraph`, then reports graph metrics, centrality, cycles, hotspots, node kinds, and edge kinds. |
 | `cogant visualize PATH_OR_RUN_DIR --format mermaid|png|svg|pdf|html --output PATH` | Renders a graph visualization artifact using the shipped visualization/export helpers. |
 | `cogant export PATH_OR_BUNDLE --formats json,jsonlines,graphml,parquet,svg --output-dir DIR` | Writes requested graph export formats plus `exports_manifest.json`. |
+
+## `cogant infer`
+
+```bash
+cogant infer MODEL.gnn.md [--steps N] [--observations indices.json]
+                         [--output trace.json] [--overwrite] [--max-work-units N]
+```
+
+Executes the exported A/B/C/D values and writes a typed, source-bound trace.
+The default uses modal model-generated observations; a JSON array supplies external
+observation indices. Missing matrices, impossible observations, stale artifacts,
+and resource-budget violations fail explicitly. See the
+[inference API guide](api/inference.md) for timing, objective, and provenance.
 
 ## `cogant translate`
 

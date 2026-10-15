@@ -2,7 +2,9 @@
 
 This module provides an executable perception-action loop that operates
 on the A/B/C/D matrices produced by :func:`cogant.reverse.synthesizer.synthesize_package`.
-The runtime is pure Python with no external dependencies.
+The categorical arithmetic is pure Python without numerical dependencies.
+The typed trace layer uses Pydantic; the installed package requires its
+declared dependencies.
 
 Public API
 ----------
@@ -14,11 +16,12 @@ Public API
 """
 
 from cogant.runtime.config import AgentConfig
-from cogant.runtime.inference_demo import (
-    default_demo_matrices,
-    run_deterministic_inference_demo,
+from cogant.runtime.inference import (
+    load_inference_trace,
+    run_gnn_inference,
     write_inference_trace_artifact,
 )
+from cogant.runtime.inference_records import InferenceOptions, InferenceTrace
 from cogant.runtime.loop import (
     AgentRuntime,
     AgentStep,
@@ -34,8 +37,10 @@ __all__ = [
     "AgentRuntime",
     "EpisodeResult",
     "MultiEpisodeResult",
-    "default_demo_matrices",
-    "run_deterministic_inference_demo",
+    "InferenceOptions",
+    "InferenceTrace",
+    "load_inference_trace",
+    "run_gnn_inference",
     "run_n_steps",
     "run_until_convergence",
     "write_inference_trace_artifact",

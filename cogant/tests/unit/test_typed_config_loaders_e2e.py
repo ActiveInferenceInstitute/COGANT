@@ -7,7 +7,7 @@ import pytest
 from cogant.config import ProjectConfig
 from cogant.config import defaults as defaults_module
 from cogant.config import presets as presets_module
-from cogant.config.loaders import ConfigLoader, ConfigLoadError, ConfigMigrationWarning
+from cogant.config.loaders import ConfigLoader, ConfigLoadError
 from cogant.config.pipeline import PipelineConfig
 
 
@@ -71,8 +71,8 @@ def test_component_builder_accepts_canonical_nested_overlay() -> None:
     assert config.stages == ["ingest", "validate"]
 
 
-def test_load_all_configs_returns_one_project_model() -> None:
-    config = ConfigLoader.load_all_configs(preset="default")
+def test_load_project_config_returns_one_project_model() -> None:
+    config = ConfigLoader.load_project_config(preset="default")
     assert isinstance(config, ProjectConfig)
     assert config.cogant is not None
     assert config.export is not None
@@ -81,33 +81,25 @@ def test_load_all_configs_returns_one_project_model() -> None:
     assert config.batch is not None
 
 
-def test_legacy_flat_config_is_migrated_with_warning(tmp_path) -> None:
-    path = tmp_path / "legacy.json"
-    path.write_text(
-        '{"output_dir": "legacy-output", "max_workers": 2, "schema_version": "0.9"}',
-        encoding="utf-8",
-    )
-    with pytest.warns(ConfigMigrationWarning):
-        config = ConfigLoader.load_project_config(path)
-    assert config.schema_version == "1.0"
-    assert config.pipeline.output_dir == "legacy-output"
-    assert config.cogant.max_workers == 2
+@pytest.mark.parametrize("version", ["0.9", "1.1", "1.bad", "1.0\n", "2.0", 1, None])
+def test_unsupported_schema_version_is_rejected(version) -> None:
+    with pytest.raises(ConfigLoadError, match="schema_version"):
+        ConfigLoader.load_project_config(overrides={"schema_version": version}, environment={})
 
 
-def test_legacy_environment_field_participates_in_precedence() -> None:
-    with pytest.warns(ConfigMigrationWarning):
-        config = ConfigLoader.load_project_config(
-            environment={"COGANT_OUTPUT_DIR": "legacy-env"},
-            cli={"pipeline": {"output_dir": "cli"}},
+def test_flat_fields_are_rejected() -> None:
+    with pytest.raises(ConfigLoadError, match="Extra inputs"):
+        ConfigLoader.load_project_config(
+            overrides={"output_dir": "old", "max_workers": 2}, environment={}
         )
-    assert config.pipeline.output_dir == "cli"
 
 
-def test_future_config_schema_is_rejected(tmp_path) -> None:
-    path = tmp_path / "future.json"
-    path.write_text('{"schema_version": "2.0"}\n', encoding="utf-8")
-    with pytest.raises(ConfigLoadError, match="Unsupported configuration schema_version"):
-        ConfigLoader.load_project_config(path)
+def test_single_segment_environment_does_not_override_config() -> None:
+    config = ConfigLoader.load_project_config(
+        environment={"COGANT_OUTPUT_DIR": "ignored"},
+        overrides={"pipeline": {"output_dir": "canonical"}},
+    )
+    assert config.pipeline.output_dir == "canonical"
 
 
 def test_server_resource_controls_are_in_the_canonical_model() -> None:

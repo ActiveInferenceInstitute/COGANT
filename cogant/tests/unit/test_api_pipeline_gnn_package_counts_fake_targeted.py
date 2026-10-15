@@ -4,7 +4,7 @@
 Covers:
 - gnn/package.py: GNNPackageBuilder private helpers (_count_graph_nodes/edges/by_kind,
   _count_state_space_elements, _count_nodes_by_kind, _count_mappings_by_tier,
-  _fallback_chart, _is_deterministic, _is_markovian, _extract_state_variables,
+  _render_distribution_chart, _is_deterministic, _is_markovian, _extract_state_variables,
   _extract_observation_space, _extract_action_space, _extract_observation_modalities,
   _extract_actions, _extract_policies, _extract_constraints, _extract_objectives,
   _extract_relationships, _extract_classes, _extract_ontology_mappings,
@@ -204,27 +204,27 @@ class TestChecksumHelpers:
 
 
 # ---------------------------------------------------------------------------
-# GNNPackageBuilder — _fallback_chart
+# GNNPackageBuilder — _render_distribution_chart
 # ---------------------------------------------------------------------------
 
 
 class TestFallbackChart:
     def test_returns_html_string(self):
         b = _make_builder()
-        html = b._fallback_chart("My Chart", {"A": 5, "B": 3})
+        html = b._render_distribution_chart("My Chart", {"A": 5, "B": 3})
         assert "<!DOCTYPE html>" in html
         assert "My Chart" in html
         assert "<svg" in html
 
     def test_empty_counts(self):
         b = _make_builder()
-        html = b._fallback_chart("Empty", {})
+        html = b._render_distribution_chart("Empty", {})
         assert "<!DOCTYPE html>" in html
         assert "Empty" in html
 
     def test_single_category(self):
         b = _make_builder()
-        html = b._fallback_chart("Single", {"OnlyOne": 10})
+        html = b._render_distribution_chart("Single", {"OnlyOne": 10})
         assert "<!DOCTYPE html>" in html
         assert "10" in html
 

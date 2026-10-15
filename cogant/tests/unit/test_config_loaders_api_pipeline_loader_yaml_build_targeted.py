@@ -4,7 +4,7 @@
 Covers:
 - ConfigLoader: load_from_yaml (HAS_YAML=False path, file not found, all paths),
   build_pipeline_config, build_export_config, build_validation_config,
-  load_all_configs (all paths, with preset, with dict)
+  load_project_config (all paths, with preset, with dict)
 - PipelineConfig (api/pipeline.py): creation, defaults, all fields
 - PipelineRunner: __init__, run (basic, skip stages, skip_dynamic, layout_output=False,
   unknown stage)
@@ -189,19 +189,19 @@ class TestBuildValidationConfig:
 
 
 # ---------------------------------------------------------------------------
-# config/loaders.py — load_all_configs
+# config/loaders.py — load_project_config
 # ---------------------------------------------------------------------------
 
 
-class TestLoadAllConfigs:
+class TestLoadProjectConfig:
     def test_no_args_returns_all_keys(self):
         from cogant.config.loaders import ConfigLoader
 
-        result = ConfigLoader.load_all_configs()
-        assert "cogant" in result
-        assert "pipeline" in result
-        assert "export" in result
-        assert "validation" in result
+        result = ConfigLoader.load_project_config()
+        assert result.cogant.max_workers > 0
+        assert result.pipeline.stages
+        assert result.export.primary_format
+        assert result.validation.level
 
     def test_with_preset(self):
         from cogant.config.defaults import PRESETS
@@ -210,14 +210,14 @@ class TestLoadAllConfigs:
         if not PRESETS:
             pytest.skip("no presets available")
         preset_name = next(iter(PRESETS))
-        result = ConfigLoader.load_all_configs(preset=preset_name)
-        assert "cogant" in result
+        result = ConfigLoader.load_project_config(preset=preset_name)
+        assert result.cogant.max_workers > 0
 
     def test_unknown_preset_raises(self):
         from cogant.config.loaders import ConfigLoader, ConfigLoadError
 
         with pytest.raises(ConfigLoadError):
-            ConfigLoader.load_all_configs(preset="definitely_not_a_real_preset")
+            ConfigLoader.load_project_config(preset="definitely_not_a_real_preset")
 
     def test_with_cogant_in_dict(self):
         from cogant.config.loaders import ConfigLoader

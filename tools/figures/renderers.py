@@ -617,9 +617,35 @@ def _render_publication_batch_evidence_summary(
     return output
 
 
-def _prepare_source_figures(root: Path, figures: Iterable[ManuscriptFigure]) -> None:
+def _prepare_source_figures(
+    root: Path, figures: Iterable[ManuscriptFigure], *, strict: bool = False
+) -> None:
     figures = tuple(figures)
     keys = {figure.key for figure in figures}
+    inference_root = root / "cogant" / "output" / "calculator"
+    if "inference_trace" in keys and (
+        strict
+        or (inference_root / "data" / "inference_trace.json").exists()
+        or (inference_root / "figures" / "inference_trace.png").exists()
+    ):
+        run_dir = root / "cogant" / "output" / "calculator"
+        try:
+            from cogant.viz.inference_view import render_inference_trace_png
+        except ModuleNotFoundError as exc:
+            if exc.name != "cogant" and not str(exc.name).startswith("cogant."):
+                raise
+            script = (
+                "from cogant.viz.inference_view import render_inference_trace_png\n"
+                "raise SystemExit(0 if render_inference_trace_png('output/calculator') else 1)\n"
+            )
+            subprocess.run(
+                ["uv", "run", "python", "-c", script],
+                cwd=root / "cogant",
+                check=True,
+            )
+        else:
+            if render_inference_trace_png(run_dir) is None:
+                raise RuntimeError("inference trace publication rendering is unavailable")
     if "graphical_abstract" in keys:
         run_dir = root / "cogant" / "output" / "calculator"
         if run_dir.is_dir():
@@ -707,7 +733,6 @@ def _prepare_source_figures(root: Path, figures: Iterable[ManuscriptFigure]) -> 
     if {
         "confidence_calibration",
         "rule_evidence_trace",
-        "inference_trace",
         "roundtrip_visual_diff",
     } & keys:
         run_dir = root / "cogant" / "output" / "calculator"

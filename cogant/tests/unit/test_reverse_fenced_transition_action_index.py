@@ -47,6 +47,11 @@ def test_reverse_endpoint_helper_rejects_out_of_range_action_as_value_error() ->
 
 
 def test_in_range_action_headers_still_fill_their_slices() -> None:
-    model = parse_gnn(OUT_OF_RANGE_ACTION.replace("# action=5", "# action=1"))
+    text = OUT_OF_RANGE_ACTION.replace("# action=5", "# action=1")
+    text = text.replace(
+        "\n```\n",
+        "\nA[[rows=2][cols=2]]\n1 0\n0 1\nC[[rows=2]]\n0\n0\nD[[rows=2]]\n0.5\n0.5\n```\n",
+    )
+    model = parse_gnn(text)
 
     assert model.B == [[[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]]

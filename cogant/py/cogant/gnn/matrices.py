@@ -53,34 +53,15 @@ logger = logging.getLogger(__name__)
 
 # Default probability masses used when no graph evidence is present.
 #
-# Principled defaults — not empirically calibrated. These follow the
-# "high direct, low indirect" Active Inference degraded-output convention
-# used by the upstream PyMDP examples (see Da Costa et al., "Active
-# inference on discrete state-spaces: a synthesis", J. Math. Psychol.
-# 2020, and the PyMDP tutorials at pymdp-rtd.readthedocs.io). The
-# 0.9/0.1 split encodes the prior that a directly-linked
-# (READS/OBSERVES/WRITES/MUTATES) node pair carries 9x the
-# probability mass of any indirectly-linked pair. This is a standard
-# sparse-observation-matrix default and is *not* intended to
-# represent ground-truth PyMDP weights; it is the starting point for
-# manual or empirical refinement.
-#
-# The two masses must sum to 1.0 because each hidden-state column of A
-# and each column of every B action slice is normalized to a simplex.
-# The 0.9/0.1 split is a pre-normalization
-# ratio, not a post-normalization target. TODO(calibration): sweep
-# {0.80/0.20, 0.85/0.15, 0.90/0.10, 0.95/0.05} on the 20-repo
-# fixture set and compare against hand-labeled likelihood matrices
-# (see ``docs/evaluation/CALIBRATION.md``).
-_DEFAULT_DIRECT_MASS = 0.9  # principled default (PyMDP convention)
-_DEFAULT_INDIRECT_MASS = 0.1  # principled default (1.0 - direct)
+# Uncalibrated structural weights: linked pairs receive nine times the
+# pre-normalization mass of indirectly linked pairs. These are COGANT
+# extraction heuristics, not estimated probabilities or a PyMDP convention.
+_DEFAULT_DIRECT_MASS = 0.9
+_DEFAULT_INDIRECT_MASS = 0.1
 
-# Numerical stability constant. 1e-9 is the canonical
-# "well below float64 round-off noise but well above denormal"
-# band used throughout scientific Python (scipy, pymdp, torch).
-# Chosen to guard against division-by-zero in ``_normalize_row``
-# without suppressing legitimate near-zero entries. Not calibrated.
-_EPSILON = 1e-9  # stability constant (scipy/pymdp convention)
+# Structural extraction treats columns below this mass as unsupported and
+# emits a uniform candidate column; execution never repairs missing support.
+_EPSILON = 1e-9
 
 # Maximum number of entries in the B transition tensor before truncation
 # kicks in. B is shape [n_states × n_states × n_actions]; for dulwich
@@ -789,14 +770,12 @@ class GNNMatrices:
 
         lines: list[str] = []
 
-        # --- A matrix ---
-        if A:
-            n_rows = len(A)
-            n_cols = len(A[0])
-            lines.append(f"A[[rows={n_rows}][cols={n_cols}]]")
-            for row in A:
-                lines.append("  " + " ".join(f"{v:.12g}" for v in row))
-            lines.append("")
+        n_rows = len(A)
+        n_cols = len(A[0]) if A else self.n_states
+        lines.append(f"A[[rows={n_rows}][cols={n_cols}]]")
+        for row in A:
+            lines.append("  " + " ".join(repr(float(v)) for v in row))
+        lines.append("")
 
         # --- B tensor ---
         if B:
@@ -808,22 +787,22 @@ class GNNMatrices:
                 lines.append(f"  # action={k}")
                 for r in range(n_rows):
                     row_vals = [B[r][c][k] for c in range(n_cols)]
-                    lines.append("  " + " ".join(f"{v:.12g}" for v in row_vals))
+                    lines.append("  " + " ".join(repr(float(v)) for v in row_vals))
             lines.append("")
+        else:
+            lines.extend(("B[[rows=0][cols=0][depth=0]]", ""))
 
         # --- C vector ---
-        if C:
-            lines.append(f"C[[rows={len(C)}]]")
-            for v in C:
-                lines.append(f"  {v:.12g}")
-            lines.append("")
+        lines.append(f"C[[rows={len(C)}]]")
+        for v in C:
+            lines.append(f"  {float(v)!r}")
+        lines.append("")
 
         # --- D vector ---
-        if D:
-            lines.append(f"D[[rows={len(D)}]]")
-            for v in D:
-                lines.append(f"  {v:.12g}")
-            lines.append("")
+        lines.append(f"D[[rows={len(D)}]]")
+        for v in D:
+            lines.append(f"  {float(v)!r}")
+        lines.append("")
 
         return "\n".join(lines).rstrip()
 

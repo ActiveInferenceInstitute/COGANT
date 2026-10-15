@@ -157,7 +157,3 @@ def render_svg_degraded_png(
     plt.savefig(output_png, dpi=cfg.dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     return output_png.is_file()
-
-
-# Backward-compatible alias for callers not yet migrated.
-_render_svg_placeholder_png = render_svg_degraded_png

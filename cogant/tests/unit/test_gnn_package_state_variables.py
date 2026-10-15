@@ -1319,14 +1319,14 @@ class TestPackageBuilderUtilities:
         h2 = GNNPackageBuilder._checksum_dict({"b": [2, 3], "a": 1})
         assert h == h2
 
-    def test_fallback_chart_with_empty_counts(self) -> None:
+    def test_render_distribution_chart_with_empty_counts(self) -> None:
         builder = _make_builder()
-        out = builder._fallback_chart("title", {})
+        out = builder._render_distribution_chart("title", {})
         assert "<svg" in out and "title" in out
 
-    def test_fallback_chart_with_counts(self) -> None:
+    def test_render_distribution_chart_with_counts(self) -> None:
         builder = _make_builder()
-        out = builder._fallback_chart("X", {"a": 5, "b": 2, "c": 8})
+        out = builder._render_distribution_chart("X", {"a": 5, "b": 2, "c": 8})
         assert "<svg" in out
         assert ">8<" in out  # bar value label rendered
 

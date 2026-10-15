@@ -747,74 +747,16 @@ class TestDynamicEnrichmentHelpers:
 
 
 class TestGNNModelRunnerExtra:
-    """Additional GNNModelRunner tests."""
+    def test_history_and_action_counts_are_reset_between_runs(self, tmp_path):
+        from tests.gnn_execution_fixture import runner
 
-    def _make_full_package(self, pkg_dir: Path) -> None:
-        """Create a full GNN package with all JSON files."""
-        manifest = {
-            "version": "1.0.0",
-            "package_name": "full_model",
-            "created_at": "2024-01-01T00:00:00",
-        }
-        (pkg_dir / "manifest.json").write_text(json.dumps(manifest))
-        model = {
-            "hidden_states": [{"id": "s0", "name": "idle"}, {"id": "s1", "name": "active"}],
-            "observations": [{"id": "o0", "name": "quiet"}, {"id": "o1", "name": "busy"}],
-            "actions": [{"id": "a0", "name": "wait"}, {"id": "a1", "name": "process"}],
-        }
-        (pkg_dir / "model.gnn.json").write_text(json.dumps(model))
-        state_space = {
-            "variables": [{"name": "s0"}, {"name": "s1"}],
-            "observations": [{"name": "o0"}, {"name": "o1"}],
-            "actions": [{"name": "a0"}, {"name": "a1"}],
-        }
-        (pkg_dir / "state_space.json").write_text(json.dumps(state_space))
-        transitions = {"s0": {"s0": 0.9, "s1": 0.1}, "s1": {"s0": 0.1, "s1": 0.9}}
-        (pkg_dir / "transitions.json").write_text(json.dumps(transitions))
-        preferences = {"o0": 0.8, "o1": 0.2}
-        (pkg_dir / "preferences.json").write_text(json.dumps(preferences))
-
-    def test_run_returns_result_dict(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        pkg_dir = tmp_path / "full_pkg"
-        pkg_dir.mkdir()
-        self._make_full_package(pkg_dir)
-        runner = GNNModelRunner()
-        runner.load_package(str(pkg_dir))
-        result = runner.run(steps=5)
-        assert isinstance(result, dict)
-
-    def test_beliefs_history_populated(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        pkg_dir = tmp_path / "pkg_hist"
-        pkg_dir.mkdir()
-        self._make_full_package(pkg_dir)
-        runner = GNNModelRunner()
-        runner.load_package(str(pkg_dir))
-        runner.run(steps=3)
-        assert len(runner.beliefs_history) > 0
-
-    def test_execution_trace_fields_in_run(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        pkg_dir = tmp_path / "pkg_trace"
-        pkg_dir.mkdir()
-        self._make_full_package(pkg_dir)
-        runner = GNNModelRunner()
-        runner.load_package(str(pkg_dir))
-        runner.run(steps=2)
-        assert len(runner.traces) == 2
-        for trace in runner.traces:
-            assert hasattr(trace, "step")
-            assert hasattr(trace, "state")
-            assert hasattr(trace, "beliefs")
-
-
-# ---------------------------------------------------------------------------
-# viz/boundary.py — _find_containing_module and cross-module edges
-# ---------------------------------------------------------------------------
+        model = runner(tmp_path)
+        model.run(5)
+        result = model.run(2)
+        assert len(model.beliefs_history) == 3
+        assert len(model.traces) == 2
+        assert sum(model.action_counts.values()) == 2
+        assert len(result["free_energy_trajectory"]) == 2
 
 
 class TestBoundaryMapperModuleMethods:

@@ -52,7 +52,6 @@ from cogant.viz.png.summary import (
     render_summary_cover_png,
 )
 from cogant.viz.png.svg import (
-    _render_svg_placeholder_png,
     render_all_svg_in_run,
     render_svg_degraded_png,
     render_svg_file_to_png,
@@ -87,7 +86,6 @@ __all__ = [
     "_parse_mermaid_sequence",
     "_parse_mermaid_state_diagram",
     "_read_json",
-    "_render_svg_placeholder_png",
     "_split_gnn_markdown",
     "_truncate",
     "discover_process_model_json",

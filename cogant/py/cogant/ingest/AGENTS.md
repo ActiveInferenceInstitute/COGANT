@@ -282,14 +282,6 @@ EXTENSION_MAP = {
     ".rs": "rust",
     ".go": "go",
 }
-
-PARSER_CLASSES = {
-    "python": PythonLanguageParser,
-    "typescript": TypeScriptTreeSitterParser | TypeScriptLanguageParser,
-    "javascript": JavaScriptLanguageParser,
-    "rust": RustLanguageParser,
-    "go": GoLanguageParser,
-}
 ```
 
 ## Data Representations
@@ -534,11 +526,10 @@ Ingest **never modifies the repository**:
    EXTENSION_MAP[".kt"] = "kotlin"
    ```
 
-3. Create parser class in parsers/kotlin/ (or use existing parser)
-4. Register in LanguageDetector.PARSER_CLASSES:
-   ```python
-   PARSER_CLASSES["kotlin"] = KotlinLanguageParser
-   ```
+3. Implement the language plugin under `cogant.parsers.languages`.
+4. Register its factory and capability in `cogant.parsers.registry`.
+   Test source extraction and unknown-extension rejection through
+   `cogant.parsers.get_parser_for_extension`.
 
 ### Add Custom File Filtering
 

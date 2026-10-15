@@ -373,73 +373,12 @@ class TestSynthesizerExtendedPaths:
 
 
 class TestGNNModelRunnerAdditional:
-    def _make_gnn_package(self, tmp_path):
-        manifest = {
-            "version": "1.0.0",
-            "schema_name": "test",
-            "files": [],
-            "checksums": {},
-        }
-        (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-        (tmp_path / "model.gnn.json").write_text(json.dumps({"model_name": "test"}))
-        (tmp_path / "state_space.json").write_text(
-            json.dumps(
-                {
-                    "variables": [],
-                    "observations": [],
-                    "actions": [],
-                    "transitions": {},
-                }
-            )
-        )
-        return tmp_path
+    def test_run_trace_contains_serializable_model_evidence(self, tmp_path):
+        from tests.gnn_execution_fixture import runner
 
-    def test_execution_trace_basic(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(
-            step=0,
-            state={"s": 0.5},
-            action="act_1",
-            observation="obs_0",
-        )
-        assert trace.step == 0
-        assert isinstance(trace.state, dict)
-
-    def test_execution_trace_with_beliefs(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(
-            step=1,
-            state={"s": 0.3},
-            beliefs={"state_a": 0.7, "state_b": 0.3},
-            free_energy_before=1.5,
-            free_energy_after=1.2,
-        )
-        assert trace.step == 1
-        assert trace.free_energy_before == 1.5
-
-    def test_runner_init(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        assert runner is not None
-        assert hasattr(runner, "load_package")
-
-    def test_runner_load_package(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        self._make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        assert runner.package_dir is not None
-
-    def test_runner_run_after_load(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        self._make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        traces = runner.run(steps=2)
-        # run returns a list of traces or similar
-        assert traces is not None
+        model = runner(tmp_path)
+        result = model.run(2)
+        encoded = json.loads(json.dumps(result, allow_nan=False))
+        assert encoded["steps_completed"] == 2
+        assert encoded["traces"][0]["beliefs_prior"] == model.traces[0].beliefs_prior
+        assert encoded["matrices_sha256"] == result["matrices_sha256"]

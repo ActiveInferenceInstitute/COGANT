@@ -602,6 +602,22 @@ def _metadata_missing(record: dict[str, object]) -> list[str]:
     missing.extend(_degraded_render_findings(record))
     missing.extend(_evidence_requirement_findings(record))
     missing.extend(_matrix_provenance_findings(record))
+    if record.get("key") == "inference_trace":
+        source_metadata = _source_metadata(record)
+        for key in ("source_sha256", "matrices_sha256", "trace_sha256", "observation_mode"):
+            if not source_metadata.get(key):
+                missing.append(f"source_figure_metadata.{key}")
+        if source_metadata.get("trace_sha256") != record.get("source_artifact_sha256"):
+            missing.append("source_figure_metadata.trace_digest_mismatch")
+        required_panels = {
+            "posterior", "next_prediction", "policy_expected_free_energy", "filtering_free_energy"
+        }
+        panels = source_metadata.get("panels")
+        actual_panels = {
+            item.get("key") for item in panels if isinstance(item, dict)
+        } if isinstance(panels, list) else set()
+        if actual_panels != required_panels:
+            missing.append("source_figure_metadata.inference_panels")
     missing.extend(_caption_reference_findings(str(record.get("caption") or "")))
     return missing
 

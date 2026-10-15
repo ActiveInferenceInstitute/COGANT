@@ -172,7 +172,7 @@ def test_runtime_with_rendered_matrices() -> None:
 
     source = render_matrices_module(model)
     ns = types.ModuleType("matrices")
-    exec(source, ns.__dict__)  # noqa: S102
+    exec(compile(source, "matrices.py", "exec", dont_inherit=True), ns.__dict__)  # noqa: S102
 
     rt = AgentRuntime(ns)
     steps = rt.run_n_steps(5, initial_state=[0.5, 0.5])

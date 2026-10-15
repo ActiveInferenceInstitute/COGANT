@@ -367,10 +367,10 @@ class TestConfigDefaults:
         from cogant.config.defaults import PRESETS
 
         for name, preset in PRESETS.items():
-            assert "cogant" in preset, f"Preset '{name}' missing 'cogant' key"
+            assert preset.cogant.max_workers > 0, name
 
     def test_presets_each_has_pipeline(self):
         from cogant.config.defaults import PRESETS
 
         for name, preset in PRESETS.items():
-            assert "pipeline" in preset, f"Preset '{name}' missing 'pipeline' key"
+            assert preset.pipeline.stages, name

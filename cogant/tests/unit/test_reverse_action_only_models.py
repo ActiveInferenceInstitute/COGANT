@@ -88,6 +88,11 @@ A[[rows=2][cols=2]]
   0.9 0.1
   0.1 0.9
 
+B[[rows=2][cols=2][depth=1]]
+  # action=0
+  1 0
+  0 1
+
 C[[rows=2]]
   0
   1
@@ -122,7 +127,8 @@ def test_action_only_model_renders_empty_transition_matrices() -> None:
     assert namespace["D"] == []
     transition = namespace["transition"]
     assert callable(transition)
-    assert transition([], 0) == []
+    with pytest.raises(ValueError, match="prior D"):
+        transition([], 0)
 
 
 def test_observation_action_model_without_hidden_states_renders() -> None:

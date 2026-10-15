@@ -468,25 +468,22 @@ class TestLanguageDetector:
             LanguageDetector.get_parser("cobol")
 
     def test_get_parser_for_extension_py(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
         parser = get_parser_for_extension(".py")
-        # Should return a parser instance or None
-        # (depends on whether python.parser is installed)
-        assert parser is None or hasattr(parser, "parse") or True
+        assert callable(parser.parse)
 
     def test_get_parser_for_extension_unknown(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import LanguageParserUnavailable, get_parser_for_extension
 
-        result = get_parser_for_extension(".xyz")
-        assert result is None
+        with pytest.raises(LanguageParserUnavailable):
+            get_parser_for_extension(".xyz")
 
     def test_get_parser_for_extension_no_dot(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
-        # Should handle missing dot
         result = get_parser_for_extension("py")
-        assert result is None or True  # either way, no crash
+        assert callable(result.parse)
 
 
 # ---------------------------------------------------------------------------

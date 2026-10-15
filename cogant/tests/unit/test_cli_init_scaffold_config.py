@@ -8,7 +8,6 @@ The scaffolded ``.cogant/config.json`` must validate as a canonical
 from __future__ import annotations
 
 import json
-import warnings
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +16,7 @@ from typer.testing import CliRunner
 
 from cogant.api.bundle import Bundle, StageOutcome
 from cogant.cli.main import app
-from cogant.config.loaders import ConfigLoader, ConfigMigrationWarning
+from cogant.config.loaders import ConfigLoader
 
 
 def _fake_bundle(target: str, config: Any) -> Bundle:
@@ -34,9 +33,7 @@ def test_init_config_loads_as_canonical_project_config(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
 
     config_path = proj / ".cogant" / "config.json"
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", ConfigMigrationWarning)
-        config = ConfigLoader.load_project_config(config_path)
+    config = ConfigLoader.load_project_config(config_path)
 
     raw = json.loads(config_path.read_text(encoding="utf-8"))
     assert config.pipeline.stages == raw["pipeline"]["stages"]

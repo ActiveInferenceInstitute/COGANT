@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Source-bound `cogant infer` execution, immutable traces, canonical replay
+  admission, batch inference, and native posterior/prediction/policy/VFE figures.
 - Explicit finite generative-model declarations, immutable A/B/C/D compilation,
   coefficient and source-identity verification, and a runtime handoff that copies
   the compiled matrices. `cogant finite compile` and `cogant finite verify` expose
@@ -16,6 +18,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   explicit construction, executor agreement, and application-level evidence.
 
 ### Corrected
+- Shared categorical filtering and risk-plus-ambiguity policy scoring across
+  runtime, simulation, package runner, and generated standalone matrix modules.
+  Filtering VFE uses the incoming prior; complete matrix fences preserve exported
+  coefficients and axes without projection.
+- The runner requires real complete GNN matrices and reports executed records and
+  measured total profiling time. Empty-model proxies and fabricated rewards are retired.
+
 - Current incremental documentation now describes unchanged-snapshot cache reuse
   and full-snapshot analysis after source changes. Historical timing records remain
   separate from current performance claims.
@@ -23,6 +32,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   variable nodes; unmeasured end-to-end Rust timing predictions are withdrawn.
 - New package tests and examples are visible to Git while generated output remains
   ignored. CLI routing and current strict-type-checking guidance are synchronized.
+
+### Removed
+- Root review logs, flat configuration migration adapters, parser registry aliases,
+  renderer aliases, and the fixed-matrix inference demonstration interface.
 
 ## [0.7.0] - 2026-10-14
 

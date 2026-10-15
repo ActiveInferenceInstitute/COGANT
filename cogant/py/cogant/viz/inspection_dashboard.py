@@ -393,14 +393,6 @@ def render_interpretability_detail_pngs(run_dir: Path | str) -> dict[str, Path]:
                 f"{trace['unreviewed_mapping_rows']} rows awaiting review",
             ],
         ),
-        "inference_trace": (
-            "Inference trace",
-            [
-                f"{model['state_space']['variables']} hidden variables",
-                f"{model['state_space']['observations']} observations",
-                f"{model['state_space']['actions']} actions",
-            ],
-        ),
         "roundtrip_diff": (
             "Roundtrip difference",
             [
@@ -429,6 +421,13 @@ def render_interpretability_detail_pngs(run_dir: Path | str) -> dict[str, Path]:
             written[name] = png
         else:
             written[name] = svg
+    from cogant.viz.inference_view import render_inference_trace_png
+
+    data = run / "data" if (run / "data").is_dir() else run
+    if (data / "inference_trace.json").is_file():
+        inference = render_inference_trace_png(run)
+        if inference is not None:
+            written["inference_trace"] = inference
     return written
 
 

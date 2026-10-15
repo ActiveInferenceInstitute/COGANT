@@ -101,8 +101,21 @@ real timings, and the dashboard directory is recorded under
 opt out for a particular batch, set `"steps": { "batch_dashboard":
 false }` in `run_all.json`.
 
-A dashboard failure is **advisory** — `run_all` logs it but does not
-treat the batch as failed.
+A dashboard failure makes the batch fail and is retained in the manifest.
+
+The default `steps.inference: true` executes eight steps from each target's
+exported GNN before rendering. `data/inference_trace.json` (or
+`inference_trace.json` beside a flat bundle) contains the matrix
+snapshot, filtered posterior, one-step risk-plus-ambiguity policy scores, and
+subsequent prediction. These are model rollouts using modal observations.
+The manifest and cross-target summary retain source/matrix/trace SHA256 digests
+and a verified inference-presence flag. Summarization rechecks source binding;
+a stale trace is a failed result.
+
+A failed translation or GNN export stops dependent work for that target.
+Existing artifacts are preserved but `source_admitted: false` excludes them
+from current summary validation and inference. This prevents a previous
+successful run from hiding a failed rerun.
 
 ## Robustness notes
 

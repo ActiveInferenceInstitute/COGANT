@@ -288,45 +288,28 @@ Extracts and caches A, B, C, D matrices from state space and process model.
 
 ### GNNModelRunner (runner.py)
 
-Loads and executes GNN models via Active Inference update loops.
+Before changing package execution, read [README.md](README.md#gnnmodelrunner-runnerpy)
+for the public API and observation scope. The runner loads the exact
+`model.gnn.md` source snapshot and delegates execution to
+`runtime.inference.run_gnn_inference`; the same categorical kernel serves the
+runtime and reverse matrix APIs.
 
-**ExecutionTrace** — single-step trace:
-- `step` — episode step counter
-- `state` — current hidden state values
-- `action` — selected action ID
-- `observation` — observed values
-- `reward` — immediate reward
-- `timestamp` — wall-clock time
-- `beliefs` — posterior belief distribution (updated posterior)
-- `beliefs_prior` — prior belief (before observation)
-- `free_energy_before` — VFE before action selection
-- `free_energy_after` — VFE after observation update
-- `policy_scores` — `list[(action_id, score)]` ranking policies
-- `action_rationale` — explanation of why action was selected
-- `predicted_state` — state predicted before observation
+Keep A[o,s], B[next,current,action], C[o], and D[s] authoritative.
+Admission rejects missing/degraded matrices, invalid probability mass, and
+workloads exceeding the declared limits. A rejected load clears the previously
+loaded source; a rejected run clears its prior report.
 
-**Key Methods:**
-- `load_package(package_dir) -> dict[str, Any]` — load manifest and models
-- `run(steps=10) -> dict[str, Any]` — execute Active Inference for N steps; returns trace history. A step that raises stops the loop and the result reports `success=False` with `error` and `failed_step` (both `None` after a clean run; also kept on `runner.last_error` / `runner.last_failed_step`)
-- `run_with_profiling(num_steps=10, num_trials=1) -> (traces, stats)` — measure timing and performance
-- `generate_execution_report(trace) -> str` — render execution trace as markdown
+Trace order is incoming prior, observation, posterior and its VFE, one-step
+risk-plus-ambiguity policy scores, then the selected action's next belief.
+The rollout takes modal predicted observations. Reports must identify this as
+model inference and preserve source/matrix digests; they establish neither
+measured source-program behavior nor globally optimal control.
 
-**Update Loop (pseudocode):**
-```
-For each step t:
-  1. compute_posterior(observation_t, likelihood_A, prior_beliefs)
-  2. beliefs_t ← posterior
-  3. free_energy_t ← VFE(beliefs_t, A, B, D)
-  4. for each policy π: efe_π ← compute_efe(π, beliefs, C, B)
-  5. select_action(π*) = argmax_π [-EFE_π]
-  6. predict_state(s_{t+1}) ← B[action, :] @ beliefs_t
-  7. trace.append(ExecutionTrace(...))
-  8. Observe(o_{t+1}) from environment/stochastic B
-```
-
-Requires `pymdp` library (optional dependency; graceful fallback if unavailable).
-
-## Data Representations
+When changing execution, exercise a complete exported package from a real
+fixture repository, compare the labelled runner record against the shared
+inference trace, and confirm that a non-stochastic exported matrix is rejected.
+`tests/gnn_execution_fixture.py` supplies a complete numerical model for
+Bayesian, action-selection, reset, report, and resource-admission controls.
 
 ### Example: Complete GNN Package Build
 
@@ -385,23 +368,17 @@ print(f"Executed {len(result['traces'])} steps")
 
 # Inspect traces
 for trace in result["traces"][:3]:
-    print(f"\nStep {trace.step}:")
-    print(f"  State: {trace.state}")
-    print(f"  Action: {trace.action}")
-    print(f"  Observation: {trace.observation}")
-    print(f"  Free Energy: {trace.free_energy_after:.4f}")
-    print(f"  Beliefs: {trace.beliefs}")
-    print(f"  Policy Scores: {trace.policy_scores}")
+    print(f"\nStep {trace['step']}:")
+    print(f"  Incoming belief: {trace['state']}")
+    print(f"  Action: {trace['action']}")
+    print(f"  Observation: {trace['observation']}")
+    print(f"  Posterior VFE: {trace['free_energy_after']:.4f}")
+    print(f"  Posterior beliefs: {trace['beliefs']}")
+    print(f"  Policy scores: {trace['policy_scores']}")
 
 # Generate report
 report = runner.generate_execution_report()
 print(report)
-# Output:
-# ## Execution Report
-# - Episodes: 1
-# - Total steps: 10
-# - Average free energy: 4.23
-# - Action distribution: {send_request: 6, retry: 3, abort: 1}
 ```
 
 ### Example: Profile Model Performance
@@ -416,15 +393,7 @@ runner.load_package("/tmp/gnn_package")
 traces, stats = runner.run_with_profiling(num_steps=100, num_trials=5)
 
 print(f"Timing stats: {stats}")
-# Output:
-# {
-#   'mean_step_time_ms': 12.5,
-#   'total_time_ms': 1250.0,
-#   'belief_update_time_ms': 4.2,
-#   'policy_eval_time_ms': 6.8,
-#   'action_selection_time_ms': 1.5,
-#   'trials': 5
-# }
+print(f"Measured total elapsed time: {stats['total_ms']:.3f} ms")
 ```
 
 ## Integration with Downstream Stages
@@ -500,9 +469,9 @@ print(f"Timing stats: {stats}")
 
 **GNNModelRunner:**
 - Package load failures → exception with diagnostics
-- Step exceptions → loop stops; `run()` returns `success=False` with `error` / `failed_step`, and `generate_execution_report()` reports where the run stopped
-- Belief update divergence → warning logged, traces recorded with NaN handling
-- Free Energy calculation errors → fallback to deterministic policy selection
+- Invalid inference input → exception with diagnostics; the previous successful report is cleared
+- Invalid or non-finite matrix values → rejected at admission
+- Profiling → measures complete runs with a combined work budget and fresh D for each trial
 
 ## See Also
 
@@ -511,4 +480,4 @@ print(f"Timing stats: {stats}")
 - `py/cogant/process/` — produces ProcessModel consumed by gnn/
 - `py/cogant/validate/` — validates GNN packages
 - `py/cogant/export/` — renders packages to PDF, HTML, deployment formats
-- `py/cogant/simulate/` — executes models using GNNModelRunner
+- `py/cogant/runtime/` — shared categorical kernel and versioned inference artifacts

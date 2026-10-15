@@ -2,8 +2,8 @@
 """Targeted branch tests — simulate/free_energy.py and simulate/distributions.py.
 
 Covers:
-- simulate/free_energy.py: _safe_log, variational_free_energy (empty/KL-only/
-  with-obs/observation-None), bayesian_belief_update, expected_free_energy,
+- simulate/free_energy.py: exact zero support, explicit observations,
+  invalid-input controls, bayesian_belief_update, expected_free_energy,
   uniform_distribution, FreeEnergyCalculator (basic)
 - simulate/distributions.py: CategoricalDistribution (init/uniform/sample/
   log_prob/entropy/kl_divergence/update), TransitionMatrix (init/set_transition/
@@ -22,44 +22,36 @@ pytestmark = pytest.mark.unit
 # ---------------------------------------------------------------------------
 
 
-class TestSafeLog:
-    def test_safe_log_normal_value(self):
-        from cogant.simulate.free_energy import _safe_log
+class TestExactLikelihoodSupport:
+    def test_certain_observation_has_zero_free_energy(self):
+        from cogant.simulate.free_energy import variational_free_energy
 
-        result = _safe_log(1.0)
-        assert abs(result - 0.0) < 1e-9
+        assert variational_free_energy([1.0], [1.0], [[1.0]], [1.0]) == 0.0
 
-    def test_safe_log_near_zero(self):
-        from cogant.simulate.free_energy import _safe_log
+    def test_zero_likelihood_has_infinite_free_energy(self):
+        from cogant.simulate.free_energy import variational_free_energy
 
-        result = _safe_log(0.0)
-        # Should return log of epsilon, not -inf
-        assert result > -1000
-        assert isinstance(result, float)
+        assert math.isinf(variational_free_energy([1.0], [1.0], [[0.0], [1.0]], [1.0, 0.0]))
 
-    def test_safe_log_half(self):
-        from cogant.simulate.free_energy import _safe_log
+    def test_half_likelihood_matches_surprisal(self):
+        from cogant.simulate.free_energy import variational_free_energy
 
-        result = _safe_log(0.5)
-        assert abs(result - math.log(0.5)) < 1e-9
+        value = variational_free_energy([1.0], [1.0], [[0.5], [0.5]], [1.0, 0.0])
+        assert value == pytest.approx(math.log(2.0))
 
 
 class TestVariationalFreeEnergy:
-    def test_empty_beliefs_returns_zero(self):
+    def test_empty_beliefs_rejected(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        result = variational_free_energy([], [], [])
-        assert result == 0.0
+        with pytest.raises(ValueError, match="nonempty"):
+            variational_free_energy([], [], [[1.0]], [1.0])
 
     def test_kl_only_no_obs(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        # Uniform beliefs with uniform prior — KL = 0
-        beliefs = [0.5, 0.5]
-        prior = [0.5, 0.5]
-        result = variational_free_energy(beliefs, prior, [])
-        assert isinstance(result, float)
-        assert result >= 0.0  # KL is non-negative
+        with pytest.raises(ValueError, match="likelihood"):
+            variational_free_energy([0.8, 0.2], [0.5, 0.5], [], [])
 
     def test_with_likelihood_and_observation(self):
         from cogant.simulate.free_energy import variational_free_energy
@@ -72,26 +64,25 @@ class TestVariationalFreeEnergy:
         result = variational_free_energy(beliefs, prior, likelihood, obs)
         assert isinstance(result, float)
 
-    def test_observation_none_uses_uniform(self):
+    def test_observation_none_rejects_invalid_input(self):
         from cogant.simulate.free_energy import variational_free_energy
 
-        beliefs = [0.5, 0.5]
-        prior = [0.5, 0.5]
-        likelihood = [[0.7, 0.3], [0.3, 0.7]]
-        result = variational_free_energy(beliefs, prior, likelihood, None)
-        assert isinstance(result, float)
+        with pytest.raises(ValueError, match="explicit observation"):
+            variational_free_energy([0.5, 0.5], [0.5, 0.5], [[0.7, 0.3], [0.3, 0.7]], None)
 
     def test_prior_mismatch_raises(self):
         from cogant.simulate.free_energy import variational_free_energy
 
         with pytest.raises(ValueError):
-            variational_free_energy([0.5, 0.5], [0.3, 0.3, 0.4], [])
+            variational_free_energy(
+                [0.5, 0.5], [0.3, 0.3, 0.4], [[0.7, 0.3], [0.3, 0.7]], [1.0, 0.0]
+            )
 
     def test_likelihood_row_mismatch_raises(self):
         from cogant.simulate.free_energy import variational_free_energy
 
         with pytest.raises(ValueError):
-            variational_free_energy([0.5, 0.5], [0.5, 0.5], [[0.7]])  # row has 1, needs 2
+            variational_free_energy([0.5, 0.5], [0.5, 0.5], [[0.7]], [1.0])
 
     def test_observation_mismatch_raises(self):
         from cogant.simulate.free_energy import variational_free_energy
@@ -106,11 +97,11 @@ class TestVariationalFreeEnergy:
 
 
 class TestBayesianBeliefUpdate:
-    def test_empty_prior_returns_empty(self):
+    def test_empty_prior_rejects_invalid_input(self):
         from cogant.simulate.free_energy import bayesian_belief_update
 
-        result = bayesian_belief_update([], [], 0)
-        assert result == []
+        with pytest.raises(ValueError, match="nonempty"):
+            bayesian_belief_update([], [[1.0]], 0)
 
     def test_basic_update_normalizes(self):
         from cogant.simulate.free_energy import bayesian_belief_update
@@ -126,40 +117,38 @@ class TestBayesianBeliefUpdate:
     def test_out_of_range_obs_raises(self):
         from cogant.simulate.free_energy import bayesian_belief_update
 
-        with pytest.raises(IndexError):
-            bayesian_belief_update([0.5, 0.5], [[0.7, 0.3]], 5)
+        with pytest.raises(ValueError, match="observation index"):
+            bayesian_belief_update([0.5, 0.5], [[0.9, 0.1], [0.1, 0.9]], 5)
 
-    def test_zero_likelihood_falls_back_to_prior(self):
+    def test_zero_likelihood_rejects_invalid_input(self):
         from cogant.simulate.free_energy import bayesian_belief_update
 
-        prior = [0.5, 0.5]
-        likelihood = [[0.0, 0.0]]  # All zeros
-        result = bayesian_belief_update(prior, likelihood, 0)
-        assert abs(result[0] - 0.5) < 1e-9
+        with pytest.raises(ValueError, match="zero evidence"):
+            bayesian_belief_update([0.5, 0.5], [[0.0, 0.0], [1.0, 1.0]], 0)
 
 
 class TestExpectedFreeEnergy:
-    def test_empty_beliefs_returns_zero(self):
+    def test_empty_beliefs_rejects_invalid_input(self):
         from cogant.simulate.free_energy import expected_free_energy
 
-        result = expected_free_energy([], [], [], [], [])
-        assert result == 0.0
+        with pytest.raises(ValueError, match="nonempty"):
+            expected_free_energy([0], [], [[1.0]], [[[1.0]]], [0.0])
 
-    def test_empty_policy_returns_zero(self):
+    def test_empty_policy_rejects_invalid_input(self):
         from cogant.simulate.free_energy import expected_free_energy
 
-        beliefs = [0.5, 0.5]
-        likelihood = [[0.7, 0.3], [0.3, 0.7]]
-        result = expected_free_energy([], beliefs, likelihood, [], [0.0, 0.0])
-        assert result == 0.0
+        with pytest.raises(ValueError, match="policy"):
+            expected_free_energy(
+                [], [0.5, 0.5], [[1.0, 1.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0]
+            )
 
     def test_log_prefs_mismatch_raises(self):
         from cogant.simulate.free_energy import expected_free_energy
 
-        beliefs = [0.5, 0.5]
-        likelihood = [[0.7, 0.3], [0.3, 0.7]]  # 2 obs, 2 states
-        with pytest.raises(ValueError):
-            expected_free_energy([0], beliefs, likelihood, [], [0.0])  # len 1 != n_obs 2
+        with pytest.raises(ValueError, match="preferences"):
+            expected_free_energy(
+                [0], [0.5, 0.5], [[1.0, 1.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], [0.1, 0.2]
+            )
 
 
 class TestUniformDistribution:
@@ -174,8 +163,9 @@ class TestUniformDistribution:
     def test_uniform_dist_zero_or_negative(self):
         from cogant.simulate.free_energy import uniform_distribution
 
-        result = uniform_distribution(0)
-        assert result == []
+        for dimension in (0, -1):
+            with pytest.raises(ValueError, match="positive"):
+                uniform_distribution(dimension)
 
 
 # ---------------------------------------------------------------------------

@@ -634,14 +634,13 @@ def _render_policy_module(plan: PackagePlan) -> str:
         f'''
         """Generated policy functions for model {plan.raw_model_name!r}.
 
-        The selector chooses among actions to maximise
-        ``<C, likelihood(state)>`` (a degenerate form of expected
-        free-energy minimisation that ignores epistemic value).
+        The selector minimizes one-step outcome risk plus expected
+        likelihood ambiguity, with lowest-index ties.
         """
 
         from typing import List
 
-        from .matrices import C, N_ACTIONS, likelihood, preference_score
+        from .matrices import best_action
         from .state import State
 
         '''
@@ -650,21 +649,8 @@ def _render_policy_module(plan: PackagePlan) -> str:
 
     helper_name = _policy_helper_name(plan)
     lines.append(f"def {helper_name}(state: State, observations: List[float]) -> int:")
-    lines.append('    """Return the action index that maximises the preference score."""')
-    lines.append("    if N_ACTIONS <= 0:")
-    lines.append("        raise ValueError('policy selection requires at least one action')")
-    lines.append("    state_dist = state.as_distribution()")
-    lines.append("    best_action = 0")
-    lines.append('    best_score = float("-inf")')
-    lines.append("    for a in range(N_ACTIONS):")
-    lines.append("        pred_obs = likelihood(state_dist)")
-    lines.append("        score = preference_score(pred_obs) - 0.01 * a")
-    lines.append("        if score > best_score:")
-    lines.append("            best_score = score")
-    lines.append("            best_action = a")
-    lines.append("    _ = C  # retain reference")
-    lines.append("    _ = observations  # retain reference for forward introspection")
-    lines.append("    return best_action")
+    lines.append('    """Return the declared action with minimum one-step expected free energy."""')
+    lines.append("    return best_action(state.as_distribution())")
     lines.append("")
 
     # Authoritative policies from the parsed GNN (rare).
@@ -825,78 +811,39 @@ def _render_context_module(plan: PackagePlan) -> str:
 
 
 def _render_main_module(plan: PackagePlan) -> str:
-    """Render ``main.py`` — a small driver loop that exercises everything."""
-    helper_name = _policy_helper_name(plan)
-    header = dedent(
-        f'''
-        """Driver program for the synthesized model {plan.raw_model_name!r}.
+    """Render a driver using exact filtering and the selected matrix action."""
+    return dedent(
+        f'''\
+        """Categorical inference driver for model {plan.raw_model_name!r}."""
 
-        Runs a short inference loop: observe -> select -> act.
-        This module gives the forward COGANT pipeline a clear entry
-        point with data-flow edges between State, observe, selector, and
-        act — the same pattern it looks for in hand-written code.
-        """
-
+        from .matrices import inference_step
         from .state import State
+
+
+        def advance_once(state: State, observation: int | None = None) -> State:
+            """Filter an observed outcome and predict under the minimum-EFE action."""
+            result = inference_step(state.as_distribution(), observation)
+            return State.from_distribution(result.prediction)
+
+
+        def main(num_steps: int = 10) -> State:
+            """Run deterministic modal observations from the declared initial prior."""
+            if num_steps < 0:
+                raise ValueError("step count must be non-negative")
+            state = State()
+            for t in range(num_steps):
+                state = advance_once(state)
+                print(f"t={{t}}: {{state}}")
+            return state
+
+
+        if __name__ == "__main__":
+            main()
         '''
     ).lstrip()
 
-    lines: list[str] = [header]
-    if plan.obs_functions:
-        fn = plan.obs_functions[0].name
-        canonical = fn if fn.startswith("get_") else f"get_{fn}"
-        lines.append(f"from .observe import {canonical}")
-    else:
-        lines.append("# No observation import: the source model has zero modalities.")
-    if plan.action_methods:
-        fn = plan.action_methods[0].name
-        canonical = fn if fn.startswith("update_") else f"update_{fn}"
-        lines.append(f"from .act import {canonical}")
-    else:
-        lines.append("# No action import: the source model has zero actions.")
-    if plan.action_methods:
-        lines.append(f"from .policy import {helper_name}")
-    lines.append("")
-    lines.append("")
-    lines.append("def advance_once(state: State) -> State:")
-    lines.append('    """One inference step: observe, choose action, update state."""')
-    if plan.obs_functions:
-        fn = plan.obs_functions[0].name
-        canonical = fn if fn.startswith("get_") else f"get_{fn}"
-        lines.append(f"    obs_value = {canonical}(state)")
-        lines.append("    observations = [float(obs_value)]")
-    else:
-        lines.append("    observations = []")
-    if not plan.action_methods:
-        lines.append("    return state.copy()")
-    else:
-        lines.append(f"    _choice = {helper_name}(state, observations)")
-        lines.append("    del _choice")
-    if plan.action_methods:
-        fn = plan.action_methods[0].name
-        canonical = fn if fn.startswith("update_") else f"update_{fn}"
-        lines.append(f"    return {canonical}(state)")
-    else:
-        lines.append("    return state.copy()")
-    lines.append("")
-    lines.append("")
-    lines.append("def main(num_steps: int = 10) -> State:")
-    lines.append('    """Run ``num_steps`` inference steps starting from the default State."""')
-    lines.append("    state = State()")
-    lines.append("    for t in range(num_steps):")
-    lines.append("        state = advance_once(state)")
-    lines.append('        print(f"t={t}: {state}")')
-    lines.append("    return state")
-    lines.append("")
-    lines.append("")
-    lines.append('if __name__ == "__main__":')
-    lines.append("    main()")
-    lines.append("")
 
-    return "\n".join(lines)
-
-
-def _render_test_smoke(plan: PackagePlan, *, has_actions: bool) -> str:
+def _render_test_smoke(plan: PackagePlan, *, has_actions: bool, executable: bool = True) -> str:
     """Render ``tests/test_smoke.py`` — a single round-trip smoke test."""
     helper_name = _policy_helper_name(plan)
     selector_lines: list[str] = []
@@ -933,6 +880,17 @@ def _render_test_smoke(plan: PackagePlan, *, has_actions: bool) -> str:
         "    state = State()",
         "    assert state is not None",
     ]
+    if not executable:
+        body_lines = [
+            "import pytest",
+            f"from {plan.package_name}.main import advance_once",
+            f"from {plan.package_name}.state import State",
+            "",
+            "def test_incomplete_categorical_model_rejects_execution() -> None:",
+            "    with pytest.raises(ValueError):",
+            "        advance_once(State())",
+        ]
+        selector_lines = []
     body_lines.extend(selector_lines)
     return "\n".join(body_lines) + "\n"
 
@@ -992,7 +950,11 @@ def synthesize_package(
         package_path / "matrices.py": render_matrices_module(model),
         package_path / "main.py": _render_main_module(plan),
         tests_path / "__init__.py": '"""Test package for the synthesized model."""\n',
-        tests_path / "test_smoke.py": _render_test_smoke(plan, has_actions=model.n_actions > 0),
+        tests_path / "test_smoke.py": _render_test_smoke(
+            plan,
+            has_actions=model.n_actions > 0,
+            executable=bool(model.A and model.B and model.C and model.D),
+        ),
     }
 
     for path, content in files.items():

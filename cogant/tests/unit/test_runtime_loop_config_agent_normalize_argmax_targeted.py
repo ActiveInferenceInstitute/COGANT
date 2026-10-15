@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
-"""Targeted branch tests — runtime/loop.py and runtime/config.py.
-
-Covers:
-- runtime/loop.py: _normalize, _argmax, _mat_vec, _default_likelihood,
-  _default_transition, _default_preference_score, AgentRuntime (from_matrices_dict,
-  step, run_n_steps), AgentStep, EpisodeResult, MultiEpisodeResult dataclasses
-- runtime/config.py: AgentConfig dataclass
-"""
-
 import pytest
+
+from cogant.runtime.categorical import CategoricalModel
 
 pytestmark = pytest.mark.unit
 
@@ -46,17 +39,17 @@ class TestNormalize:
         assert len(result) == 3
         assert abs(sum(result) - 1.0) < 1e-9
 
-    def test_normalize_zero_vector(self):
+    def test_normalize_zero_vector_rejected(self):
         from cogant.runtime.loop import _normalize
 
-        result = _normalize([0.0, 0.0])
-        assert abs(sum(result) - 1.0) < 1e-9
+        with pytest.raises(ValueError):
+            _normalize([0.0, 0.0])
 
-    def test_normalize_empty(self):
+    def test_normalize_empty_rejected(self):
         from cogant.runtime.loop import _normalize
 
-        result = _normalize([])
-        assert result == []
+        with pytest.raises(ValueError):
+            _normalize([])
 
     def test_normalize_already_normalized(self):
         from cogant.runtime.loop import _normalize
@@ -72,10 +65,11 @@ class TestArgmax:
 
         assert _argmax([0.1, 0.9, 0.3]) == 1
 
-    def test_argmax_empty(self):
+    def test_argmax_empty_rejected(self):
         from cogant.runtime.loop import _argmax
 
-        assert _argmax([]) == 0
+        with pytest.raises(ValueError):
+            _argmax([])
 
     def test_argmax_single(self):
         from cogant.runtime.loop import _argmax
@@ -91,49 +85,51 @@ class TestArgmax:
 
 class TestMatVec:
     def test_mat_vec_basic(self):
-        from cogant.runtime.loop import _mat_vec
 
         mat = [[1.0, 0.0], [0.0, 1.0]]
         vec = [0.3, 0.7]
-        result = _mat_vec(mat, vec)
+        result = CategoricalModel(mat, [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0, 0.0], vec).observe(
+            vec
+        )
         assert len(result) == 2
         assert abs(result[0] - 0.3) < 1e-9
         assert abs(result[1] - 0.7) < 1e-9
 
-    def test_mat_vec_zero_matrix(self):
-        from cogant.runtime.loop import _mat_vec
-
-        mat = [[0.0, 0.0], [0.0, 0.0]]
-        vec = [1.0, 0.0]
-        result = _mat_vec(mat, vec)
-        assert all(v == 0.0 for v in result)
+    def test_likelihood_zero_columns_rejected(self):
+        with pytest.raises(ValueError, match="sum to"):
+            CategoricalModel(
+                [[0.0, 0.0], [0.0, 0.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0, 0.0], [1.0, 0.0]
+            )
 
 
-class TestDefaultHelpers:
-    def test_default_likelihood(self):
-        from cogant.runtime.loop import _default_likelihood
+class TestCategoricalHelpers:
+    def test_categorical_likelihood(self):
 
         A = [[0.9, 0.1], [0.1, 0.9]]
         state_dist = [0.5, 0.5]
-        result = _default_likelihood(A, state_dist)
+        result = CategoricalModel(
+            A, [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0, 0.0], state_dist
+        ).observe(state_dist)
         assert len(result) == 2
         assert abs(sum(result) - 1.0) < 1e-9
 
-    def test_default_transition(self):
-        from cogant.runtime.loop import _default_transition
+    def test_categorical_transition(self):
 
         B = [[[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]]
         state_dist = [0.5, 0.5]
-        result = _default_transition(B, state_dist, action=0)
+        result = CategoricalModel([[1.0, 0.0], [0.0, 1.0]], B, [0.0, 0.0], state_dist).predict(
+            state_dist, 0
+        )
         assert len(result) == 2
         assert abs(sum(result) - 1.0) < 1e-9
 
-    def test_default_preference_score(self):
-        from cogant.runtime.loop import _default_preference_score
+    def test_preference_diagnostic(self):
 
         C = [1.0, 0.0]
         obs_idx = [0.8, 0.2]
-        result = _default_preference_score(C, obs_idx)
+        result = CategoricalModel(
+            [[1.0, 0.0], [0.0, 1.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], C, [0.5, 0.5]
+        ).preference_score(obs_idx)
         assert abs(result - 0.8) < 1e-9
 
 

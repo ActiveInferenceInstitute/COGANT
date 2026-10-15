@@ -47,6 +47,10 @@ cogant/docs/evaluation/*
 !cogant/docs/rnd/
 cogant/docs/rnd/*
 !cogant/docs/rnd/organization_state_spaces.md
+!cogant/docs/rnd/end_to_end_inference.md
+!cogant/docs/api/
+cogant/docs/api/*
+!cogant/docs/api/inference.md
 
 # OS / editor cruft
 .DS_Store

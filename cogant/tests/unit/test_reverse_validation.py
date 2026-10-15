@@ -129,8 +129,16 @@ D_f0={ (0.6, 0.4) }
 D_f1={ (0.5, 0.5) }
 
 ```gnn-matrices
-A[[rows=1][cols=2]]
+A[[rows=2][cols=2]]
 0.8 0.2
+0.2 0.8
+B[[rows=2][cols=2][depth=1]]
+# action=0
+1 0
+0 1
+C[[rows=2]]
+0
+0
 D[[rows=2]]
 0.7
 0.3
@@ -183,17 +191,7 @@ class TestParser:
         assert model.observations == []
         assert model.actions == []
 
-    def test_parse_degenerate_aggregate_d_expanded_to_declared_cardinality(self) -> None:
-        """A 1-entry aggregate D for a multi-state factor is broadcast.
-
-        Regression: the forward pipeline emits an aggregate in-memory
-        matrices block (one entry per variable) alongside factorized
-        declarations whose cardinalities exceed 1. The fenced D[[rows=1]]
-        overrode the factorized D, and the synthesizer rejected the model
-        with "D must contain N entries; received 1". The parser now
-        broadcasts the degenerate prior to the declared cardinality and
-        realigns A/B to the expanded state dimension.
-        """
+    def test_parse_authoritative_aggregate_preserves_matrix_dimensions(self) -> None:
         gnn = dedent(
             """\
             ## ModelName
@@ -233,18 +231,13 @@ class TestParser:
             """
         )
         model = parse_gnn(gnn)
-        assert model.n_states == 4
-        assert len(model.D) == 4
-        assert model.D == [0.25, 0.25, 0.25, 0.25]
-        # A columns broadcast to the expanded state dimension.
-        assert len(model.A) == 2 and all(len(row) == 4 for row in model.A)
-        # B expanded to identity transitions (4x4x2), columns sum to 1.
-        assert len(model.B) == 4 and len(model.B[0]) == 4
-        for action in range(2):
-            for source in range(4):
-                total = sum(model.B[t][source][action] for t in range(4))
-                assert abs(total - 1.0) < 1e-9
-        # The reconciled model synthesizes without the shape error.
+        assert model.n_states == 1
+        assert model.D == [1.0]
+        assert model.A == [[0.5], [0.5]]
+        assert model.B == [[[1.0, 1.0]]]
+        assert model.C == [0.0, 0.0]
+        assert not model.degraded
+        assert model.matrix_source == "fenced"
         from cogant.reverse.matrices import render_matrices_module
 
         render_matrices_module(model)
@@ -306,7 +299,7 @@ class TestParser:
         """Parse with gnn-matrices fenced block -> A/D populated from block."""
         model = parse_gnn(MATRICES_FENCED_GNN)
         # The fenced block overrides InitialParameterization
-        assert model.A == [[0.8, 0.2]]
+        assert model.A == [[0.8, 0.2], [0.2, 0.8]]
         assert model.D == [0.7, 0.3]
 
     def test_parse_human_names_table(self) -> None:

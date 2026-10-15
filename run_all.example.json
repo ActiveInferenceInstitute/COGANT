@@ -46,6 +46,7 @@
     "graph_stdout": true,
     "export_gnn": true,
     "export_gnn_format": "all",
+    "inference": true,
     "render_site": true,
     "viz_png": true,
     "validate_run_dir": true,

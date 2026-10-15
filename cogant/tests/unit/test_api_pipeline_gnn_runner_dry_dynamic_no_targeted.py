@@ -205,47 +205,15 @@ class TestPipelineRunnerDryRunStages:
 
 
 class TestGNNRunner:
-    def test_import_gnn_model_runner(self):
-        from cogant.gnn.runner import GNNModelRunner
+    def test_package_exported_runner_uses_shared_kernel(self, tmp_path):
+        from cogant.gnn import ExecutionTrace, GNNModelRunner
+        from tests.gnn_execution_fixture import package
 
-        assert GNNModelRunner is not None
-
-    def test_gnn_model_runner_init(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        assert runner is not None
-
-    def test_execution_trace_dataclass(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(
-            step=1,
-            state={"x": 1},
-            action="do_something",
-        )
-        assert trace.step == 1
-        assert trace.action == "do_something"
-
-    def test_free_energy_calculator_import(self):
-        from cogant.gnn.runner import FreeEnergyCalculator
-
-        assert FreeEnergyCalculator is not None
-
-    def test_active_inference_available_bool(self):
-        from cogant.gnn.runner import ACTIVE_INFERENCE_AVAILABLE
-
-        assert isinstance(ACTIVE_INFERENCE_AVAILABLE, bool)
-
-    def test_gnn_runner_module_importable(self):
-        from cogant.gnn import runner as runner_module
-
-        assert runner_module is not None
-
-
-# ---------------------------------------------------------------------------
-# api/pipeline.py — PipelineRunner._stage_dynamic no-data path
-# ---------------------------------------------------------------------------
+        model = GNNModelRunner()
+        model.load_package(str(package(tmp_path)))
+        result = model.run(1)
+        assert isinstance(model.traces[0], ExecutionTrace)
+        assert list(result["final_beliefs"].values()) == pytest.approx([27 / 29, 2 / 29])
 
 
 class TestPipelineDynamicNoData:

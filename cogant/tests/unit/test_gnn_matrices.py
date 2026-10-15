@@ -469,6 +469,17 @@ class TestEmptyModel:
         assert m.compute_B() == []
         assert m.compute_C() == []
         assert m.compute_D() == []
+        from cogant.reverse.fenced import read_matrices
+
+        block = m.to_gnn_markdown_block()
+        assert "A[[rows=0][cols=0]]" in block
+        assert "B[[rows=0][cols=0][depth=0]]" in block
+        assert read_matrices(f"```gnn-matrices\n{block}\n```\n", 100) == {
+            "A": [],
+            "B": [],
+            "C": [],
+            "D": [],
+        }
 
     def test_mappings_as_list_are_accepted(
         self,

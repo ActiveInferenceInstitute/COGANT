@@ -5,13 +5,10 @@ api/orchestration.py light helpers, and reverse/idempotency.py public API.
 Covers:
 - cogant.run_pipeline: happy path (lines 106-112)
 - cogant module attributes: __version__, __rust_version__, _RUST_AVAILABLE, aliases
-- GNNModelRunner: load_package (non-existent dir), _initialize_beliefs, _initialize_state,
-  _compute_statistics (empty traces), _generate_observation, _select_action
+- GNNModelRunner: missing-package admission and exported prior/posterior history
 - api/orchestration.py: _repo_uri helper, program_graph_to_dict
 - reverse/idempotency.py: RoundtripResult, _ONTOLOGY_TO_ROLE, _role_multiset_from_model
 """
-
-from pathlib import Path
 
 import pytest
 
@@ -76,90 +73,25 @@ class TestCogantInit:
 
 
 class TestGNNModelRunnerHelpers:
-    def _make_runner(self):
+    def test_missing_package_rejected(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
 
-        runner = GNNModelRunner()
-        # Manually set up minimal package state
-        runner.package_dir = Path("/nonexistent")
-        runner.manifest = {}  # minimal manifest
-        runner.state_space = {"variables": {}}
-        runner.observations = {}
-        runner.actions = ["action_a", "action_b"]
-        runner.preferences = {}
-        runner.traces = []
-        runner.beliefs_history = []
-        runner.free_energy_trajectory = []
-        return runner
+        with pytest.raises(FileNotFoundError):
+            GNNModelRunner().load_package(str(tmp_path / "missing"))
 
-    def test_initialize_beliefs_returns_dict(self):
-        runner = self._make_runner()
-        beliefs = runner._initialize_beliefs()
-        assert isinstance(beliefs, dict)
-
-    def test_initialize_state_returns_dict(self):
-        runner = self._make_runner()
-        state = runner._initialize_state()
-        assert isinstance(state, dict)
-
-    def test_compute_statistics_empty_traces(self):
-        runner = self._make_runner()
-        stats = runner._compute_statistics()
-        assert isinstance(stats, dict)
-        assert "total_steps" in stats or "steps" in stats or len(stats) >= 0
-
-    def test_generate_observation_returns_str(self):
-        runner = self._make_runner()
-        state = {"x": 1}
-        obs = runner._generate_observation(state)
-        assert isinstance(obs, str)
-
-    def test_select_action_returns_str(self):
-        runner = self._make_runner()
-        beliefs = {"s0": 0.5, "s1": 0.5}
-        policy_scores = [("action_a", 0.3), ("action_b", 0.7)]
-        action, rationale = runner._select_action_active_inference(beliefs, policy_scores)
-        assert isinstance(action, str)
-        assert isinstance(rationale, str)
-
-    def test_load_package_nonexistent(self, tmp_path):
+    def test_not_loaded_rejected(self):
         from cogant.gnn.runner import GNNModelRunner
 
-        runner = GNNModelRunner()
-        # load_package on a dir without manifest.json should raise or return gracefully
-        nonexistent = tmp_path / "no_package"
-        nonexistent.mkdir()
-        try:
-            runner.load_package(str(nonexistent))
-        except (FileNotFoundError, RuntimeError, KeyError, Exception):
-            pass  # Any exception is acceptable — we just want to hit the code
+        with pytest.raises(RuntimeError, match="not loaded"):
+            GNNModelRunner().run(1)
 
-    def test_run_raises_without_package(self):
-        from cogant.gnn.runner import GNNModelRunner
+    def test_history_starts_with_exported_prior(self, tmp_path):
+        from tests.gnn_execution_fixture import runner
 
-        runner = GNNModelRunner()
-        with pytest.raises(RuntimeError, match="Package not loaded"):
-            runner.run(steps=1)
-
-    def test_execution_trace_to_dict(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(
-            step=0,
-            state={"s": 1},
-            action="act",
-            observation="obs_0",
-            reward=1.0,
-            beliefs={"s0": 0.6, "s1": 0.4},
-        )
-        d = trace.to_dict()
-        assert isinstance(d, dict)
-        assert d["step"] == 0
-
-
-# ---------------------------------------------------------------------------
-# api/orchestration.py — _repo_uri helper
-# ---------------------------------------------------------------------------
+        model = runner(tmp_path)
+        model.run(1)
+        assert list(model.beliefs_history[0].values()) == [0.75, 0.25]
+        assert model.beliefs_history[1] == model.traces[0].beliefs
 
 
 class TestOrchestrationHelpers:

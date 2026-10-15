@@ -25,7 +25,6 @@ from .ingest import IngestConfig
 from .loaders import (
     ConfigLoader,
     ConfigLoadError,
-    ConfigMigrationWarning,
     ReservedConfigWarning,
 )
 from .pipeline import PipelineConfig
@@ -84,7 +83,6 @@ __all__ = [
     # Loaders
     "ConfigLoader",
     "ConfigLoadError",
-    "ConfigMigrationWarning",
     "ReservedConfigWarning",
     # Defaults
     "DEFAULT_COGANT_CONFIG",

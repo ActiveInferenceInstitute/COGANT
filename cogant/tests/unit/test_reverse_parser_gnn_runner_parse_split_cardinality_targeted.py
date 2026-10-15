@@ -6,12 +6,8 @@ Covers:
 - reverse/parser.py: _split_sections, _parse_cardinality_and_type, _parse_tuple_vector,
   _parse_state_space_block, parse_gnn (str input, Path input, full GNN block),
   ReverseGNNModel properties (n_states, n_obs, n_actions), _sanitize_identifier
-- gnn/runner.py: _update_beliefs, _compute_vfe, _evaluate_policies,
-  _compute_transition, _compute_reward, _count_unique_states, _count_unique_actions,
-  _entropy, generate_execution_report (no-trace path, with beliefs_history)
+- gnn/runner.py: matrix likelihood and prior sensitivity of posterior beliefs
 """
-
-from pathlib import Path
 
 import pytest
 
@@ -247,169 +243,19 @@ class TestParseGNN:
 # ---------------------------------------------------------------------------
 
 
-def _make_runner_with_state():
-    """Return a GNNModelRunner with minimal state loaded."""
-    from cogant.gnn.runner import GNNModelRunner
-
-    runner = GNNModelRunner()
-    runner.package_dir = Path("/nonexistent")
-    runner.manifest = {}
-    runner.state_space = {
-        "variables": {"s_f0": {"values": ["low", "high"]}, "s_f1": {"values": ["off", "on"]}},
-        "observations": {"o_m0": {"values": ["obs_a", "obs_b"]}},
-    }
-    runner.observations = {}
-    runner.actions = ["action_a", "action_b"]
-    runner.preferences = {}
-    runner.traces = []
-    runner.beliefs_history = []
-    runner.free_energy_trajectory = []
-    runner.action_counts = {}
-    return runner
-
-
 class TestGNNModelRunnerActiveInference:
-    def test_update_beliefs_empty(self):
-        runner = _make_runner_with_state()
-        result = runner._update_beliefs({}, "obs_0")
-        assert result == {}
+    @pytest.mark.parametrize(
+        "prior,expected",
+        [
+            ("0.75\n0.25", [27 / 29, 2 / 29]),
+            ("0.5\n0.5", [9 / 11, 2 / 11]),
+            ("0.0\n1.0", [0.0, 1.0]),
+        ],
+    )
+    def test_posterior_changes_with_exported_prior(self, tmp_path, prior, expected):
+        from tests.gnn_execution_fixture import MODEL, runner
 
-    def test_update_beliefs_normalizes(self):
-        runner = _make_runner_with_state()
-        prior = {"state_a": 0.5, "state_b": 0.5}
-        posterior = runner._update_beliefs(prior, "state_a")
-        total = sum(posterior.values())
-        assert abs(total - 1.0) < 1e-9
-        assert isinstance(posterior, dict)
-
-    def test_update_beliefs_matching_obs(self):
-        runner = _make_runner_with_state()
-        prior = {"state_a": 0.5, "state_b": 0.5}
-        posterior = runner._update_beliefs(prior, "state_a")
-        # "state_a" matches obs, should have higher posterior weight
-        assert posterior["state_a"] > posterior["state_b"]
-
-    def test_compute_vfe_empty_beliefs(self):
-        runner = _make_runner_with_state()
-        vfe = runner._compute_vfe({}, "obs")
-        assert vfe == 0.0
-
-    def test_compute_vfe_returns_float(self):
-        runner = _make_runner_with_state()
-        beliefs = {"state_a": 0.6, "state_b": 0.4}
-        vfe = runner._compute_vfe(beliefs, "state_a")
-        assert isinstance(vfe, float)
-
-    def test_evaluate_policies_no_state_space(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        runner.state_space = {}
-        runner.actions = []
-        result = runner._evaluate_policies({"s0": 1.0})
-        assert result == []
-
-    def test_evaluate_policies_returns_list(self):
-        runner = _make_runner_with_state()
-        beliefs = {"state_a": 0.5, "state_b": 0.5}
-        result = runner._evaluate_policies(beliefs)
-        assert isinstance(result, list)
-
-    def test_compute_transition_adds_key(self):
-        runner = _make_runner_with_state()
-        state = {"x": 1.0, "y": 2.0}
-        new_state = runner._compute_transition(state, "action_a")
-        assert "step_result_action_a" in new_state
-
-    def test_compute_transition_increments_numeric(self):
-        runner = _make_runner_with_state()
-        state = {"x": 1.0}
-        new_state = runner._compute_transition(state, "move")
-        assert new_state["x"] > 1.0
-
-    def test_compute_reward_changed_state(self):
-        runner = _make_runner_with_state()
-        state = {"x": 1}
-        new_state = {"x": 2}
-        reward = runner._compute_reward(state, "act", new_state)
-        assert reward == 0.1
-
-    def test_compute_reward_unchanged_state(self):
-        runner = _make_runner_with_state()
-        state = {"x": 1}
-        reward = runner._compute_reward(state, "act", state)
-        assert reward == 0.0
-
-    def test_count_unique_states_empty(self):
-        runner = _make_runner_with_state()
-        result = runner._count_unique_states([])
-        assert result == 0
-
-    def test_count_unique_states(self):
-        runner = _make_runner_with_state()
-        traces = [
-            {"state": {"x": 1}},
-            {"state": {"x": 2}},
-            {"state": {"x": 1}},  # duplicate
-        ]
-        result = runner._count_unique_states(traces)
-        assert result == 2
-
-    def test_count_unique_actions_empty(self):
-        runner = _make_runner_with_state()
-        result = runner._count_unique_actions([])
-        assert result == 0
-
-    def test_count_unique_actions(self):
-        runner = _make_runner_with_state()
-        traces = [
-            {"action": "act_a"},
-            {"action": "act_b"},
-            {"action": "act_a"},  # duplicate
-        ]
-        result = runner._count_unique_actions(traces)
-        assert result == 2
-
-    def test_entropy_uniform(self):
-        runner = _make_runner_with_state()
-        dist = {"a": 0.5, "b": 0.5}
-        entropy = runner._entropy(dist)
-        import math
-
-        assert abs(entropy - math.log(2)) < 1e-9
-
-    def test_entropy_deterministic(self):
-        runner = _make_runner_with_state()
-        dist = {"a": 1.0, "b": 0.0}
-        entropy = runner._entropy(dist)
-        assert entropy == 0.0
-
-    def test_generate_execution_report_no_traces(self):
-        runner = _make_runner_with_state()
-        report = runner.generate_execution_report()
-        assert isinstance(report, str)
-        assert "No traces" in report or "GNN" in report
-
-    def test_generate_execution_report_with_trace_dict(self):
-        runner = _make_runner_with_state()
-        trace = {
-            "traces": [
-                {
-                    "step": 0,
-                    "action": "act",
-                    "observation": "obs",
-                    "free_energy_after": 0.5,
-                    "reward": 0.1,
-                    "beliefs": {},
-                }
-            ],
-            "statistics": {"mean_reward": 0.1},
-            "free_energy_trajectory": [1.0, 0.5],
-            "action_distribution": {"act": 1},
-            "total_reward": 0.1,
-            "avg_reward": 0.1,
-        }
-        runner.beliefs_history = [{"state_a": 0.5, "state_b": 0.5}]
-        report = runner.generate_execution_report(trace=trace)
-        assert isinstance(report, str)
-        assert "GNN" in report
+        model = runner(tmp_path, MODEL.replace("0.75\n0.25", prior))
+        model.run(1)
+        assert list(model.traces[0].beliefs.values()) == pytest.approx(expected)
+        assert sum(model.traces[0].predicted_state.values()) == pytest.approx(1.0)

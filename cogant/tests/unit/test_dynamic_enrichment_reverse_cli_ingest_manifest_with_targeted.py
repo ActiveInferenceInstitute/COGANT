@@ -6,7 +6,8 @@ Covers:
 - reverse/cli.py: _render_plan_summary, _render_roundtrip_result helpers
 - ingest/manifest.py: ManifestParser all formats
 - ingest/repo.py: RepoIngester, RepoMetadata, RepoSnapshot
-- ingest/language_detect.py: LanguageDetector, get_parser_for_extension
+- ingest/language_detect.py: LanguageDetector
+- parsers/registry.py: get_parser_for_extension
 - ingest/files.py: FileEnumerator, FileInfo
 - gnn/runner.py: ExecutionTrace, GNNModelRunner
 - viz/boundary.py: BoundaryMapper
@@ -500,22 +501,21 @@ class TestLanguageDetector:
         assert isinstance(langs, list)
 
     def test_get_parser_for_extension_unknown(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import LanguageParserUnavailable, get_parser_for_extension
 
-        result = get_parser_for_extension(".xyz")
-        assert result is None
+        with pytest.raises(LanguageParserUnavailable):
+            get_parser_for_extension(".xyz")
 
     def test_get_parser_for_extension_py(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
-        # May return None if parser not loaded; just check no exception
-        get_parser_for_extension(".py")
+        assert callable(get_parser_for_extension(".py").parse)
         # result could be None or a parser instance
 
     def test_get_parser_for_extension_no_dot(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
-        get_parser_for_extension("py")
+        assert callable(get_parser_for_extension("py").parse)
         # Should handle no-dot prefix
 
 
@@ -691,159 +691,24 @@ class TestRepoIngester:
 
 
 class TestExecutionTrace:
-    """Test ExecutionTrace dataclass."""
+    def test_trace_fields_come_from_admitted_model(self, tmp_path):
+        from tests.gnn_execution_fixture import trace
 
-    def test_execution_trace_basic(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(
-            step=0,
-            state={"x": 1},
-            action="move",
-            observation="obs_a",
-            reward=1.0,
-        )
-        assert trace.step == 0
-        assert trace.action == "move"
-        assert trace.observation == "obs_a"
-        assert trace.reward == 1.0
-
-    def test_execution_trace_to_dict(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(
-            step=1,
-            state={"y": 2},
-            beliefs={"s0": 0.6, "s1": 0.4},
-            free_energy_before=1.5,
-            free_energy_after=1.2,
-            policy_scores=[("act_a", -0.5), ("act_b", -0.8)],
-        )
-        d = trace.to_dict()
-        assert d["step"] == 1
-        assert "beliefs" in d
-        assert "free_energy_before" in d
-        assert "policy_scores" in d
-
-    def test_execution_trace_defaults(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(step=0, state={})
-        assert trace.beliefs == {}
-        assert trace.beliefs_prior == {}
-        assert trace.predicted_state == {}
-        assert trace.policy_scores == []
-        assert trace.action is None
-
-    def test_execution_trace_with_all_fields(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(
-            step=5,
-            state={"hidden": "A"},
-            action="perceive",
-            observation="bright",
-            reward=0.5,
-            beliefs={"A": 0.7, "B": 0.3},
-            beliefs_prior={"A": 0.5, "B": 0.5},
-            free_energy_before=2.0,
-            free_energy_after=1.8,
-            policy_scores=[("perceive", -1.0)],
-            action_rationale="minimizes EFE",
-            predicted_state={"hidden": "A"},
-        )
-        d = trace.to_dict()
-        assert d["action_rationale"] == "minimizes EFE"
-        assert d["predicted_state"] == {"hidden": "A"}
+        result = trace(tmp_path).to_dict()
+        assert list(result["beliefs_prior"].values()) == [0.75, 0.25]
+        assert list(result["predicted_state"].values()) == [0.0, 1.0]
+        assert isinstance(result["action"], str)
 
 
 class TestGNNModelRunner:
-    """Test GNNModelRunner lifecycle."""
+    def test_load_then_execute_without_metadata_sidecars(self, tmp_path):
+        from tests.gnn_execution_fixture import runner
 
-    def _create_minimal_package(self, pkg_dir: Path) -> None:
-        """Create a minimal GNN package for testing."""
-        manifest = {
-            "version": "1.0.0",
-            "package_name": "test_model",
-            "created_at": "2024-01-01T00:00:00",
-        }
-        (pkg_dir / "manifest.json").write_text(json.dumps(manifest))
-        model = {
-            "hidden_states": [{"id": "s0", "name": "state0"}, {"id": "s1", "name": "state1"}],
-            "observations": [{"id": "o0", "name": "obs0"}],
-            "actions": [{"id": "a0", "name": "act0"}],
-        }
-        (pkg_dir / "model.gnn.json").write_text(json.dumps(model))
-        state_space = {
-            "variables": [{"name": "s0"}, {"name": "s1"}],
-            "observations": [{"name": "o0"}],
-            "actions": [{"name": "a0"}],
-        }
-        (pkg_dir / "state_space.json").write_text(json.dumps(state_space))
-
-    def test_load_package(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        pkg_dir = tmp_path / "pkg"
-        pkg_dir.mkdir()
-        self._create_minimal_package(pkg_dir)
-        runner = GNNModelRunner()
-        manifest = runner.load_package(str(pkg_dir))
-        assert manifest["version"] == "1.0.0"
-
-    def test_load_package_missing_manifest_raises(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        with pytest.raises(FileNotFoundError):
-            runner.load_package(str(tmp_path / "empty_pkg"))
-
-    def test_run_without_load_raises(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        with pytest.raises(RuntimeError, match="not loaded"):
-            runner.run(steps=1)
-
-    def test_run_basic(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        pkg_dir = tmp_path / "pkg2"
-        pkg_dir.mkdir()
-        self._create_minimal_package(pkg_dir)
-        runner = GNNModelRunner()
-        runner.load_package(str(pkg_dir))
-        result = runner.run(steps=3)
-        assert isinstance(result, dict)
-        assert "traces" in result or "steps" in result or "total_reward" in result
-
-    def test_runner_has_traces_after_run(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        pkg_dir = tmp_path / "pkg3"
-        pkg_dir.mkdir()
-        self._create_minimal_package(pkg_dir)
-        runner = GNNModelRunner()
-        runner.load_package(str(pkg_dir))
-        runner.run(steps=2)
-        assert len(runner.traces) == 2
-
-    def test_load_package_no_model_json(self, tmp_path):
-        """Package with only manifest.json should still load."""
-        from cogant.gnn.runner import GNNModelRunner
-
-        pkg_dir = tmp_path / "pkg4"
-        pkg_dir.mkdir()
-        manifest = {"version": "1.0.0"}
-        (pkg_dir / "manifest.json").write_text(json.dumps(manifest))
-        runner = GNNModelRunner()
-        m = runner.load_package(str(pkg_dir))
-        assert m["version"] == "1.0.0"
-
-
-# ---------------------------------------------------------------------------
-# viz/boundary.py
-# ---------------------------------------------------------------------------
+        model = runner(tmp_path)
+        result = model.run(3)
+        assert model.manifest["version"] == "1.0"
+        assert result["steps_completed"] == 3
+        assert len(model.traces) == 3
 
 
 class TestBoundaryMapper:

@@ -40,7 +40,7 @@ def test_vfe_zero_when_beliefs_equal_prior_and_observation_uniform():
         [0.9, 0.1],
         [0.1, 0.9],
     ]
-    vfe = variational_free_energy(beliefs, prior, A)
+    vfe = variational_free_energy(beliefs, prior, A, [0.5, 0.5])
     # KL(Q||P) = 0; E_Q[log P(o|s)] with uniform observation == log(0.5).
     # For each s: sum_o 0.5 * log(A[o][s]) = 0.5*log(0.9) + 0.5*log(0.1).
     per_state = 0.5 * math.log(0.9) + 0.5 * math.log(0.1)
@@ -57,8 +57,8 @@ def test_vfe_is_nonnegative_kl_term_when_likelihood_neutral():
     uniform_beliefs = [1 / 3, 1 / 3, 1 / 3]
     peaked_beliefs = [0.98, 0.01, 0.01]
 
-    vfe_uniform = variational_free_energy(uniform_beliefs, prior, neutral_A)
-    vfe_peaked = variational_free_energy(peaked_beliefs, prior, neutral_A)
+    vfe_uniform = variational_free_energy(uniform_beliefs, prior, neutral_A, [0.5, 0.5])
+    vfe_peaked = variational_free_energy(peaked_beliefs, prior, neutral_A, [0.5, 0.5])
     assert vfe_peaked > vfe_uniform
 
 
@@ -91,22 +91,14 @@ def test_vfe_rejects_mismatched_dimensions():
         variational_free_energy([0.5, 0.5], [0.5, 0.5], [[0.9, 0.1], [0.1, 0.9]], observation=[1.0])
 
 
-def test_vfe_empty_state_returns_zero():
-    assert variational_free_energy([], [], []) == 0.0
+def test_vfe_empty_state_rejected():
+    with pytest.raises(ValueError):
+        variational_free_energy([], [], [], [1.0])
 
 
-def test_vfe_no_observation_model_reduces_to_kl():
-    """With n_obs=0 the VFE collapses to the KL term."""
-    beliefs = [0.9, 0.1]
-    prior = [0.5, 0.5]
-    # KL([.9, .1] || [.5, .5]) = .9*log(.9/.5) + .1*log(.1/.5)
-    expected = 0.9 * math.log(0.9 / 0.5) + 0.1 * math.log(0.1 / 0.5)
-    assert variational_free_energy(beliefs, prior, []) == pytest.approx(expected, rel=1e-9)
-
-
-# =========================================================================
-# Bayesian belief update
-# =========================================================================
+def test_vfe_missing_observation_model_rejected():
+    with pytest.raises(ValueError, match="likelihood"):
+        variational_free_energy([0.9, 0.1], [0.5, 0.5], [], [1.0])
 
 
 def test_bayesian_update_moves_mass_toward_observed_state():
@@ -130,21 +122,14 @@ def test_bayesian_update_concentrates_on_exact_match():
     assert posterior == pytest.approx([0.0, 1.0])
 
 
-def test_bayesian_update_falls_back_to_prior_on_zero_likelihood():
-    prior = [0.4, 0.6]
-    A = [[0.0, 0.0]]  # Pathological — no state explains the observation.
-    posterior = bayesian_belief_update(prior, A, observation_index=0)
-    assert posterior == prior
+def test_bayesian_update_rejects_zero_evidence():
+    with pytest.raises(ValueError, match="evidence"):
+        bayesian_belief_update([0.5, 0.5], [[0.0, 0.0], [1.0, 1.0]], 0)
 
 
 def test_bayesian_update_raises_on_bad_index():
-    with pytest.raises(IndexError):
-        bayesian_belief_update([0.5, 0.5], [[0.9, 0.1]], observation_index=5)
-
-
-# =========================================================================
-# EFE
-# =========================================================================
+    with pytest.raises(ValueError, match="observation"):
+        bayesian_belief_update([0.5, 0.5], [[1.0, 0.0], [0.0, 1.0]], 5)
 
 
 def _identity_transition(n_states: int, n_actions: int):
@@ -208,8 +193,11 @@ def test_efe_prefers_informative_actions_under_ambiguous_likelihood():
     assert math.isfinite(efe_ambiguous)
 
 
-def test_efe_empty_policy_is_zero():
-    assert expected_free_energy([], [0.5, 0.5], [[0.9, 0.1]], [[[1.0], [0.0]]], [0.0]) == 0.0
+def test_efe_empty_policy_rejected():
+    with pytest.raises(ValueError, match="policy"):
+        expected_free_energy(
+            [], [0.5, 0.5], [[0.9, 0.1], [0.1, 0.9]], _deterministic_shift_transition(2), [0.0, 0.0]
+        )
 
 
 def test_efe_rejects_wrong_C_length():
@@ -243,7 +231,7 @@ def test_model_runner_stores_generative_model():
 def test_model_runner_vfe_from_beliefs_uses_principled_path():
     A = [[0.9, 0.1], [0.1, 0.9]]
     D = [0.5, 0.5]
-    runner = ModelRunner(A=A, D=D)
+    runner = ModelRunner(A=A, B=_deterministic_shift_transition(2), C=[0.0, 0.0], D=D)
 
     vfe_match = runner.vfe_from_beliefs([1.0, 0.0], observation=[1.0, 0.0])
     vfe_mismatch = runner.vfe_from_beliefs([0.0, 1.0], observation=[1.0, 0.0])
@@ -264,7 +252,7 @@ def test_model_runner_efe_for_policy_matches_module_function():
 
 def test_model_runner_belief_update_helper():
     A = [[0.9, 0.1], [0.1, 0.9]]
-    runner = ModelRunner(A=A)
+    runner = ModelRunner(A=A, B=_deterministic_shift_transition(2), C=[0.0, 0.0], D=[0.5, 0.5])
     posterior = runner.update_beliefs_from_observation([0.5, 0.5], observation_index=0)
     assert posterior[0] > posterior[1]
 
@@ -279,27 +267,18 @@ def test_model_runner_raises_without_generative_model():
         runner.update_beliefs_from_observation([0.5, 0.5], 0)
 
 
-def test_compute_free_energy_uses_principled_path_when_matrices_present():
-    """compute_free_energy prefers the principled VFE when A/D are compatible."""
-    A = [[0.9, 0.1], [0.1, 0.9]]
-    D = [0.5, 0.5]
-    runner = ModelRunner(A=A, D=D)
-    state = {"s0": 0, "s1": 0}
-    vfe = runner.compute_free_energy(state, observation="s0")
-    # Principled VFE with one-hot on s0 and uniform obs ==
-    # KL(Q||P) + expected_log_lik term; just assert it's finite and
-    # strictly greater than zero (KL(one-hot || uniform) > 0 is guaranteed).
-    assert math.isfinite(vfe)
-    assert vfe > 0
+def test_compute_free_energy_rejects_partial_model():
+    with pytest.raises(RuntimeError, match="requires A, B, C, and D"):
+        ModelRunner(A=[[0.9, 0.1], [0.1, 0.9]], D=[0.5, 0.5])
 
 
-def test_compute_free_energy_falls_back_without_generative_model():
+def test_compute_free_energy_rejects_unbound_named_axes():
     runner = ModelRunner()
-    state = {"s0": 0, "s1": 0}
-    vfe_compatibility = runner.compute_free_energy(state, observation="s0")
-    assert math.isfinite(vfe_compatibility)
+    with pytest.raises(ValueError, match="bound StateSpaceModel"):
+        runner.compute_free_energy({"s0": 0, "s1": 0}, observation="s0")
 
 
 def test_uniform_distribution_helper():
     assert uniform_distribution(4) == [0.25, 0.25, 0.25, 0.25]
-    assert uniform_distribution(0) == []
+    with pytest.raises(ValueError, match="positive"):
+        uniform_distribution(0)

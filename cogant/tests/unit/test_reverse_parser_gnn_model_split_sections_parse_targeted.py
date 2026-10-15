@@ -570,42 +570,36 @@ class TestParseMatricesFencedBlock:
         m = _mfb("no fenced block here\n")
         assert m.A == []
 
-    def test_A_matrix_parsed(self):
+    def test_A_matrix_parsed_incomplete_rejected(self):
         text = "```gnn-matrices\nA[[rows=2][cols=2]]\n0.9 0.1\n0.2 0.8\n```\n"
-        m = _mfb(text)
-        assert len(m.A) == 2
-        assert abs(m.A[0][0] - 0.9) < 1e-9
+        with pytest.raises(ValueError, match="missing"):
+            _mfb(text)
 
-    def test_C_vector_parsed(self):
+    def test_C_vector_parsed_incomplete_rejected(self):
         text = "```gnn-matrices\nC[[rows=2]]\n0.5\n0.7\n```\n"
-        m = _mfb(text)
-        assert len(m.C) == 2
+        with pytest.raises(ValueError, match="missing"):
+            _mfb(text)
 
-    def test_D_vector_parsed(self):
+    def test_D_vector_parsed_incomplete_rejected(self):
         text = "```gnn-matrices\nD[[rows=3]]\n0.3\n0.3\n0.4\n```\n"
-        m = _mfb(text)
-        assert len(m.D) == 3
+        with pytest.raises(ValueError, match="missing"):
+            _mfb(text)
 
-    def test_B_matrix_parsed(self):
+    def test_B_matrix_parsed_incomplete_rejected(self):
         text = "```gnn-matrices\nB[[rows=2][cols=2][depth=1]]\n# action=0\n1.0 0.0\n0.0 1.0\n```\n"
-        m = _mfb(text)
-        assert len(m.B) == 2
+        with pytest.raises(ValueError, match="missing"):
+            _mfb(text)
 
-    def test_empty_fence_no_crash(self):
-        m = _mfb("```gnn-matrices\n```\n")
-        assert m.A == []
+    def test_empty_fence_no_crash_incomplete_rejected(self):
+        with pytest.raises(ValueError, match="missing"):
+            _mfb("```gnn-matrices\n```\n")
 
-    def test_overrides_existing_A(self):
+    def test_overrides_existing_A_incomplete_rejected(self):
         base = _new_model()
         base.A = [[0.5, 0.5]]
         text = "```gnn-matrices\nA[[rows=1][cols=2]]\n0.9 0.1\n```\n"
-        m = _mfb(text, model=base)
-        assert abs(m.A[0][0] - 0.9) < 1e-9
-
-
-# ---------------------------------------------------------------------------
-# _sanitize_identifier
-# ---------------------------------------------------------------------------
+        with pytest.raises(ValueError, match="missing"):
+            _mfb(text, model=base)
 
 
 class TestSanitizeIdentifier:
@@ -736,7 +730,7 @@ class TestParseGNN:
         model = _parse_gnn(gnn)
         assert model.cardinalities.get("s_f0") == 5
 
-    def test_matrices_fenced_block_overrides(self):
+    def test_matrices_fenced_block_overrides_incomplete_rejected(self):
         gnn = (
             "## StateSpaceBlock\ns_f0[2,type=int]\no_m0[2,type=int]\n"
             "## InitialParameterization\nD_f0={ (0.6, 0.4) }\n"
@@ -745,5 +739,5 @@ class TestParseGNN:
             "0.8 0.2\n"
             "```\n"
         )
-        model = _parse_gnn(gnn)
-        assert len(model.A) >= 1
+        with pytest.raises(ValueError, match="missing"):
+            _parse_gnn(gnn)

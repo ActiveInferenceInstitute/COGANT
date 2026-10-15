@@ -3,23 +3,17 @@
 cogant/__init__.py symbols.
 
 Covers:
-- gnn/runner.py: ExecutionTrace, GNNModelRunner (load_package, run, generate_execution_report,
-  all private helpers: _initialize_beliefs, _initialize_state, _generate_observation,
-  _update_beliefs, _compute_vfe, _evaluate_policies, _select_action_active_inference,
-  _compute_reward, _count_unique_states, _count_unique_actions, _compute_statistics,
-  _entropy, _assess_model_quality)
+- gnn/runner.py: complete matrix rollout, trace history, and scoped execution report
 - viz/boundary.py: BoundaryMapper (generate_boundary_report, map_type_boundaries,
   markov_blanket_collapsed_mermaid, markov_blanket_detailed_mermaid,
   _find_containing_module, _find_inter_type_edges)
 - gnn/package.py: GNNPackageBuilder private helpers (_count_nodes_by_kind,
-  _count_mappings_by_tier, _fallback_chart, _extract_state_variables,
+  _count_mappings_by_tier, _render_distribution_chart, _extract_state_variables,
   _extract_observation_space, _extract_action_space, _extract_transition_structure,
   _extract_policies, _extract_constraints, _extract_objectives, _extract_factorization,
   _extract_factor_list, _extract_ontology_mappings)
 - cogant/__init__.py: module-level imports, CogantSession alias, run_pipeline error path
 """
-
-import json
 
 import pytest
 
@@ -73,321 +67,20 @@ def _make_process_model():
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
-def _make_gnn_package(tmp_path):
-    """Build a minimal GNN package directory for GNNModelRunner."""
-    manifest = {
-        "version": "1.0.0",
-        "schema_name": "test",
-        "created_at": "2025-01-01T00:00:00",
-        "files": [],
-    }
-    model = {
-        "model_name": "test",
-        "hidden_states": ["state_a", "state_b"],
-        "observations": [{"name": "obs_x"}, {"name": "obs_y"}],
-        "actions": [{"name": "act_1"}, {"name": "act_2"}],
-    }
-    state_space = {
-        "variables": [{"name": "var_a"}, {"name": "var_b"}],
-        "observations": [{"name": "obs_x"}, {"name": "obs_y"}],
-        "actions": [{"name": "act_1"}, {"name": "act_2"}],
-    }
-    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-    (tmp_path / "model.gnn.json").write_text(json.dumps(model))
-    (tmp_path / "state_space.json").write_text(json.dumps(state_space))
-    return tmp_path
-
-
-# ---------------------------------------------------------------------------
-# gnn/runner.py — ExecutionTrace
-# ---------------------------------------------------------------------------
-
-
-class TestExecutionTrace:
-    def test_init_minimal(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(step=0, state={"x": 1})
-        assert trace.step == 0
-        assert trace.state == {"x": 1}
-        assert trace.action is None
-
-    def test_init_with_all_fields(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(
-            step=1,
-            state={"x": 2},
-            action="move",
-            observation="obs_a",
-            reward=0.5,
-            beliefs={"s0": 0.7, "s1": 0.3},
-            free_energy_before=1.0,
-            free_energy_after=0.8,
-            policy_scores=[("act_1", 0.5)],
-            action_rationale="best EFE",
-            predicted_state={"x": 3},
-        )
-        assert trace.step == 1
-        assert trace.action == "move"
-        assert abs(trace.reward - 0.5) < 1e-9
-
-    def test_to_dict_returns_dict(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(step=0, state={"x": 1}, action="a")
-        d = trace.to_dict()
-        assert isinstance(d, dict)
-        assert "step" in d
-        assert "state" in d
-
-
-# ---------------------------------------------------------------------------
-# gnn/runner.py — GNNModelRunner
-# ---------------------------------------------------------------------------
-
-
 class TestGNNModelRunner:
-    def test_init(self):
-        from cogant.gnn.runner import GNNModelRunner
+    @pytest.mark.parametrize("steps", [1, 3, 12, 35])
+    def test_complete_matrix_rollout_and_report(self, tmp_path, steps):
+        from tests.gnn_execution_fixture import runner
 
-        runner = GNNModelRunner()
-        assert runner is not None
-        assert isinstance(runner.traces, list)
-
-    def test_load_package_returns_manifest(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        manifest = runner.load_package(str(tmp_path))
-        assert isinstance(manifest, dict)
-        assert "version" in manifest
-
-    def test_load_package_missing_manifest_raises(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        with pytest.raises(FileNotFoundError):
-            runner.load_package(str(tmp_path))
-
-    def test_run_returns_dict(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        result = runner.run(steps=3)
-        assert isinstance(result, dict)
-        assert "success" in result
-        assert "steps_completed" in result
-
-    def test_run_without_load_raises(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        runner.manifest = {}  # empty manifest triggers RuntimeError
-        with pytest.raises(RuntimeError):
-            runner.run(steps=1)
-
-    def test_generate_execution_report_no_traces(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        report = runner.generate_execution_report()
-        assert isinstance(report, str)
-
-    def test_generate_execution_report_after_run(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        runner.run(steps=3)
-        report = runner.generate_execution_report()
-        assert isinstance(report, str)
-        assert len(report) > 0
-
-    def test_generate_execution_report_with_trace_dict(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        runner.run(steps=2)
-        result = runner.run(steps=2)
-        report = runner.generate_execution_report(trace=result)
-        assert isinstance(report, str)
-
-    def test_initialize_beliefs_with_state_space(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        beliefs = runner._initialize_beliefs()
-        assert isinstance(beliefs, dict)
-        assert len(beliefs) >= 1
-
-    def test_initialize_beliefs_empty_state_space(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        runner.state_space = {}
-        beliefs = runner._initialize_beliefs()
-        assert isinstance(beliefs, dict)
-
-    def test_initialize_state(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        state = runner._initialize_state()
-        assert isinstance(state, dict)
-
-    def test_generate_observation(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        obs = runner._generate_observation({"var_a": 0, "var_b": 1})
-        assert isinstance(obs, str)
-
-    def test_generate_observation_empty_state_space(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        runner.state_space = {}
-        obs = runner._generate_observation({"x": 0})
-        assert obs == "obs_0"
-
-    def test_update_beliefs(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        prior = {"state_a": 0.5, "state_b": 0.5}
-        posterior = runner._update_beliefs(prior, "state_a")
-        assert isinstance(posterior, dict)
-        total = sum(posterior.values())
-        assert abs(total - 1.0) < 1e-6
-
-    def test_update_beliefs_empty(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        result = runner._update_beliefs({}, "obs")
-        assert result == {}
-
-    def test_compute_vfe(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        beliefs = {"s0": 0.7, "s1": 0.3}
-        vfe = runner._compute_vfe(beliefs, "obs_s0")
-        assert isinstance(vfe, float)
-
-    def test_compute_vfe_empty(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        vfe = runner._compute_vfe({}, "obs")
-        assert vfe == 0.0
-
-    def test_evaluate_policies(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        beliefs = {"s0": 0.6, "s1": 0.4}
-        scores = runner._evaluate_policies(beliefs)
-        assert isinstance(scores, list)
-
-    def test_evaluate_policies_empty_state_space(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        runner.state_space = {}
-        scores = runner._evaluate_policies({"s0": 1.0})
-        assert scores == []
-
-    def test_entropy(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        dist = {"a": 0.5, "b": 0.5}
-        h = runner._entropy(dist)
-        assert isinstance(h, float)
-        assert h > 0
-
-    def test_entropy_certain(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        dist = {"a": 1.0, "b": 0.0}
-        h = runner._entropy(dist)
-        assert isinstance(h, float)
-        assert h == 0.0
-
-    def test_compute_statistics(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        _make_gnn_package(tmp_path)
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        runner.run(steps=3)
-        stats = runner._compute_statistics()
-        assert isinstance(stats, dict)
-
-    def test_compute_statistics_empty_traces(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        stats = runner._compute_statistics()
-        assert isinstance(stats, dict)
-        assert stats == {}
-
-    def test_count_unique_states(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        traces = [{"state": {"x": 1}}, {"state": {"x": 1}}, {"state": {"x": 2}}]
-        count = runner._count_unique_states(traces)
-        assert count == 2
-
-    def test_count_unique_actions(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        traces = [{"action": "a"}, {"action": "b"}, {"action": "a"}]
-        count = runner._count_unique_actions(traces)
-        assert count == 2
-
-    def test_compute_reward(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        old_state = {"x": 1}
-        new_state = {"x": 2}
-        reward = runner._compute_reward(old_state, "act", new_state)
-        assert isinstance(reward, float)
-
-    def test_compute_reward_no_change(self):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        state = {"x": 1}
-        reward = runner._compute_reward(state, "act", state)
-        assert reward == 0.0
-
-
-# ---------------------------------------------------------------------------
-# viz/boundary.py — BoundaryMapper
-# ---------------------------------------------------------------------------
+        model = runner(tmp_path)
+        result = model.run(steps)
+        assert result["steps_completed"] == steps
+        assert len(model.traces) == steps
+        assert len(model.beliefs_history) == steps + 1
+        assert sum(model.action_counts.values()) == steps
+        assert "not measured execution" in model.generate_execution_report()
+        assert result["policy_horizon"] == 1
+        assert result["policy_objective"] == "risk_plus_ambiguity"
 
 
 class TestBoundaryMapperExtended:
@@ -493,15 +186,15 @@ class TestGNNPackageBuilderHelpers:
         result = builder._count_mappings_by_tier()
         assert isinstance(result, dict)
 
-    def test_fallback_chart_returns_html(self):
+    def test_render_distribution_chart_returns_html(self):
         builder = self._make_builder()
-        result = builder._fallback_chart("Node Distribution", {"module": 3, "class": 5})
+        result = builder._render_distribution_chart("Node Distribution", {"module": 3, "class": 5})
         assert isinstance(result, str)
         assert "<!DOCTYPE html>" in result or "<html>" in result
 
-    def test_fallback_chart_empty_counts(self):
+    def test_render_distribution_chart_empty_counts(self):
         builder = self._make_builder()
-        result = builder._fallback_chart("Empty", {})
+        result = builder._render_distribution_chart("Empty", {})
         assert isinstance(result, str)
 
     def test_extract_state_variables_empty(self):

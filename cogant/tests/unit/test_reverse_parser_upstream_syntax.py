@@ -330,7 +330,8 @@ def test_cogant_forward_bundle_keeps_aggregate_dimensions_without_cartesian_blow
     assert model.n_states == n
     assert model.n_obs == 1
     assert model.n_actions == 1
-    assert model.degraded
+    assert not model.degraded
+    assert model.matrix_source == "fenced"
 
 
 def _reverse_json(gnn: Path, out_dir: Path) -> dict[str, Any]:

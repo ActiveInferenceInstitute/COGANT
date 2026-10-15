@@ -281,8 +281,8 @@ class TestConfigLoader:
 
     def test_build_cogant_config_from_dict(self):
         loader = self._make_loader()
-        config = loader.build_cogant_config(config_dict={"max_workers": 2})
-        assert config is not None
+        config = loader.build_cogant_config(config_dict={"cogant": {"max_workers": 2}})
+        assert config.max_workers == 2
 
     def test_build_cogant_config_with_preset(self):
         loader = self._make_loader()

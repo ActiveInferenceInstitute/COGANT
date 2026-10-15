@@ -206,109 +206,143 @@ class TestModelRunnerValidateObservationsLikelihoodsPreferences:
 
 
 # ---------------------------------------------------------------------------
-# simulate/runner.py — simulate_step with string effect (line 191-192)
+# simulate/runner.py — explicit probability inputs
 # ---------------------------------------------------------------------------
 
 
-class TestModelRunnerSimulateStepStringEffect:
-    """Cover lines 191-192: string state values get '_modified' appended."""
-
+class TestModelRunnerSimulateStepProbabilityInputs:
     def setup_method(self):
         from cogant.simulate.runner import ModelRunner
 
         self.runner = ModelRunner()
 
-    def test_simulate_step_string_effect_appends_modified(self):
+    def test_simulate_step_rejects_string_probability(self):
         v = _make_variable("v1")
         action = _make_action("a1", effects=["v1"])
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
         current_state = {"v1": "initial_value"}
-        result = self.runner.simulate_step(ss, current_state, "a1")
-        assert result["success"] is True
-        assert result["next_state"]["v1"] == "initial_value_modified"
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
 
-    def test_simulate_step_bool_effect_toggles(self):
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError):
+            self.runner.simulate_step(ss, current_state, "a1")
+
+    def test_simulate_step_rejects_boolean_probability(self):
         v = _make_variable("v1")
         action = _make_action("a1", effects=["v1"])
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
-        result = self.runner.simulate_step(ss, {"v1": True}, "a1")
-        assert result["next_state"]["v1"] is False
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
 
-    def test_simulate_step_numeric_effect_increments(self):
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError):
+            self.runner.simulate_step(ss, {"v1": True}, "a1")
+
+    def test_simulate_step_rejects_unnormalized_integer_probability(self):
         v = _make_variable("v1")
         action = _make_action("a1", effects=["v1"])
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
-        result = self.runner.simulate_step(ss, {"v1": 5}, "a1")
-        assert result["next_state"]["v1"] == 6
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
 
-    def test_simulate_step_float_effect_increments(self):
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError):
+            self.runner.simulate_step(ss, {"v1": 5}, "a1")
+
+    def test_simulate_step_rejects_unnormalized_float_probability(self):
         v = _make_variable("v1")
         action = _make_action("a1", effects=["v1"])
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
-        result = self.runner.simulate_step(ss, {"v1": 1.5}, "a1")
-        assert abs(result["next_state"]["v1"] - 2.5) < 1e-9
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
+
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError):
+            self.runner.simulate_step(ss, {"v1": 1.5}, "a1")
 
 
 # ---------------------------------------------------------------------------
-# simulate/runner.py — run_simulation state initialization (lines 219-225)
+# simulate/runner.py — initialization from declared D
 # ---------------------------------------------------------------------------
 
 
 class TestModelRunnerRunSimulation:
-    """Cover lines 219-225: run_simulation initializes state from variable types."""
-
     def setup_method(self):
         from cogant.simulate.runner import ModelRunner
 
         self.runner = ModelRunner()
 
-    def test_run_simulation_boolean_variable_initializes_false(self):
+    def test_run_simulation_boolean_variable_uses_declared_prior(self):
         from cogant.statespace.variables import StateVariableType
 
         v = _make_variable("v1", vtype=StateVariableType.BOOLEAN)
         action = _make_action("a1", effects=["v1"])
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
-        trace = self.runner.run_simulation(ss, steps=2)
-        assert trace[0]["state"]["v1"] is False
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
 
-    def test_run_simulation_discrete_variable_initializes_zero(self):
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        trace = self.runner.run_simulation(ss, steps=2)
+        assert trace[0]["beliefs"]["v1"] == 1.0
+
+    def test_run_simulation_discrete_variable_uses_declared_prior(self):
         from cogant.statespace.variables import StateVariableType
 
         v = _make_variable("v1", vtype=StateVariableType.DISCRETE)
         action = _make_action("a1")
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
-        trace = self.runner.run_simulation(ss, steps=2)
-        assert trace[0]["state"]["v1"] == 0
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
 
-    def test_run_simulation_continuous_variable_initializes_zero_float(self):
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        trace = self.runner.run_simulation(ss, steps=2)
+        assert trace[0]["beliefs"]["v1"] == 1.0
+
+    def test_run_simulation_continuous_variable_uses_declared_prior(self):
         from cogant.statespace.variables import StateVariableType
 
         v = _make_variable("v1", vtype=StateVariableType.CONTINUOUS)
         action = _make_action("a1")
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
-        trace = self.runner.run_simulation(ss, steps=1)
-        assert trace[0]["state"]["v1"] == 0.0
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
 
-    def test_run_simulation_categorical_variable_initializes_none(self):
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        trace = self.runner.run_simulation(ss, steps=1)
+        assert trace[0]["beliefs"]["v1"] == 1.0
+
+    def test_run_simulation_categorical_variable_uses_declared_prior(self):
         from cogant.statespace.variables import StateVariableType
 
         v = _make_variable("v1", vtype=StateVariableType.CATEGORICAL)
         action = _make_action("a1")
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
-        trace = self.runner.run_simulation(ss, steps=1)
-        assert trace[0]["state"]["v1"] is None
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
 
-    def test_run_simulation_no_actions_stops_early(self):
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        trace = self.runner.run_simulation(ss, steps=1)
+        assert trace[0]["beliefs"]["v1"] == 1.0
+
+    def test_run_simulation_no_actions_rejected(self):
         v = _make_variable("v1")
         ss = _make_state_space(variables={"v1": v})
-        trace = self.runner.run_simulation(ss, steps=5)
-        # Only step 0 added (initial state), then no actions → loop breaks
-        assert len(trace) == 1
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
+
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError, match="structural axes"):
+            self.runner.run_simulation(ss, steps=5)
 
     def test_run_simulation_multiple_steps_returns_trace(self):
         v = _make_variable("v1")
         action = _make_action("a1", effects=["v1"])
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
+        ss.observations = {"o": _make_observation("o", source_node_id="n1")}
+        from cogant.simulate.runner import ModelRunner
+
+        self.runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
         trace = self.runner.run_simulation(ss, steps=3)
         # Step 0 + 3 steps
         assert len(trace) == 4

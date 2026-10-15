@@ -322,7 +322,7 @@ class TestConfigBuilderErrorPaths:
 
 
 class TestConfigLoaderHappyPaths:
-    """Round-trip every preset/file through build_*_config and load_all_configs."""
+    """Round-trip every preset/file through build_*_config and load_project_config."""
 
     @pytest.mark.parametrize(
         "preset", ["default", "minimal", "standard", "comprehensive", "gnn-focused", "security"]
@@ -348,7 +348,7 @@ class TestConfigLoaderHappyPaths:
         result = ConfigLoader.build_pipeline_config(config)
         assert result.stages == ["ingest", "static", "graph"]
 
-    def test_load_all_configs_with_yaml_path(self, tmp_path: Path) -> None:
+    def test_load_project_config_with_yaml_path(self, tmp_path: Path) -> None:
         """Load all configs from a YAML file end-to-end."""
         pytest.importorskip("yaml")
         yaml_path = tmp_path / "all.yaml"
@@ -358,29 +358,29 @@ class TestConfigLoaderHappyPaths:
             "export:\n  include_metadata: true\n"
             "validation:\n  validate_schema: false\n"
         )
-        configs = ConfigLoader.load_all_configs(yaml_path=yaml_path)
+        configs = ConfigLoader.load_project_config(path=yaml_path)
         assert configs.cogant.environment == "production"
         assert configs.pipeline.verbose is True
         assert configs.export.include_metadata is True
         assert configs.validation.validate_schema is False
 
-    def test_load_all_configs_with_yaml_path_and_preset(self, tmp_path: Path) -> None:
+    def test_load_project_config_with_yaml_path_and_preset(self, tmp_path: Path) -> None:
         """Combining a YAML override with a preset still produces all four configs."""
         pytest.importorskip("yaml")
         yaml_path = tmp_path / "minimal_override.yaml"
         yaml_path.write_text("pipeline:\n  verbose: false\n")
-        configs = ConfigLoader.load_all_configs(yaml_path=yaml_path, preset="minimal")
+        configs = ConfigLoader.load_project_config(path=yaml_path, preset="minimal")
         assert configs.pipeline.verbose is False
 
-    def test_load_all_configs_with_only_preset(self) -> None:
-        configs = ConfigLoader.load_all_configs(preset="default")
+    def test_load_project_config_with_only_preset(self) -> None:
+        configs = ConfigLoader.load_project_config(preset="default")
         from cogant.config.schema import ProjectConfig
 
         assert isinstance(configs, ProjectConfig)
 
-    def test_load_all_configs_with_no_args(self) -> None:
+    def test_load_project_config_with_no_args(self) -> None:
         """No yaml + no preset -> uses DEFAULT_* baselines."""
-        configs = ConfigLoader.load_all_configs()
+        configs = ConfigLoader.load_project_config()
         from cogant.config.schema import ProjectConfig
 
         assert isinstance(configs, ProjectConfig)

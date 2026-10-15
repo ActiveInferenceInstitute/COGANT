@@ -10,7 +10,6 @@ from .schema import ValidationConfig as ValidationConfig
 
 HAS_YAML: bool
 
-class ConfigMigrationWarning(DeprecationWarning): ...
 class ReservedConfigWarning(UserWarning): ...
 class ConfigLoadError(ValueError): ...
 
@@ -45,10 +44,6 @@ class ConfigLoader:
     def build_validation_config(
         config_dict: Mapping[str, Any] | None = None, preset: str | None = None
     ) -> ValidationConfig: ...
-    @staticmethod
-    def load_all_configs(
-        yaml_path: str | Path | None = None, preset: str | None = None
-    ) -> ProjectConfig: ...
     @staticmethod
     def load_project_config(
         path: str | Path | None = None,

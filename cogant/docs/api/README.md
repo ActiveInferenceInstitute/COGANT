@@ -23,6 +23,7 @@
 | [PipelineRunner API](pipelinerunner_api.md) | Lower-level pipeline executor for custom stage composition | Intermediate |
 | [Bundle API](bundle_api.md) | Read, write, and inspect COGANT result bundles | Intermediate |
 | [Export Stage and GNN Package](export_stage_and_gnn_package.md) | Export final mappings as a GNN package | Intermediate |
+| [Execute Exported GNN Models](inference.md) | Categorical filtering, action selection, typed traces, and source-bound figures | Intermediate |
 
 ### Translation, scoring, and review
 

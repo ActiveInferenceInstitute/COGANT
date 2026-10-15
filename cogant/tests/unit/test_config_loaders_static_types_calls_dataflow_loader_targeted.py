@@ -93,7 +93,9 @@ class TestConfigLoader:
         from cogant.config.loaders import ConfigLoader
 
         result = ConfigLoader.load_default()
-        assert "cogant" in result or "pipeline" in result or "export" in result
+        assert result.cogant.max_workers > 0
+        assert result.pipeline.stages
+        assert result.export.primary_format
 
     def test_load_preset_default(self):
         from cogant.config.loaders import ConfigLoader
@@ -702,9 +704,13 @@ class TestModelRunnerMatrixMethods:
         return runner
 
     def test_vfe_from_beliefs_basic(self):
+        import math
+
         runner = self._make_runner_with_matrices()
-        vfe = runner.vfe_from_beliefs([0.7, 0.3])
-        assert isinstance(vfe, float)
+        vfe = runner.vfe_from_beliefs([0.7, 0.3], observation=[1.0, 0.0])
+        expected = 0.7 * math.log(0.7 / 0.5) + 0.3 * math.log(0.3 / 0.5)
+        expected -= 0.7 * math.log(0.9) + 0.3 * math.log(0.1)
+        assert vfe == pytest.approx(expected)
 
     def test_vfe_from_beliefs_no_A_raises(self):
         from cogant.simulate.runner import ModelRunner
@@ -714,9 +720,13 @@ class TestModelRunnerMatrixMethods:
             runner.vfe_from_beliefs([0.5, 0.5])
 
     def test_vfe_from_beliefs_with_explicit_prior(self):
+        import math
+
         runner = self._make_runner_with_matrices()
-        vfe = runner.vfe_from_beliefs([0.7, 0.3], prior=[0.6, 0.4])
-        assert isinstance(vfe, float)
+        vfe = runner.vfe_from_beliefs([0.7, 0.3], observation=[1.0, 0.0], prior=[0.6, 0.4])
+        expected = 0.7 * math.log(0.7 / 0.6) + 0.3 * math.log(0.3 / 0.4)
+        expected -= 0.7 * math.log(0.9) + 0.3 * math.log(0.1)
+        assert vfe == pytest.approx(expected)
 
     def test_vfe_from_beliefs_with_observation(self):
         runner = self._make_runner_with_matrices()
@@ -741,9 +751,8 @@ class TestModelRunnerMatrixMethods:
         A = [[0.9, 0.1], [0.1, 0.9]]
         B = [[[1.0], [0.0]], [[0.0], [1.0]]]
         C = [0.5, -0.5]
-        runner = ModelRunner(A=A, B=B, C=C)
-        with pytest.raises(RuntimeError, match="No initial beliefs"):
-            runner.efe_for_policy([0])
+        with pytest.raises(RuntimeError, match="requires A, B, C, and D"):
+            ModelRunner(A=A, B=B, C=C)
 
     def test_update_beliefs_from_observation(self):
         runner = self._make_runner_with_matrices()

@@ -1,24 +1,17 @@
-"""Milestone integration test: first Active Inference inference step on a round-tripped codebase.
-
-This test chains the full COGANT pipeline end to end:
-
-    parse GNN -> plan package -> synthesize package -> exec matrices -> AgentRuntime -> run_n_steps
-
-It demonstrates that a GNN specification can be compiled into a working
-Active Inference agent that produces normalized belief distributions,
-finite free energy, and discrete actions at each timestep.
-"""
-
 from __future__ import annotations
 
 import math
 import types
 from pathlib import Path
 
+import pytest
+
 from cogant.reverse.callable import MatrixFunctions
 from cogant.reverse.parser import parse_gnn
 from cogant.reverse.planner import plan_package
 from cogant.reverse.synthesizer import synthesize_package
+from cogant.runtime.inference import run_gnn_inference
+from cogant.runtime.inference_records import InferenceOptions
 from cogant.runtime.loop import AgentRuntime, AgentStep
 
 # ---------------------------------------------------------------------------
@@ -69,6 +62,26 @@ D_f0=PriorBelief
 
 ## Time
 Static
+
+## State Space
+```gnn-matrices
+A[[rows=2][cols=2]]
+0.8 0.2
+0.2 0.8
+B[[rows=2][cols=2][depth=2]]
+# action=0
+1.0 0.0
+0.0 1.0
+# action=1
+1.0 0.0
+0.0 1.0
+C[[rows=2][cols=1]]
+1.0
+-1.0
+D[[rows=2][cols=1]]
+0.6
+0.4
+```
 """
 
 
@@ -77,12 +90,7 @@ Static
 # ---------------------------------------------------------------------------
 
 
-def test_inference_demo(tmp_path: Path) -> None:
-    """Parse GNN -> synthesize package -> exec matrices -> AgentRuntime -> run 3 steps.
-
-    This is the milestone test: the first time a COGANT-generated package
-    is executed as a working Active Inference agent.
-    """
+def test_generated_matrices_execute_authored_gnn(tmp_path: Path) -> None:
     # 1. Parse the GNN specification.
     model = parse_gnn(HAND_WRITTEN_GNN)
     assert model.n_states == 2, f"Expected 2 hidden states, got {model.n_states}"
@@ -117,6 +125,15 @@ def test_inference_demo(tmp_path: Path) -> None:
 
     # 5. Assertions.
     assert len(steps) == 3, f"Expected 3 steps, got {len(steps)}"
+    direct = run_gnn_inference(HAND_WRITTEN_GNN, InferenceOptions(steps=3))
+    assert steps[0].posterior == pytest.approx((0.48 / 0.56, 0.08 / 0.56))
+    assert steps[0].free_energy == pytest.approx(-math.log(0.56))
+    for step, record in zip(steps, direct.trace, strict=True):
+        assert step.posterior == list(record.posterior)
+        assert step.state_dist == list(record.predicted_belief)
+        assert step.policy_scores == list(record.policy_scores)
+        assert step.free_energy == record.free_energy
+        assert step.action == record.action
 
     for i, step in enumerate(steps):
         assert isinstance(step, AgentStep)
@@ -154,7 +171,7 @@ def test_inference_demo(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_inference_demo_no_exec() -> None:
+def test_direct_matrix_functions_execute_without_generated_code() -> None:
     """Same pipeline but using MatrixFunctions directly -- no exec() needed.
 
     MatrixFunctions builds runtime-callable closures from a parsed GNN
@@ -166,20 +183,8 @@ def test_inference_demo_no_exec() -> None:
     model = parse_gnn(HAND_WRITTEN_GNN)
     mf = MatrixFunctions(model)
 
-    # MatrixFunctions exposes A/B/C/D as private attrs; build a namespace
-    # that AgentRuntime expects.
-    mat_ns = types.SimpleNamespace(
-        A=mf._A,
-        B=mf._B,
-        C=mf._C,
-        D=mf._D,
-        likelihood=mf.likelihood,
-        transition=mf.transition,
-        preference_score=mf.preference_score,
-    )
-
     # 2. Create AgentRuntime and run 3 steps.
-    runtime = AgentRuntime(mat_ns)
+    runtime = AgentRuntime(mf)
     steps = runtime.run_n_steps(3, initial_state=None)
 
     # 3. Same assertions as the exec-based test.

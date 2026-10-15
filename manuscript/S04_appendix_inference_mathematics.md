@@ -1,280 +1,200 @@
 # Appendix D — Inference Loop Mathematics {#sec:S04-appendix-inference-mathematics}
 
-This appendix formalizes the discrete-time active inference loop executed
-by COGANT's matrix runtime (`cogant.gnn.runner` / `cogant.runtime.loop`, with
-the variational free-energy functions in `cogant.simulate.free_energy`) on the
-extracted A/B/C/D matrices and reported
-empirically in `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`
-(VFE trace tables per zoo fixture). The variational free-energy discussion in
-@sec:10-conclusion ties the same functions to shipped capabilities. The
-formalism follows the free-energy principle and the discrete-state Active
-Inference synthesis [@friston2010free; @dacosta2020active; @parr2022active],
-with PyMDP as the closest executable reference implementation for the
-matrix-based POMDP loop [@heins2022pymdp]. The discrete POMDP/active-inference loop COGANT closes its evaluation around is
-the small-scale instance of a broader lineage; the scale-free, renormalising
-generalisation that lifts partially observed Markov decision processes to
-include paths as latent variables [@friston2024pixels] is the current
-state of that discrete-state generalisation beyond [@dacosta2020active] and
-[@parr2022active]. The factor-graph language is used
-in the standard sense of a bipartite representation of factored functions and
-sum-product message passing [@kschischang2001factor], but COGANT's current
-runtime (`cogant.gnn.runner` / `cogant.runtime.loop`) executes the finite
-matrix model — the compiled A/B/C/D state space — rather than a
-general-purpose loopy factor-graph solver. We restate it here in notation
-consistent with COGANT's `cogant.simulate.free_energy` implementation.
+This appendix specifies the finite categorical calculation shared by
+cogant.runtime.categorical, cogant.runtime.loop, and cogant.runtime.inference.
+The public inference path parses exported GNN matrices, conditions on
+observations, scores actions, and records the result. Classical belief-state
+planning supplies the POMDP setting [@kaelbling1998planning]; discrete
+active-inference treatments motivate the likelihood, transition, preference,
+and initial-prior decomposition [@dacosta2020active; @smith2022stepbystep].
+PyMDP provides a related executable implementation [@heins2022pymdp]. The
+equations below specify COGANT's implemented objective and update order,
+without claiming the full range of algorithms available in those references.
 
 ### POMDP formulation {#sec:S04-pomdp-formulation}
 
-The extracted model is a discrete-time Partially Observable Markov Decision
-Process $(S, O, A, \pi, A_{\mathrm{mat}}, B_{\mathrm{mat}}, C_{\mathrm{mat}}, D_{\mathrm{mat}})$, grounded in the classical
-POMDP formulation of belief-state planning under partial observability
-[@kaelbling1998planning] and using the A/B/C/D decomposition standard in
-discrete active inference [@dacosta2020active; @smith2022stepbystep], with:
+Let $S$, $O$, and $\mathcal{U}$ denote finite, ordered state, observation, and
+action domains. Write $A[o,s]=P(o\mid s)$,
+$B[s',s,a]=P(s'\mid s,a)$, and $D[s]=P(s_0=s)$. The finite log weights $C[o]$
+define the preference distribution
 
-> $\mathbf{S} = \{s_1, \ldots, s_{|S|}\}$ — finite set of hidden states.
-> The explicit finite-model interface declares complete state configurations.
-> For a model whose joint factor space is actually constructed,
-> $|S| = \prod_f |S_f|$; repository variable nodes alone do not construct it.
->
-> $\mathbf{O} = \{o_1, \ldots, o_{|O|}\}$ — finite set of observations.
-> For multi-modality models, $|O| = \prod_m |O_m|$.
->
-> $\mathbf{A} \subseteq \{1, \ldots, |A|\}$ — finite set of discrete actions
-> (control states).
->
-> $\pi \in \Pi$ — policies, i.e. finite sequences
-> $(a_0, a_1, \ldots, a_{T-1}) \in A^T$ over horizon $T$.
->
-> $\mathbf{A}_{\mathrm{mat}} \in \mathbb{R}^{|O| \times |S|}$,
-> $A_{\mathrm{mat}}[o, s] = P(o \mid s)$ — likelihood.
->
-> $\mathbf{B}_{\mathrm{mat}} \in \mathbb{R}^{|S| \times |S| \times |A|}$,
-> $B_{\mathrm{mat}}[s', s, a] = P(s' \mid s, a)$ — state-transition tensor.
->
-> $\mathbf{C}_{\mathrm{mat}} \in \mathbb{R}^{|O|}$, $C_{\mathrm{mat}}[o]$ —
-> log-preference over observations.
->
-> $\mathbf{D}_{\mathrm{mat}} \in \mathbb{R}^{|S|}$,
-> $D_{\mathrm{mat}}[s] = P(s_0 = s)$ — prior over initial states.
+$$
+p_C(o)=\frac{\exp C[o]}{\sum_{\tilde o}\exp C[\tilde o]}.
+$$
 
-A nondegenerate categorical model satisfies the stochasticity conditions
-$\sum_o A_{\mathrm{mat}}[o, s] = 1$ for all $s$ and
-$\sum_{s'} B_{\mathrm{mat}}[s', s, a] = 1$ for all $(s, a)$; the GNN
-validator checks these invariants at emission time. Empty, truncated, or degraded
-artifacts require their associated validation and provenance reports.
+Every column of $A$, every conditional column $B[:,s,a]$, and $D$ must have
+nonnegative finite entries and unit mass within the numerical admission
+tolerance. Missing or incompatible matrix axes are rejected; an empty matrix
+does not define an executable categorical model.
 
-The probability notation is internal to the emitted model. After
-normalisation, $A_{\mathrm{mat}}$, $B_{\mathrm{mat}}$, and
-$D_{\mathrm{mat}}$ are valid categorical distributions for simulation and
-validation, but they are not learned causal mechanisms or empirical transition
-frequencies unless external traces supply that evidence. Matrix validation
-therefore establishes stochastic well-formedness of the generated artifact,
-not semantic adequacy of the repository interpretation.
+These probabilities describe the emitted model. Normalized repository
+adjacency and structural defaults do not become learned empirical dynamics
+merely by satisfying stochasticity. Repository variable nodes need not
+enumerate complete joint value configurations. A joint factor space has size
+$\prod_f |S_f|$ only when those configurations have actually been constructed.
+The same distinction applies to combined observation modalities.
 
 ### Declared finite kernels {#sec:S04-explicit-finite-kernels}
 
-For the explicit finite-model interface, let $T(s'\mid s,a)$ and
-$L(o\mid s)$ be the authored transition and observation tables on the ordered
-finite domains. The compiler assigns
+For the explicit finite-model interface, let $T(s'\mid s,a)$ and $L(o\mid s)$
+be authored tables on ordered finite domains. The compiler assigns
 
 $$
-B_{\mathrm{mat}}[j,i,k]=T(s_j\mid s_i,a_k),\qquad
-A_{\mathrm{mat}}[\ell,i]=L(o_\ell\mid s_i),
+B[j,i,k]=T(s_j\mid s_i,a_k),\qquad A[\ell,i]=L(o_\ell\mid s_i),
 $$
 
-and copies the declared prior and log preferences into $D_{\mathrm{mat}}$ and
-$C_{\mathrm{mat}}$. Unlisted outcomes have zero mass. The resulting controlled
-prediction for a state distribution $q$ is
+and copies the declared prior and log preferences into $D$ and $C$.
+Unlisted outcomes have zero mass. For any represented state distribution $q$,
 
 $$
-q'(s_j)=\sum_i B_{\mathrm{mat}}[j,i,k]q(s_i)
-       =\sum_i T(s_j\mid s_i,a_k)q(s_i).
+q'(s_j)=\sum_i B[j,i,k]q(s_i)
+      =\sum_i T(s_j\mid s_i,a_k)q(s_i).
 $$
 
-This is a representation identity for the declared kernel. For deterministic
-tables, basis-state columns select the authored successor. The implementation
-preserves the parsed floating-point coefficients and checks unit mass within
-its declared numerical tolerance; it does not certify exact real arithmetic
-for stochastic calculations. The checker compares every coefficient against
-the sparse declaration, rather than accepting normalized shape alone.
-
-This state axis must be distinguished from the repository-derived matrix axis:
-the latter enumerates compiled semantic variable nodes and does not generally
-enumerate their joint value configurations. Thus the authored finite-model
-contract is stronger about its supplied domain, while the source-analysis route
-still requires evidence that its candidate variables and kernels adequately
-represent the analyzed program. Neither declaration checking nor matrix
-simulation alone establishes that evidence.
+This is a representation identity for the declared kernel. The compiler
+preserves parsed floating-point coefficients; the independent checker compares
+all entries with the sparse declaration, including implied zeros. It does not
+establish exact real arithmetic or behavioral adequacy of the declaration.
+For repository-derived models, the interpretation of structural nodes and
+transitions requires separate evidence from the analyzed program.
 
 ### Variational free energy functional {#sec:S04-variational-free-energy}
 
-Let $Q(s)$ be an approximate posterior over hidden states and $P(o, s)$ the
-joint distribution defined by the generative model
-$P(o, s) = A_{\mathrm{mat}}[o, s] \cdot D_{\mathrm{mat}}[s]$. The variational free energy (VFE) is
+At observation time $t$, let $r_t(s)$ be the incoming predicted prior and let
+$o_t$ be the supplied observation. Initially $r_0=D$. For a candidate posterior
+$q$, the implemented variational free energy is
 
 $$
-F[Q] = \mathbb{E}_{Q(s)}[\log Q(s) - \log P(o, s)]
-     = \mathrm{KL}(Q(s) \Vert P(s \mid o)) - \log P(o).
+F_t[q]=\mathrm{KL}(q\Vert r_t)
+       -\sum_s q(s)\log A[o_t,s].
 $$
 
-The second equality (the "Helmholtz decomposition") shows that minimizing
-$F$ is equivalent to finding the posterior that best approximates
-$P(s \mid o)$ up to a constant $\log P(o)$ that depends only on the observation.
-Equivalently,
+The terms are complexity relative to the incoming prior and negative expected
+log likelihood. Posterior entropy alone is not the likelihood ambiguity term
+used for policy scoring below. When observation evidence
+$Z_t=\sum_s A[o_t,s]r_t(s)$ is positive,
 
 $$
-F[Q] =
-\mathbb{E}_{Q(s)}[-\log A_{\mathrm{mat}}[o, s]]
-- H[Q(s)]
-- \mathbb{E}_{Q(s)}[\log D_{\mathrm{mat}}[s]].
+F_t[q]=\mathrm{KL}(q\Vert P(s\mid o_t,r_t))-\log Z_t.
 $$
 
-decomposes VFE into three interpretable terms: the expected negative
-log‑likelihood (prediction error), the negative entropy of the posterior
-(ambiguity), and the expected log‑prior (complexity). COGANT's
-`variational_free_energy` (`cogant.simulate.free_energy`) computes this
-decomposition directly from the extracted matrices.
+Thus the exact represented posterior has $F_t=-\log Z_t$. Later steps use their
+incoming predicted prior, not a repeated comparison against the initial $D$.
+The general helper can also accept an explicit distribution over observations,
+replacing $\log A[o_t,s]$ by its expectation under that distribution; it does
+not invent an observation when none is provided.
 
-### Variational inference via belief propagation {#sec:S04-belief-propagation}
+Zero probabilities retain their support meaning: positive posterior mass where
+the prior or observed likelihood is zero yields infinite free energy.
+Conditioning on zero total evidence is undefined and is rejected. No positive
+epsilon is inserted to manufacture a finite score.
 
-For a single-factor discrete POMDP with observation $o_t$ at time $t$, the
-posterior update is the normalized product
+### Categorical filtering and control prediction {#sec:S04-belief-propagation}
 
-$$
-Q(s_t) \propto A_{\mathrm{mat}}[o_t, s_t] \cdot Q(s_{t\mid t-1}).
-$$
-
-where $Q(s_{t\mid t-1})$ is the predicted state (the result of applying the
-transition tensor to the previous posterior:
-$Q(s_{t\mid t-1}) = \sum_{s_{t-1}} B_{\mathrm{mat}}[s_t, s_{t-1}, a_{t-1}]
-\cdot Q(s_{t-1})$). Because the represented posterior is a categorical
-distribution over a finite set and the implemented update uses one likelihood
-factor, the update has emitted-model exactness and the inner loop
-terminates in a single normalization step. That scoped exactness does not
-show that the extracted model is semantically adequate for the source
-repository. The belief-propagation terminology is retained because the same
-normalized-product update is the single-factor specialization of
-sum-product message passing on factor graphs [@kschischang2001factor]; in
-multi-factor or loopy graphs, the corresponding message-passing algorithm may
-be approximate.
-
-### VFE = 0.0 in the identity model {#sec:S04-identity-model-vfe}
-
-The zoo/01\_simple\_state fixture demonstrates the identity case where
-VFE evaluates to 0.0. The extracted model has
-
-> $|S| = 1$ (single factor, single cardinality after aggregation)
->
-> `A_mat = [[1.0]]` (identity likelihood)
->
-> $B_{\mathrm{mat}}[:, :, a] = [[1.0]]$ for all $a$ (identity transition, all actions)
->
-> `C_mat = [0.0]` (no preference gradient)
->
-> `D_mat = [1.0]` (fully certain prior)
-
-Substituting into the VFE decomposition:
-
-> $F = \mathbb{E}_{Q(s)}[-\log A_{\mathrm{mat}}[o, s]] - H[Q(s)] - \mathbb{E}_{Q(s)}[\log D_{\mathrm{mat}}[s]]$
->
-> $= -\log(1.0) - 0 - \log(1.0)$
->
->   = **0.0**
-
-The three terms vanish separately: the prediction error is zero because
-`A_mat[0, 0] = 1.0` makes the single observation deterministic, the entropy is zero
-because `Q(s) = [1.0]` is a Dirac delta on the single state, and the
-complexity term is zero because the prior is also a Dirac. This is the
-correct and expected behaviour for any fixture where the extracted model is
-a degenerate single-state POMDP; the ten-step trace in
-`../cogant/docs/evaluation/EMPIRICAL_CLAIM.md` confirms $F = -0.000000$ at every step, which is
-the expected numerical signature (the signed zero arises from the sign of
-$\log(1.0) = 0$ after the negation in the prediction-error term).
-
-### Other regimes observed in the empirical runs {#sec:S04-other-regimes}
-
-Three qualitatively distinct VFE regimes appear in the four zoo fixtures
-reported in `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`:
-
-1. **`VFE = 0.0` (flat certainty).** `zoo/01_simple_state` and
-   `zoo/02_observer` — identity A/B with `D = [1.0]`, no free energy
-   gradient, no belief update happens because the point-mass prior already
-   fixes the posterior.
-
-2. **`VFE = 23.025851` (maximum uncertainty floor).** `zoo/04_pomdp_minimal`
-   — observation-only GNN where the likelihood matrix `A_mat` is empty
-   (the extracted model has no hidden-state factor). The runtime evaluates
-   `-log(1e-10) = 23.025850929940457` as the floor for an unresolvable
-   observation, which is the expected floor for the `cogant.simulate.free_energy`
-   implementation when the likelihood is vacuously defined.
-
-3. **VFE approaches 0.798508 (converging plateau).** `zoo/06_hierarchical` —
-   two-factor hierarchical model with discriminative likelihood
-   `A_mat = [[0.9, 0.1], [0.1, 0.9]]`. The posterior collapses from the
-   uniform prior `D_mat = [0.5, 0.5]` to the certain state
-   $Q(s) = [1.0, 0.0]$ by $t = 2$; VFE rises from $F(t=0) = 0.751435$ to
-   the equilibrium $F(t \ge 4) = 0.798508$. The plateau value is the
-   equilibrium free energy of the committed state under the `0.9 / 0.1`
-   likelihood and corresponds to the residual complexity term
-   $-\sum_s Q(s)\log D_{\mathrm{mat}}[s]$ evaluated at the collapsed posterior.
-
-### Multi-episode D update rule and convergence {#sec:S04-d-update-convergence}
-
-For multi-episode runs, the runtime updates `D_mat` as an arithmetic running mean of episode
-posteriors:
+Filtering uses the normalized likelihood-prior product
 
 $$
-D_{\mathrm{mat}}^{(k+1)}[s] =
-\frac{k \cdot D_{\mathrm{mat}}^{(k)}[s] + Q^{(k)}_{\mathrm{final}}(s)}{k + 1}.
+q_t(s)=\frac{A[o_t,s]r_t(s)}{Z_t}.
 $$
 
-where `k` is the number of completed episodes before the update and
-`Q^{(k)}_{\mathrm{final}}` is the normalized final posterior from the latest episode. The helper
-`AgentRuntime.update_D_from_posterior()` mutates `D` in place and renormalizes to guard against
-floating-point drift. The companion `update_A_from_counts()` blends empirical
-observation-state frequencies into each A entry with a configurable `learning_rate`, then
-renormalizes columns. These are pragmatic count/posterior updates for deterministic smoke
-experiments; the manuscript does not claim a geometric-contraction proof for the implemented
-runtime. This running-mean scheme is a substitute for, not an implementation of, Bayesian
-model reduction for structure learning [@friston2017curiosity; @friston2025reasoning], which selects or prunes model
-structure by expected free energy / information gain and would be the principled route to
-learning $D$ --- and the underlying factor structure --- across episodes rather than averaging
-posteriors at fixed cardinality.
+This is exact Bayesian conditioning for the represented finite categorical
+model, up to floating-point arithmetic. After evaluating actions and choosing
+$a_t$, prediction advances the prior:
+
+$$
+r_{t+1}(s')=\sum_s B[s',s,a_t]q_t(s).
+$$
+
+A trace distinguishes incoming prior $r_t$, filtered posterior $q_t$, and
+predicted next belief $r_{t+1}$. This update uses one likelihood factor;
+it does not implement general loopy factor-graph inference. The runtime
+records VFE before advancing to the next prior.
+
+### Analytic identity-model control {#sec:S04-identity-model-vfe}
+
+For a single state and a single certain observation, $A=[[1]]$, $D=[1]$,
+and identity transition columns imply $q=r=[1]$. Both terms of $F$ vanish.
+This is an analytic verification case, not evidence of successful uncertainty
+recovery. A single-state model with uniform likelihood over its observation
+axis instead has $F=\log |O|$: the hidden state is already certain, while the
+observed outcome remains uncertain.
+
+### Distinguishing execution regimes {#sec:S04-other-regimes}
+
+An informative likelihood can change beliefs, an uninformative likelihood can
+leave them unchanged, and an impossible observation must fail conditioning.
+These mathematical cases require distinct controls.
+The calculator figure in @fig:cogant-inference-trace belongs to the
+single-state, uniform-likelihood case. Its flat trace verifies execution of
+that exported artifact; it does not demonstrate hidden-state recovery or
+improved control performance. Invalid or incomplete GNN matrices are reported
+as admission errors rather than assigned a finite uncertainty floor.
+
+### Optional episode adaptation {#sec:S04-d-update-convergence}
+
+The source-bound inference CLI holds its parsed matrices fixed throughout
+a trace. Separate AgentRuntime episode helpers can update $D$ using a running
+mean of normalized final posteriors,
+
+$$
+D^{(k+1)}=\frac{kD^{(k)}+q_{\mathrm{final}}^{(k)}}{k+1},
+$$
+
+where $k$ counts previously completed updates. For nonnegative observation-state
+counts $n_{os}$ and learning rate $\eta$, the optional likelihood update is
+
+$$
+A'_{os}=(1-\eta)A_{os}+\eta\frac{n_{os}}{\sum_{\tilde o}n_{\tilde o s}}
+$$
+
+for columns with positive total count; unseen-state columns are unchanged.
+These adaptation helpers are not invoked by the fixed-matrix CLI trace.
+They do not establish a convergence guarantee, identify causal transition
+dynamics, or perform Bayesian structure learning.
 
 ### Expected free energy and policy selection {#sec:S04-expected-free-energy}
 
-For policy selection, COGANT uses the expected free energy (EFE) for each
-candidate policy $\pi$, following the risk-plus-ambiguity decomposition used
-in discrete active inference [@dacosta2020active; @parr2022active; @parr2019generalised]:
+For an action $a$, predict $q_a=B_aq_t$ and $q_a^O=Aq_a$. COGANT implements
+the outcome-risk plus likelihood-ambiguity objective
 
 $$
-G(\pi) =
-\sum_{\tau}
-\mathbb{E}_{Q(o_\tau, s_\tau \mid \pi)}
-[\log Q(s_\tau \mid \pi) - \log P(o_\tau, s_\tau)]
-= \sum_{\tau} [\mathrm{risk}(\pi,\tau) + \mathrm{ambiguity}(\pi,\tau)].
+G(a)=\mathrm{KL}(q_a^O\Vert p_C)+\sum_s q_a(s)H(A[:,s]).
 $$
 
-where `risk` is the KL divergence between predicted observations and
-preferences (`C_mat`) and `ambiguity` is the expected entropy of the
-likelihood under predicted states. The implementation in
-`GNNModelRunner._evaluate_policies` (`cogant.gnn.runner`, scoring policies
-with `expected_free_energy` from `cogant.simulate.free_energy`) computes
-$G(\pi)$ for every policy in the finite policy space and selects the argmin
-(softmax with temperature = 0 in the deterministic default). On zoo/01\_simple\_state with `C_mat = [0.0]`,
-both `u_c0` and `u_c1` score `G = 0.0` identically; the argmin tie-break
-returns `u_c0` every step, which is the behaviour observed in
-`../cogant/docs/evaluation/EMPIRICAL_CLAIM.md` §3.
+This is a particular discrete active-inference formulation. Broader treatments
+distinguish state risk, outcome risk, and additional parameter-learning terms
+[@dacosta2020active; @smith2022stepbystep]. For the fixed joint distribution
+$q_a(s)A[o,s]$, expanding the implemented expression gives
 
-The runtime mathematics here are implementation-backed rather than proof-complete.
-Run the focused checks with:
+$$
+G(a)=-\mathbb{E}_{q_a^O}[C(o)]-I_{q_a}(S;O)
+     +\log\sum_o \exp C[o].
+$$
 
-```bash
-uv run --directory cogant pytest --no-cov \
-  tests/unit/test_free_energy.py tests/unit/test_inference_trace_artifact.py \
-  tests/unit/test_runtime_metrics_config_loop_gnn_runner_kl_targeted.py -q
-```
+This algebraic identity follows from
+$I(S;O)=H(q_a^O)-\sum_s q_a(s)H(A[:,s])$; the final term is constant across
+candidate actions for fixed $C$. Expected log preference alone is therefore
+not the implemented objective.
 
-This exercises the VFE/EFE helper paths, inference trace artifacts, and runner
-diagnostics. Passing those tests supports the emitted smoke-trace behavior; it
-does not prove convergence or policy optimality beyond the finite fixture cases.
+The CLI evaluates each available action at a one-step horizon and chooses the
+lowest score, breaking ties by the lowest action index. It does not enumerate
+all finite-horizon policies or claim globally optimal POMDP control. The
+lower-level policy scorer can sum this objective along an explicitly supplied
+finite action sequence, without branching over future observations.
+
+### Source-bound execution and evidential scope
+
+Inference artifacts bind the exact GNN text and parsed matrix snapshot with
+separate SHA-256 digests. Supplied observation indices are recorded as external
+inputs. In the default model-rollout mode, each observation is the lowest-index
+mode of the predicted observation distribution. Such generated observations
+are not measurements of source-program behavior. Figure admission checks
+source and matrix digests and replays canonical execution before plotting.
+
+These checks address representation and numerical execution. Behavioral
+adequacy additionally requires an independently justified relation between
+program executions and the model's states, observations, and controls.
+Oberkampf and Trucano's distinction between computational verification and
+comparison with experimental evidence provides a methodological analogy from
+computational fluid dynamics [@oberkampf2002verification]; that citation is not
+evidence that COGANT has achieved empirical model validation.

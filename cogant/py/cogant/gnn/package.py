@@ -778,16 +778,6 @@ class GNNPackageBuilder:
             + "</svg></body></html>"
         )
 
-    def _fallback_chart(self, title: str, counts: dict[str, int]) -> str:
-        """Backward-compatible name for the deterministic chart renderer.
-
-        Older downstream callers used ``_fallback_chart`` while the renderer
-        was renamed to describe that it emits a complete distribution chart.
-        Keep the alias for one compatibility cycle and route both names
-        through the same deterministic implementation.
-        """
-        return self._render_distribution_chart(title, counts)
-
     def _create_manifest(self, output_path: Path) -> dict[str, Any]:
         """Create and save the package manifest."""
         manifest = {

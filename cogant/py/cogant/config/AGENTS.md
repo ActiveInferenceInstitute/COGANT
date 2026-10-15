@@ -6,15 +6,15 @@ Infra Lead
 
 ## Responsibilities
 
-Provide configuration schemas, loaders, and defaults for the entire COGANT system. Validate configurations against Pydantic models. Support YAML and JSON loading with environment variable overrides. Maintain backward compatibility with existing configuration files. Provide sensible defaults and named presets for common scenarios.
+Provide configuration schemas, loaders, and defaults for the entire COGANT system. Validate canonical sectioned YAML, JSON, and mapping inputs against ProjectConfig with schema version 1.0. Environment configuration uses COGANT_SECTION__FIELD; subsystem runtime toggles remain separate.
 
 ## Extending
 
-Add new configuration fields to CogantConfig, PipelineConfig, ExportConfig, or ValidationConfig in schema.py. Update DEFAULT_*_CONFIG instances in defaults.py with sensible values. Create new preset functions in presets.py and register in get_preset. Add new LanguageConfig entries for new language support. Ensure all new fields are optional or have defaults to maintain backward compatibility.
+Add fields to the owning typed model and its stub. Keep presets in the single presets.py registry. Test valid input, rejected input, and defaults < preset < file < environment < CLI precedence whenever changing loader behavior.
 
 ## Coordination
 
-Configuration feeds all subsystems (api, cli, plugins) via schema exports from __init__.py. Runtime Lead ensures config surface is stable; breaking changes require Architecture Lead approval. Environment variable overrides bypass file parsing for secrets and deployment-specific settings. Must not break existing cogant.yaml or .env configurations.
+Configuration feeds subsystems via typed exports from __init__.py. Access sections as attributes; use model_dump for serialization. Every external layer must pass model validation before execution.
 
 ## Files
 

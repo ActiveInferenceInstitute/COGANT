@@ -1,12 +1,13 @@
 """Agent configuration for the Active Inference runtime.
 
 Uses a plain dataclass rather than pydantic to maintain the zero-dependency
-constraint of the runtime package.
+constraint of the categorical execution core.
 """
 
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
@@ -21,17 +22,10 @@ class AgentConfig:
             Must be non-negative.
         convergence_threshold: KL divergence threshold below which the
             agent considers its belief to have converged. Must be in (0, 1).
-        action_selection: Strategy for selecting actions. Currently
-            only ``"preference"`` (argmax of preference_score) is
-            supported.
-        seed: Random seed for reproducibility (reserved for future
-            stochastic action selection).
     """
 
     max_steps: int = 100
     convergence_threshold: float = 1e-4
-    action_selection: str = "preference"
-    seed: int = 42
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization.
@@ -39,18 +33,17 @@ class AgentConfig:
         Raises:
             ValueError: If any configuration value is invalid.
         """
-        if self.max_steps < 0:
-            raise ValueError(f"max_steps must be non-negative; got {self.max_steps}")
+        if type(self.max_steps) is not int or self.max_steps < 0:
+            raise ValueError(f"max_steps must be a non-negative integer; got {self.max_steps}")
 
-        if not (0 < self.convergence_threshold < 1):
+        if (
+            isinstance(self.convergence_threshold, bool)
+            or not isinstance(self.convergence_threshold, (int, float))
+            or not math.isfinite(self.convergence_threshold)
+            or not (0 < self.convergence_threshold < 1)
+        ):
             raise ValueError(
                 f"convergence_threshold must be in (0, 1); got {self.convergence_threshold}"
-            )
-
-        if self.action_selection not in ("preference", "entropy"):
-            logger.warning(
-                f"Unknown action_selection strategy: {self.action_selection}; "
-                f"will fall back to 'preference'"
             )
 
     @classmethod
@@ -79,14 +72,15 @@ class AgentConfig:
             ) from exc
 
         with open(path, encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
-
-        return cls(
-            max_steps=data.get("max_steps", 100),
-            convergence_threshold=data.get("convergence_threshold", 1e-4),
-            action_selection=data.get("action_selection", "preference"),
-            seed=data.get("seed", 42),
-        )
+            data = yaml.safe_load(f)
+        if data is None:
+            data = {}
+        if not isinstance(data, dict):
+            raise ValueError("runtime configuration must be a YAML mapping")
+        unknown = set(data) - {"max_steps", "convergence_threshold"}
+        if unknown:
+            raise ValueError(f"unknown runtime configuration fields: {sorted(map(str, unknown))}")
+        return cls(**data)
 
     def to_yaml(self, path: str) -> None:
         """Save configuration to a YAML file.
@@ -111,8 +105,6 @@ class AgentConfig:
         data = {
             "max_steps": self.max_steps,
             "convergence_threshold": self.convergence_threshold,
-            "action_selection": self.action_selection,
-            "seed": self.seed,
         }
 
         with open(path, "w", encoding="utf-8") as f:

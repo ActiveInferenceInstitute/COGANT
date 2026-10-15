@@ -354,28 +354,32 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         destination="cogant_inference_trace.png",
         role="runtime-belief-policy-free-energy-trace",
         caption=(
-            "Deterministic runtime inference trace emitted from the package's "
-            "built-in demonstration A/B/C/D matrices (not the fixture's exported "
-            "values), with belief, action, preference, and free-energy panels."
+            "Inference from the calculator's exported GNN matrices: filtered "
+            "posteriors, next predictions, action scores, and filtering free energy."
         ),
-        source_artifact="cogant/output/calculator/gnn_package/model.gnn.json",
-        renderer="cogant.runtime.inference_demo and native visualization renderer",
+        source_artifact="cogant/output/calculator/data/inference_trace.json",
+        renderer="cogant.viz.inference_view.render_inference_trace_png",
         method_note=(
-            "Deterministic trace generated from the package's built-in demonstration "
-            "A/B/C/D matrices (`default_demo_matrices`), which share an exported model's "
-            "shape but are not the fixture's exported values."
+            "Exact exported A/B/C/D values drive categorical filtering and greedy "
+            "one-step risk-plus-ambiguity action selection. Trace admission replays "
+            "the records and verifies the source and matrix digests."
         ),
         reading_guide=(
-            "Read belief, action, preference, and free-energy-like panels as a smoke "
-            "demonstration of executable matrices."
+            "Compare posterior and next prediction separately; action markers show "
+            "the selected score minimum. F and G use natural logarithms."
         ),
-        limitations="Demonstration trace only; it is not a behavioural-performance benchmark.",
+        limitations=(
+            "Modal model-generated observations provide an execution smoke test. "
+            "The single-state calculator does not test uncertainty recovery or "
+            "source-program behavioural adequacy."
+        ),
         alt_text=(
-            "Inference trace with belief trajectory, selected actions, preference "
-            "satisfaction, and free-energy-like curve."
+            "Four panels showing filtered posterior, next state prediction, "
+            "one-step expected free energy by action, and filtering free energy."
         ),
         min_width_px=1400,
         min_height_px=650,
+        evidence_requirements=("steps", "states", "observations", "actions"),
     ),
     ManuscriptFigure(
         key="rule_family_ablation",

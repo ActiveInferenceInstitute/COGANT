@@ -1,28 +1,13 @@
-"""Targeted coverage tests for ``cogant.runtime.loop``.
-
-Drives the AgentRuntime end-to-end with real matrices (no mocks).
-Covers:
-- _normalize / _argmax / _mat_vec helpers (via empty / degenerate cases)
-- _default_likelihood / _default_transition / _default_preference_score
-- run_until_convergence (default cfg branch)
-- run_episode (zero-step branches: with and without initial_state, and
-  with empty D)
-- update_D_from_posterior (running average + early return + identity preservation)
-- update_A_from_counts (zero observations, learning-rate clamping,
-  degenerate-column path)
-- run_multi_episode (full lifecycle with D and A updates)
-- run_episode_with_logging
-- benchmark
-- reset, get_free_energy
-- to_dict / from_dict round trip
-- module-level run_n_steps and run_until_convergence convenience wrappers
-"""
+"""Real-matrix categorical runtime, episode learning, and rejection controls."""
 
 from __future__ import annotations
 
 import math
 import types
 
+import pytest
+
+from cogant.runtime.categorical import CategoricalModel
 from cogant.runtime.config import AgentConfig
 from cogant.runtime.loop import (
     AgentRuntime,
@@ -30,9 +15,6 @@ from cogant.runtime.loop import (
     EpisodeResult,
     MultiEpisodeResult,
     _argmax,
-    _default_likelihood,
-    _default_preference_score,
-    _default_transition,
     _normalize,
     run_n_steps,
     run_until_convergence,
@@ -55,20 +37,22 @@ def _identity_matrices() -> dict:
 
 
 class TestPureHelpers:
-    def test_normalize_uniform_when_total_zero(self):
-        # Empty / zero-sum lists fall back to uniform distribution.
-        assert _normalize([0.0, 0.0]) == [0.5, 0.5]
+    def test_normalize_rejects_zero_mass(self):
+        with pytest.raises(ValueError, match="zero probability"):
+            _normalize([0.0, 0.0])
 
-    def test_normalize_empty_returns_empty(self):
-        assert _normalize([]) == []
+    def test_normalize_rejects_empty(self):
+        with pytest.raises(ValueError, match="nonempty"):
+            _normalize([])
 
     def test_normalize_scales_to_sum_one(self):
         out = _normalize([2.0, 2.0, 4.0])
         assert math.isclose(sum(out), 1.0)
         assert math.isclose(out[2], 0.5)
 
-    def test_argmax_empty_returns_zero(self):
-        assert _argmax([]) == 0
+    def test_argmax_rejects_empty(self):
+        with pytest.raises(ValueError, match="nonempty"):
+            _argmax([])
 
     def test_argmax_picks_max_index(self):
         assert _argmax([0.1, 0.5, 0.4]) == 1
@@ -76,19 +60,28 @@ class TestPureHelpers:
     def test_argmax_first_on_ties(self):
         assert _argmax([0.3, 0.3, 0.3]) == 0
 
-    def test_default_likelihood(self):
+    def test_categorical_likelihood(self):
         A = [[1.0, 0.0], [0.0, 1.0]]
-        out = _default_likelihood(A, [0.7, 0.3])
+        out = CategoricalModel(A, [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0, 0.0], [0.7, 0.3]).observe(
+            [0.7, 0.3]
+        )
         assert out == [0.7, 0.3]
 
-    def test_default_transition(self):
+    def test_categorical_transition(self):
         # Identity-like B
         B = [[[1.0], [0.0]], [[0.0], [1.0]]]
-        out = _default_transition(B, [0.6, 0.4], action=0)
+        out = CategoricalModel([[1.0, 0.0], [0.0, 1.0]], B, [0.0, 0.0], [0.6, 0.4]).predict(
+            [0.6, 0.4], 0
+        )
         assert math.isclose(sum(out), 1.0)
 
-    def test_default_preference_score(self):
-        assert math.isclose(_default_preference_score([1.0, 0.0], [0.7, 0.3]), 0.7)
+    def test_preference_diagnostic(self):
+        assert math.isclose(
+            CategoricalModel(
+                [[1.0, 0.0], [0.0, 1.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], [1.0, 0.0], [0.5, 0.5]
+            ).preference_score([0.7, 0.3]),
+            0.7,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +97,7 @@ class TestAgentRuntimeConstruction:
         assert rt._n_obs == 2
         assert rt._n_actions == 1
 
-    def test_init_uses_default_helpers_when_missing(self):
+    def test_init_uses_declared_matrices(self):
         # Bare namespace with only A/B/C/D — should bind defaults.
         ns = types.SimpleNamespace(**_identity_matrices())
         rt = AgentRuntime(ns)
@@ -112,20 +105,14 @@ class TestAgentRuntimeConstruction:
         out = rt._likelihood([0.5, 0.5])
         assert len(out) == 2
 
-    def test_init_uses_provided_callables(self):
+    def test_matrix_contract_overrides_inconsistent_custom_helpers(self):
         ns = types.SimpleNamespace(**_identity_matrices())
         ns.likelihood = lambda sd: [1.0, 0.0]
         ns.transition = lambda sd, a=0: [0.0, 1.0]
         ns.preference_score = lambda od: 42.0
         rt = AgentRuntime(ns)
-        assert rt._likelihood([0.5, 0.5]) == [1.0, 0.0]
-        assert rt._transition([0.5, 0.5], 0) == [0.0, 1.0]
-        assert rt._preference_score([0.5, 0.5]) == 42.0
-
-
-# ---------------------------------------------------------------------------
-# step / run_n_steps / run_until_convergence
-# ---------------------------------------------------------------------------
+        assert rt._likelihood([0.5, 0.5]) == [0.5, 0.5]
+        assert rt._transition([0.5, 0.5], 0) == [0.5, 0.5]
 
 
 class TestStepAndRun:
@@ -196,17 +183,11 @@ class TestEpisodeAndLearning:
         result = rt.run_episode(0)
         assert result.final_posterior == [0.5, 0.5]
 
-    def test_run_episode_zero_steps_uniform_when_D_empty(self):
-        ns = types.SimpleNamespace(
-            A=[[1.0, 0.0], [0.0, 1.0]],
-            B=[[[1.0], [0.0]], [[0.0], [1.0]]],
-            C=[1.0, 0.0],
-            D=[],  # forces uniform fallback
-        )
-        rt = AgentRuntime(ns)
-        result = rt.run_episode(0)
-        # Uniform over n_states (defaulted to 1 when D is empty + A column count)
-        assert math.isclose(sum(result.final_posterior), 1.0)
+    def test_runtime_rejects_empty_prior(self):
+        matrices = _identity_matrices()
+        matrices["D"] = []
+        with pytest.raises(ValueError, match="prior D"):
+            AgentRuntime.from_matrices_dict(matrices)
 
     def test_update_D_from_posterior_running_average(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
@@ -222,13 +203,10 @@ class TestEpisodeAndLearning:
         assert math.isclose(rt.D[0], 0.5)
         assert math.isclose(rt.D[1], 0.5)
 
-    def test_update_D_from_posterior_empty_inputs(self):
+    def test_update_D_rejects_empty_posterior(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
-        # Empty posterior => return D unchanged
-        assert rt.update_D_from_posterior([]) is rt.D
-        # Empty D => same
-        rt.D = []
-        assert rt.update_D_from_posterior([0.5, 0.5]) is rt.D
+        with pytest.raises(ValueError, match="dimensions"):
+            rt.update_D_from_posterior([])
 
     def test_update_A_from_counts_blends_frequencies(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
@@ -256,46 +234,25 @@ class TestEpisodeAndLearning:
         # Prior was already normalised so values should match.
         assert before == rt.A
 
-    def test_update_A_from_counts_clamps_lr(self):
+    def test_update_A_rejects_invalid_rate(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
-        # lr > 1 should be clamped to 1
-        rt.update_A_from_counts([[1.0, 1.0], [1.0, 1.0]], learning_rate=5.0)
-        for s in range(2):
-            col = sum(rt.A[o][s] for o in range(2))
-            assert math.isclose(col, 1.0, abs_tol=1e-9)
+        with pytest.raises(ValueError, match="learning_rate"):
+            rt.update_A_from_counts([[1.0, 1.0], [1.0, 1.0]], learning_rate=5.0)
 
-    def test_update_A_from_counts_empty_inputs(self):
+    def test_update_A_rejects_empty_counts(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
-        # Empty counts => return A unchanged
-        same = rt.update_A_from_counts([], learning_rate=0.1)
-        assert same is rt.A
+        with pytest.raises(ValueError, match="dimensions"):
+            rt.update_A_from_counts([])
 
-    def test_update_A_from_counts_no_states_returns_early(self):
-        # Build a runtime whose A has zero columns
-        ns = types.SimpleNamespace(A=[[]], B=[], C=[], D=[])
-        rt = AgentRuntime(ns)
-        result = rt.update_A_from_counts([[0.0]], learning_rate=0.5)
-        assert result is rt.A
+    def test_runtime_rejects_zero_states(self):
+        with pytest.raises(ValueError, match="prior D"):
+            AgentRuntime(types.SimpleNamespace(A=[[]], B=[], C=[], D=[]))
 
-    def test_update_A_from_counts_degenerate_column_uniform(self):
-        # Force a column of all-zeros so the degenerate branch fires.
-        ns = types.SimpleNamespace(
-            A=[[0.0, 0.0], [0.0, 0.0]],
-            B=[[[1.0], [0.0]], [[0.0], [1.0]]],
-            C=[1.0, 0.0],
-            D=[0.5, 0.5],
-        )
-        rt = AgentRuntime(ns)
-        # All counts zero => freq blend leaves row at zeros, hits degenerate
-        # column branch.
-        rt.update_A_from_counts([[0.0, 0.0], [0.0, 0.0]], learning_rate=0.5)
-        for s in range(2):
-            col = sum(rt.A[o][s] for o in range(2))
-            # Uniform => column sums to 1
-            assert math.isclose(col, 1.0, abs_tol=1e-9)
-            # And every entry equals 1/n_obs
-            for o in range(2):
-                assert math.isclose(rt.A[o][s], 0.5)
+    def test_runtime_rejects_zero_likelihood_columns(self):
+        matrices = _identity_matrices()
+        matrices["A"] = [[0.0, 0.0], [0.0, 0.0]]
+        with pytest.raises(ValueError, match="sum to"):
+            AgentRuntime.from_matrices_dict(matrices)
 
     def test_run_multi_episode(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
@@ -313,15 +270,10 @@ class TestEpisodeAndLearning:
         assert result.episodes == []
         assert result.D_trajectory == []
 
-    def test_run_multi_episode_negative_clamped(self):
+    def test_run_multi_episode_rejects_negative_count(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
-        result = rt.run_multi_episode(n_episodes=-3, steps_per_episode=2)
-        assert result.episodes == []
-
-
-# ---------------------------------------------------------------------------
-# Logging / benchmarking / introspection
-# ---------------------------------------------------------------------------
+        with pytest.raises(ValueError, match="episode count"):
+            rt.run_multi_episode(-3, 2)
 
 
 class TestRuntimeIntrospection:
@@ -351,11 +303,10 @@ class TestRuntimeIntrospection:
         assert stats["mean_ms"] >= 0
         assert stats["min_ms"] <= stats["max_ms"]
 
-    def test_benchmark_clamps_to_one_when_zero(self):
+    def test_benchmark_rejects_zero_episodes(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
-        # n_episodes=0 should clamp to 1 via max(1, ...)
-        stats = rt.benchmark(n_episodes=0)
-        assert stats["mean_ms"] >= 0
+        with pytest.raises(ValueError, match="positive"):
+            rt.benchmark(0)
 
     def test_reset_clears_episode_state(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())

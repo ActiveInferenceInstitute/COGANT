@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from typing import Any
 
+from cogant.runtime.categorical import CategoricalModel
 from cogant.simulate.distributions import CategoricalDistribution
 from cogant.statespace.compiler import StateSpaceModel
 
@@ -34,8 +35,11 @@ class FreeEnergyCalculator:
     state_space: Any
     states: Any
     actions: Any
-    transition_matrix: Any
-    def __init__(self, state_space: StateSpaceModel) -> None: ...
+    observations: list[str]
+    model: CategoricalModel
+    def __init__(
+        self, state_space: StateSpaceModel, matrices: CategoricalModel | None = None
+    ) -> None: ...
     def variational_free_energy(
         self,
         beliefs: CategoricalDistribution,

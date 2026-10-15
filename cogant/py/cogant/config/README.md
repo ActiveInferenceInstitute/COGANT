@@ -6,8 +6,7 @@ preset returns that validated Pydantic model. The precedence chain is:
 `defaults < preset < file < environment < CLI`
 
 The environment layer reads `COGANT_<SECTION>__<FIELD>` variables (for
-example `COGANT_PIPELINE__OUTPUT_DIR`) plus the deprecated flat names such as
-`COGANT_OUTPUT_DIR`. Other single-segment `COGANT_*` variables, such as
+example `COGANT_PIPELINE__OUTPUT_DIR`). Single-segment `COGANT_*` variables, such as
 `COGANT_USE_RUST` or `COGANT_DISABLE_UPSTREAM_GNN`, are runtime toggles read by
 their own subsystems and are ignored by the loader.
 
@@ -44,7 +43,12 @@ validation.
 
 ConfigLoadError: Exception raised when configuration loading fails.
 
-ConfigMigrationWarning / ReservedConfigWarning: Warnings for legacy flat fields that were normalized, and for reserved per-stage keys that have no effect yet.
+ReservedConfigWarning: Warning for reserved per-stage keys that have no effect yet.
+
+The supported schema version is exactly `1.0`; omitted versions use that
+default. Other versions and flat root fields are rejected. Access sections
+as typed attributes (`config.pipeline`), or call `model_dump()` when a
+serialized mapping is required.
 
 DEFAULT_COGANT_CONFIG, DEFAULT_PIPELINE_CONFIG, DEFAULT_EXPORT_CONFIG, DEFAULT_VALIDATION_CONFIG: Module-level default instances for each config type.
 

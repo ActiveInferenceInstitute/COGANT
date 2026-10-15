@@ -112,11 +112,11 @@ because threshold movement in that band can change the state-space surface.
 | $\pi$ | Policy; finite action sequence $(a_0, \ldots, a_{T-1}) \in A^T$ | @sec:S04-pomdp-formulation | Not to be confused with conflict penalty $\pi$ in @sec:98-confidence-symbols |
 | $T$ | Planning horizon (number of time steps) | @sec:S04-pomdp-formulation | |
 | $Q(s)$ | Approximate posterior over hidden states | @sec:S04-variational-free-energy | Variational distribution |
-| $P(o, s)$ | Joint generative model; $= A[o,s] \cdot D[s]$ | @sec:S04-variational-free-energy | |
+| $P_t(o, s)$ | Stepwise joint model; $= A[o,s] \cdot r_t[s]$ | @sec:S04-variational-free-energy | Incoming predictive prior $r_t$; $r_0=D$ |
 | $F[Q]$ | Variational free energy (VFE) | @sec:S04-variational-free-energy | $F[Q] = \mathbb{E}_{Q(s)}[\log Q(s) - \log P(o,s)]$ |
 | $G(\pi)$ | Expected free energy (EFE) for policy $\pi$ | @sec:S04-expected-free-energy | $G(\pi) = \sum_\tau [\text{risk}(\pi,\tau) + \text{ambiguity}(\pi,\tau)]$ |
-| $H[Q(s)]$ | Shannon entropy of approximate posterior | @sec:S04-variational-free-energy | Ambiguity term in VFE decomposition |
-| $\alpha$ | A-matrix count-update learning rate in the runtime helper | @sec:S04-d-update-convergence | `update_A_from_counts(learning_rate=...)`; D uses a running posterior mean |
+| $H[Q(s)]$ | Shannon entropy of approximate posterior | @sec:S04-variational-free-energy | Distinct from likelihood ambiguity $\mathbb{E}_{Q(s)}H[A_{\cdot,s}]$ |
+| $\eta$ | A-matrix count-update learning rate in the runtime helper | @sec:S04-d-update-convergence | `update_A_from_counts(learning_rate=...)`; D uses a running posterior mean |
 | $D^{(k)}$ | Prior after $k$ learning episodes | @sec:S04-d-update-convergence | Running arithmetic mean of normalized episode posteriors |
 
 ---

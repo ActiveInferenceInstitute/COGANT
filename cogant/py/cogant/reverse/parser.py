@@ -36,7 +36,9 @@ import re
 from dataclasses import dataclass, field
 from itertools import product
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from cogant.reverse.fenced import MatrixValue, read_matrices
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +140,7 @@ class ReverseGNNModel:
     human_names: dict[str, str] = field(default_factory=dict)
     degraded: bool = False
     diagnostics: list[str] = field(default_factory=list)
+    matrix_source: Literal["parameterization", "fenced"] = "parameterization"
 
     @property
     def n_hidden_factors(self) -> int:
@@ -152,6 +155,8 @@ class ReverseGNNModel:
         are parsed, retain the declared factor count so callers can inspect
         a syntactically valid but not-yet-executable model.
         """
+        if self.matrix_source == "fenced":
+            return len(self.D)
         if self.D:
             if len(self.D) == 1 and len(self.hidden_states) == 1:
                 declared = self.cardinalities.get(self.hidden_states[0], 0)
@@ -165,6 +170,8 @@ class ReverseGNNModel:
     @property
     def n_obs(self) -> int:
         """Number of observation dimensions represented by this model."""
+        if self.matrix_source == "fenced":
+            return len(self.C)
         if self.C:
             return len(self.C)
         if self.A:
@@ -918,11 +925,11 @@ def _parse_initial_parameterization(
             _require_element_budget("projected A likelihood", n_obs, n_states)
             raw_rows: list[list[float]] = []
             for i in range(len(model.observations)):
-                rows = per_factor_A.get(f"A_m{i}", [])
-                if len(rows) == n_obs and all(len(row) == n_states for row in rows):
-                    raw_rows.extend([list(row) for row in rows])
+                factor_rows = per_factor_A.get(f"A_m{i}", [])
+                if len(factor_rows) == n_obs and all(len(row) == n_states for row in factor_rows):
+                    raw_rows.extend([list(row) for row in factor_rows])
                 else:
-                    row = rows[0] if rows and len(rows[0]) == n_states else []
+                    row = factor_rows[0] if factor_rows and len(factor_rows[0]) == n_states else []
                     raw_rows.append(list(row) if row else [1.0] * n_states)
             if n_obs != len(raw_rows):
                 # A factorized source may not provide a global modality matrix.
@@ -1057,6 +1064,8 @@ def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
     non-degraded model the A/B/C/D matrices are authoritative: the variable
     lists are aligned to their dimensions by :func:`_align_slots_to_dimension`.
     """
+    if model.matrix_source == "fenced":
+        return
     if model.D and not model.degraded:
         model.hidden_states = _align_slots_to_dimension(
             model, model.hidden_states, len(model.D), "s_f0"
@@ -1141,113 +1150,18 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
     ``## InitialParameterization``. This gives the reverse synthesizer
     the most accurate matrix values available.
     """
-    for key, value in _read_matrices_fenced_block(text).items():
+    matrices = _read_matrices_fenced_block(text)
+    for key, value in matrices.items():
         setattr(model, key, value)
+    if matrices:
+        model.matrix_source = "fenced"
 
 
-def _read_matrices_fenced_block(text: str) -> dict[str, Any]:
-    """Return the non-empty A/B/C/D matrices of the ``gnn-matrices`` fence.
-
-    :func:`parse_gnn` reads the fence before ``## InitialParameterization`` so
-    the factorized projection never materializes a matrix the fence
-    overrides (COGANT bundles declare per-category factor cardinalities whose
-    Cartesian product can be far larger than the fence's per-variable
-    matrices).
-    """
-    found: dict[str, Any] = {}
-    fence_match = re.search(r"```gnn-matrices\s*\n(.*?)\n```", text, re.DOTALL)
-    if not fence_match:
-        return found
-    block = fence_match.group(1)
-    lines = block.splitlines()
-    i = 0
-    while i < len(lines):
-        line = lines[i].rstrip()
-        header = _MATRIX_BLOCK_HEADER_RE.match(line)
-        if not header:
-            i += 1
-            continue
-        tag = header.group(1)
-        rows = int(header.group(2))
-        cols = int(header.group(3)) if header.group(3) else 0
-        depth = int(header.group(4)) if header.group(4) else 0
-        i += 1
-        if tag == "A":
-            A: list[list[float]] = []
-            while i < len(lines) and len(A) < rows:
-                row_line = lines[i].strip()
-                if row_line and not row_line.startswith("#"):
-                    vals = [float(x) for x in _FLOAT_RE.findall(row_line)]
-                    if len(vals) == cols:
-                        A.append(vals)
-                i += 1
-            if A:
-                found["A"] = A
-        elif tag == "B":
-            # Block format: ``# action=k`` header followed by rows rows.
-            # The header dimensions come straight from the text, so check
-            # them before preallocating the tensor.
-            _require_element_budget(
-                f"B[[rows={rows}][cols={cols}][depth={depth}]] header", rows, cols, depth
-            )
-            B: list[list[list[float]]] = [[[0.0] * depth for _ in range(cols)] for _ in range(rows)]
-            current_action = -1
-            row_idx = 0
-            while i < len(lines):
-                row_line = lines[i].strip()
-                if not row_line:
-                    i += 1
-                    continue
-                act_match = re.match(r"#\s*action\s*=\s*(\d+)", row_line)
-                if act_match:
-                    current_action = int(act_match.group(1))
-                    if current_action >= depth:
-                        raise ReverseModelError(
-                            f"B block header '# action={current_action}' is outside "
-                            f"the declared depth={depth}"
-                        )
-                    row_idx = 0
-                    i += 1
-                    continue
-                if row_line.startswith("#"):
-                    i += 1
-                    continue
-                if row_line.startswith(("A[[", "B[[", "C[[", "D[[")):
-                    break
-                if current_action < 0:
-                    i += 1
-                    continue
-                vals = [float(x) for x in _FLOAT_RE.findall(row_line)]
-                if len(vals) == cols and row_idx < rows:
-                    for c in range(cols):
-                        B[row_idx][c][current_action] = vals[c]
-                    row_idx += 1
-                i += 1
-            if B and B[0]:
-                found["B"] = B
-        elif tag == "C":
-            C: list[float] = []
-            while i < len(lines) and len(C) < rows:
-                row_line = lines[i].strip()
-                if row_line and not row_line.startswith("#"):
-                    vals = [float(x) for x in _FLOAT_RE.findall(row_line)]
-                    if vals:
-                        C.extend(vals[:1])
-                i += 1
-            if C:
-                found["C"] = C[:rows]
-        elif tag == "D":
-            D: list[float] = []
-            while i < len(lines) and len(D) < rows:
-                row_line = lines[i].strip()
-                if row_line and not row_line.startswith("#"):
-                    vals = [float(x) for x in _FLOAT_RE.findall(row_line)]
-                    if vals:
-                        D.extend(vals[:1])
-                i += 1
-            if D:
-                found["D"] = D[:rows]
-    return found
+def _read_matrices_fenced_block(text: str) -> dict[str, MatrixValue]:
+    try:
+        return read_matrices(text, MAX_REVERSE_MATRIX_ELEMENTS)
+    except ValueError as error:
+        raise ReverseModelError(str(error)) from error
 
 
 # ---------------------------------------------------------------------------
@@ -1329,8 +1243,10 @@ def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
     # read it first so the projection skips the matrices it supplies.
     fenced = _read_matrices_fenced_block(text)
 
+    if set(fenced) == {"A", "B", "C", "D"}:
+        model.matrix_source = "fenced"
     body = first("InitialParameterization")
-    if body:
+    if body and model.matrix_source != "fenced":
         _parse_initial_parameterization(body, model, fenced=frozenset(fenced))
 
     # COGANT extended section with the human-readable state variable

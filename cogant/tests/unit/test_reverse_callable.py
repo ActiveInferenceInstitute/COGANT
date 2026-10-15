@@ -281,9 +281,9 @@ def test_transition_matches_generated_code() -> None:
             assert abs(a - b) < 1e-9, f"transition(action={action}) mismatch: {a} vs {b}"
 
 
-def test_expected_free_energy_empty_distribution() -> None:
-    """EFE returns inf for empty distribution."""
-    model = _make_model()
-    mf = MatrixFunctions(model)
-    efe = mf.expected_free_energy([], action=0)
-    assert efe == float("inf")
+def test_expected_free_energy_rejects_empty_distribution() -> None:
+    import pytest
+
+    mf = MatrixFunctions(_make_model())
+    with pytest.raises(ValueError, match="nonempty"):
+        mf.expected_free_energy([], action=0)

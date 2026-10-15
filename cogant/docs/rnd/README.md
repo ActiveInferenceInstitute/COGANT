@@ -10,6 +10,7 @@
 | [Calibration](calibration.md) | Rule calibration and confidence backlog | Advanced |
 | [Organization State Spaces](organization_state_spaces.md) | Provisional bridge from org charts and process traces to typed state-space models, with a negative-control audit helper | Advanced |
 | [Handwired](handwired.md) | Pinned source review of explicit construction and independent behavioral checks | Advanced |
+| [End-to-End Inference](end_to_end_inference.md) | Source-bound execution, corrected objectives, and limits of model verification | Advanced |
 
 ## Recommended Reading Order
 

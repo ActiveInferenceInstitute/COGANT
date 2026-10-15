@@ -66,9 +66,18 @@ The evidence-coverage panel deliberately avoids presenting a reliability curve w
 
 The batch dashboard still writes audit sidecars such as `output/dashboard/metrics_per_target.json`, `output/dashboard/role_distribution.mmd`, `output/dashboard/roundtrip_status.mmd`, and `output/dashboard/visual_completeness.mmd`. The manuscript inserts only the registered publication summary in @fig:cogant-batch-evidence-summary because its source JSON has nonzero graph, mapping, role, validation, roundtrip, and visual-artifact data. Reviewers should inspect the dashboard JSON and Mermaid sidecars when evaluating a release run; the figure is an overview of emitted evidence, not a substitute for target-level artifacts.
 
-![Deterministic inference trace generated from the package's built-in demonstration A/B/C/D matrices (`default_demo_matrices`), which share the shape of an exported model but are not the calculator fixture's own exported values. The runtime demo emits `data/inference_trace.json` and the corresponding native publication PNG with belief trajectories, selected actions, preference satisfaction, and the package's reported free-energy diagnostic. Read the curve as an executable-matrix smoke signal, not as a calibrated psychological, biological, or benchmarked control-performance measurement.](../figures/cogant_inference_trace.png){#fig:cogant-inference-trace width=98%}
+![Source-bound inference trace from the calculator fixture's exported GNN matrices. The panels show recorded beliefs, selected actions, policy scores, and variational free energy after canonical replay. This single-state model has a uniform observation likelihood: beliefs remain certain and action scores tie, so the lowest-index action is selected. The flat curves provide an execution smoke check, not evidence of uncertainty recovery or control performance.](../figures/cogant_inference_trace.png){#fig:cogant-inference-trace width=98%}
 
-The inference trace in @fig:cogant-inference-trace is intentionally a deterministic demonstration rather than a benchmark of agent quality. It shows that A/B/C/D matrices of the form COGANT exports can drive a reproducible belief/action/preference/free-energy trace through the bundled deterministic demo runtime, which is the smallest executable bridge between an exported model bundle and downstream discrete active-inference runtimes [@dacosta2020active; @heins2022pymdp].
+The trace in @fig:cogant-inference-trace is generated from the same exported `gnn_package/model.gnn.md` artifact as the calculator model. Its JSON records the GNN source digest, parsed-matrix digest, incoming prior, posterior, predicted next belief, observation, action, policy scores, and VFE. The figure loader checks those identities and replays the trace. This connects exported model construction to an inspectable finite categorical calculation [@dacosta2020active; @heins2022pymdp]; empirical adequacy of the source-to-model interpretation remains a separate question.
+
+From the inner package root, after translation has emitted the calculator GNN package, the explicit inference command is:
+
+```bash
+uv run cogant infer output/calculator/gnn_package/model.gnn.md \
+  --steps 8 -o output/calculator/data/inference_trace.json
+```
+
+The output path must be new unless `--overwrite` is supplied. With `--observations observations.json`, the command conditions on a JSON array of observation indices; its length must agree with an explicitly requested step count. Without that file, it uses modal model-generated observations and marks the trace as a model rollout. The current controller scores a one-step action horizon with deterministic lowest-index tie breaking. The inference mathematics appendix (@sec:S04-appendix-inference-mathematics) specifies the filtering, prediction, and risk-plus-ambiguity calculations.
 
 ### Concrete walkthrough: Flask REST API
 

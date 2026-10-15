@@ -3,10 +3,10 @@
 gnn/runner, server/models, translate/dsl/schema, plugins/base, schema/versions,
 config/schema."""
 
-import json
-
 import pytest
 from pydantic import ValidationError
+
+from cogant.runtime.categorical import CategoricalModel
 
 pytestmark = pytest.mark.unit
 
@@ -54,13 +54,11 @@ class TestKLDivergence:
             q = [0.25, 0.25, 0.25, 0.25]
             assert kl_divergence(p, q) >= 0
 
-    def test_mismatched_length(self):
+    def test_mismatched_length_rejected(self):
         from cogant.runtime.metrics import kl_divergence
 
-        p = [0.5, 0.5]
-        q = [0.33, 0.33, 0.33]
-        result = kl_divergence(p, q)  # zip truncates to shorter
-        assert result >= 0
+        with pytest.raises(ValueError, match="dimensions"):
+            kl_divergence([0.5, 0.5], [1 / 3, 1 / 3, 1 / 3])
 
 
 class TestFreeEnergy:
@@ -90,22 +88,19 @@ class TestFreeEnergy:
         assert isinstance(fe_certain, float)
         assert isinstance(fe_uncertain, float)
 
-    def test_obs_idx_out_of_range(self):
+    def test_obs_idx_out_of_range_rejected(self):
         from cogant.runtime.metrics import free_energy
 
         A, C, D = self._make_simple_model()
-        state_dist = [0.5, 0.5]
-        # Out-of-range obs_idx should be clamped to 0
-        result = free_energy(state_dist, 10, A, C, D)
-        assert isinstance(result, float)
+        with pytest.raises(ValueError, match="observation"):
+            free_energy([0.5, 0.5], 10, A, C, D)
 
-    def test_negative_obs_idx(self):
+    def test_negative_obs_idx_rejected(self):
         from cogant.runtime.metrics import free_energy
 
         A, C, D = self._make_simple_model()
-        state_dist = [0.5, 0.5]
-        result = free_energy(state_dist, -1, A, C, D)
-        assert isinstance(result, float)
+        with pytest.raises(ValueError, match="observation"):
+            free_energy([0.5, 0.5], -1, A, C, D)
 
     def test_uniform_belief(self):
         from cogant.runtime.metrics import free_energy
@@ -130,15 +125,13 @@ class TestAgentConfig:
         cfg = AgentConfig()
         assert cfg.max_steps == 100
         assert cfg.convergence_threshold == 1e-4
-        assert cfg.action_selection == "preference"
-        assert cfg.seed == 42
 
     def test_custom(self):
         from cogant.runtime.config import AgentConfig
 
-        cfg = AgentConfig(max_steps=50, convergence_threshold=1e-3, seed=7)
+        cfg = AgentConfig(max_steps=50, convergence_threshold=1e-3)
         assert cfg.max_steps == 50
-        assert cfg.seed == 7
+        assert cfg.convergence_threshold == 1e-3
 
     def test_dataclass_fields(self):
         import dataclasses
@@ -182,17 +175,17 @@ class TestNormalize:
         result = _normalize(p)
         assert abs(sum(result) - 1.0) < 1e-9
 
-    def test_zero_sum(self):
+    def test_zero_sum_rejected(self):
         from cogant.runtime.loop import _normalize
 
-        result = _normalize([0.0, 0.0])
-        assert abs(sum(result) - 1.0) < 1e-9
+        with pytest.raises(ValueError, match="zero probability"):
+            _normalize([0.0, 0.0])
 
-    def test_empty(self):
+    def test_empty_rejected(self):
         from cogant.runtime.loop import _normalize
 
-        result = _normalize([])
-        assert result == []
+        with pytest.raises(ValueError, match="nonempty"):
+            _normalize([])
 
 
 class TestArgmax:
@@ -211,10 +204,11 @@ class TestArgmax:
 
         assert _argmax([0.0, 0.0, 1.0]) == 2
 
-    def test_empty(self):
+    def test_empty_rejected(self):
         from cogant.runtime.loop import _argmax
 
-        assert _argmax([]) == 0
+        with pytest.raises(ValueError, match="nonempty"):
+            _argmax([])
 
     def test_ties_take_first(self):
         from cogant.runtime.loop import _argmax
@@ -224,58 +218,62 @@ class TestArgmax:
 
 class TestMatVec:
     def test_identity(self):
-        from cogant.runtime.loop import _mat_vec
 
         mat = [[1.0, 0.0], [0.0, 1.0]]
         vec = [0.3, 0.7]
-        result = _mat_vec(mat, vec)
+        result = CategoricalModel(mat, [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0, 0.0], vec).observe(
+            vec
+        )
         assert abs(result[0] - 0.3) < 1e-9
         assert abs(result[1] - 0.7) < 1e-9
 
     def test_uniform_mat(self):
-        from cogant.runtime.loop import _mat_vec
 
         mat = [[0.5, 0.5], [0.5, 0.5]]
         vec = [1.0, 0.0]
-        result = _mat_vec(mat, vec)
+        result = CategoricalModel(mat, [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0, 0.0], vec).observe(
+            vec
+        )
         assert abs(result[0] - 0.5) < 1e-9
 
 
-class TestDefaultLikelihood:
+class TestCategoricalLikelihood:
     def test_basic(self):
-        from cogant.runtime.loop import _default_likelihood
 
         A = [[0.9, 0.1], [0.1, 0.9]]
         state_dist = [1.0, 0.0]
-        result = _default_likelihood(A, state_dist)
+        result = CategoricalModel(
+            A, [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0, 0.0], state_dist
+        ).observe(state_dist)
         assert abs(result[0] - 0.9) < 1e-9
         assert abs(result[1] - 0.1) < 1e-9
 
 
-class TestDefaultTransition:
+class TestCategoricalTransition:
     def test_basic(self):
-        from cogant.runtime.loop import _default_transition
 
         B = [[[1.0], [0.0]], [[0.0], [1.0]]]
         state_dist = [1.0, 0.0]
-        result = _default_transition(B, state_dist, action=0)
+        result = CategoricalModel([[1.0, 0.0], [0.0, 1.0]], B, [0.0, 0.0], state_dist).predict(
+            state_dist, 0
+        )
         assert abs(sum(result) - 1.0) < 1e-9
 
-    def test_out_of_range_action(self):
-        from cogant.runtime.loop import _default_transition
+    def test_out_of_range_action_rejected(self):
+        with pytest.raises(ValueError, match="action"):
+            CategoricalModel(
+                [[1.0, 0.0], [0.0, 1.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], [0.0, 0.0], [0.5, 0.5]
+            ).predict([0.5, 0.5], 99)
 
-        B = [[[1.0], [0.0]], [[0.0], [1.0]]]
-        result = _default_transition(B, [0.5, 0.5], action=99)
-        assert abs(sum(result) - 1.0) < 1e-9
 
-
-class TestDefaultPreferenceScore:
+class TestPreferenceDiagnostic:
     def test_basic(self):
-        from cogant.runtime.loop import _default_preference_score
 
         C = [1.0, -1.0]
         obs_dist = [0.8, 0.2]
-        result = _default_preference_score(C, obs_dist)
+        result = CategoricalModel(
+            [[1.0, 0.0], [0.0, 1.0]], [[[1.0], [0.0]], [[0.0], [1.0]]], C, [0.5, 0.5]
+        ).preference_score(obs_dist)
         assert abs(result - (1.0 * 0.8 + (-1.0) * 0.2)) < 1e-9
 
 
@@ -416,135 +414,25 @@ class TestStandaloneFunctions:
 
 
 class TestExecutionTrace:
-    def test_basic(self):
-        from cogant.gnn.runner import ExecutionTrace
+    def test_trace_json_records_filter_then_predict(self, tmp_path):
+        from tests.gnn_execution_fixture import trace
 
-        t = ExecutionTrace(step=0, state={"x": 1})
-        assert t.step == 0
-        assert t.action is None
-        assert t.reward == 0.0
-        assert t.beliefs == {}
-
-    def test_full(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        t = ExecutionTrace(
-            step=3,
-            state={"x": 1, "y": 2},
-            action="move_right",
-            observation="obs_0",
-            reward=1.5,
-            beliefs={"state_a": 0.8, "state_b": 0.2},
-            beliefs_prior={"state_a": 0.5, "state_b": 0.5},
-            free_energy_before=2.0,
-            free_energy_after=1.0,
-            policy_scores=[("act_a", 0.9), ("act_b", 0.1)],
-            action_rationale="Minimize EFE",
-            predicted_state={"x": 2, "y": 2},
-        )
-        assert t.step == 3
-        assert t.action == "move_right"
-        assert t.reward == 1.5
-        assert len(t.policy_scores) == 2
-
-    def test_to_dict(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        t = ExecutionTrace(step=1, state={"x": 0}, action="do_nothing")
-        d = t.to_dict()
-        assert "step" in d
-        assert "state" in d
-        assert "action" in d
-        assert d["action"] == "do_nothing"
-        assert "timestamp" in d
-        assert "beliefs" in d
-        assert "policy_scores" in d
-
-    def test_to_dict_none_action(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        t = ExecutionTrace(step=0, state={})
-        d = t.to_dict()
-        assert d["action"] is None
+        record = trace(tmp_path)
+        encoded = record.to_dict()
+        assert encoded["beliefs"] != encoded["predicted_state"]
+        assert encoded["beliefs_prior"] == encoded["state"]
+        assert len(encoded["policy_scores"]) == 2
 
 
 class TestGNNModelRunner:
-    def test_init(self):
-        from cogant.gnn.runner import GNNModelRunner
+    def test_complete_model_run_and_report(self, tmp_path):
+        from tests.gnn_execution_fixture import runner
 
-        runner = GNNModelRunner()
-        assert runner.traces == []
-        assert runner.manifest == {}
-        assert runner.beliefs_history == []
-
-    def test_load_package_missing_manifest(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        runner = GNNModelRunner()
-        with pytest.raises(FileNotFoundError):
-            runner.load_package(str(tmp_path))
-
-    def test_load_package_minimal(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        manifest = {"version": "1.0.0", "name": "test_model"}
-        (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-        runner = GNNModelRunner()
-        result = runner.load_package(str(tmp_path))
-        assert result["version"] == "1.0.0"
-
-    def test_load_package_with_model(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        manifest = {"version": "1.0.0", "name": "test"}
-        (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-        model = {"variables": ["x", "y"], "observations": ["obs1"]}
-        (tmp_path / "model.gnn.json").write_text(json.dumps(model))
-        state_space = {"states": ["s0", "s1"]}
-        (tmp_path / "state_space.json").write_text(json.dumps(state_space))
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        assert runner.model == model
-        assert runner.state_space == state_space
-
-    def test_load_package_with_transitions(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        manifest = {"version": "1.0.0", "name": "test"}
-        (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-        (tmp_path / "transitions.json").write_text(json.dumps({"transitions": []}))
-        (tmp_path / "preferences.json").write_text(json.dumps({"preferences": []}))
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        assert runner.manifest["name"] == "test"
-
-    def test_run_basic(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        manifest = {"version": "1.0.0", "name": "test", "variables": ["x", "y"]}
-        (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        result = runner.run(steps=3)
-        assert isinstance(result, dict)
-        assert "traces" in result or "steps_run" in result or len(runner.traces) > 0
-
-    def test_generate_execution_report(self, tmp_path):
-        from cogant.gnn.runner import GNNModelRunner
-
-        manifest = {"version": "1.0.0", "name": "test", "variables": ["x"]}
-        (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-        runner = GNNModelRunner()
-        runner.load_package(str(tmp_path))
-        runner.run(steps=2)
-        report = runner.generate_execution_report()
-        assert isinstance(report, str)
-        assert len(report) > 0
-
-
-# ---------------------------------------------------------------------------
-# server/models.py — Pydantic models
-# ---------------------------------------------------------------------------
+        model = runner(tmp_path)
+        result = model.run(3)
+        assert len(result["traces"]) == 3
+        assert result["success"] is True
+        assert result["source_sha256"] in model.generate_execution_report()
 
 
 class TestAnalyzeRequest:

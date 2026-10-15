@@ -75,7 +75,7 @@ def test_single_entry_prior_expansion_over_budget_is_rejected(small_budget: int)
         "D[[rows=1]]\n  1\n```\n"
     )
 
-    with pytest.raises(ReverseModelError, match="exceeds"):
+    with pytest.raises(ReverseModelError, match="missing A, C"):
         parse_gnn(text)
 
 
@@ -85,7 +85,8 @@ def test_models_within_budget_still_parse(small_budget: int) -> None:
 
     fenced = parse_gnn(
         "## ModelName\nx\n\n## StateSpaceBlock\ns_f0[2,1,type=int]\n\n"
-        "```gnn-matrices\nB[[rows=2][cols=2][depth=1]]\n  # action=0\n  1 0\n  0 1\n```\n"
+        "```gnn-matrices\nB[[rows=2][cols=2][depth=1]]\n  # action=0\n  1 0\n  0 1\n"
+        "A[[rows=2][cols=2]]\n1 0\n0 1\nC[[rows=2]]\n0\n0\nD[[rows=2]]\n0.5\n0.5\n```\n"
     )
     assert fenced.B == [[[1.0], [0.0]], [[0.0], [1.0]]]
 

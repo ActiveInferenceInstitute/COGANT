@@ -365,6 +365,7 @@ class BatchStepsConfig(CogantBaseConfig):
     scan_json: bool = True
     graph_stdout: bool = True
     export_gnn: bool = True
+    inference: bool = True
     export_gnn_format: str = Field(default="all", min_length=1)
     render_site: bool = True
     viz_png: bool = True
@@ -408,9 +409,8 @@ class BatchConfig(CogantBaseConfig):
 class ProjectConfig(CogantBaseConfig):
     """Fully typed configuration consumed by all COGANT entry points."""
 
-    schema_version: str = Field(
+    schema_version: Literal["1.0"] = Field(
         default=CURRENT_CONFIG_SCHEMA_VERSION,
-        pattern=r"^1\.\d+$",
         description="Version of the canonical project configuration schema",
     )
     cogant: CogantConfig = Field(default_factory=CogantConfig)
@@ -419,23 +419,3 @@ class ProjectConfig(CogantBaseConfig):
     validation: ValidationConfig = Field(default_factory=ValidationConfig)
     server: ServerConfig = Field(default_factory=ServerConfig)
     batch: BatchConfig = Field(default_factory=BatchConfig)
-
-    def __getitem__(self, key: str) -> Any:
-        """Expose named sections for read-only boundary adapters."""
-        if key not in type(self).model_fields:
-            raise KeyError(key)
-        return getattr(self, key)
-
-    def __contains__(self, key: object) -> bool:
-        """Support legacy section-membership checks without exposing a dict.
-
-        Presets now contain canonical :class:`ProjectConfig` models rather
-        than duplicated raw dictionaries.  A small mapping-compatible
-        membership surface keeps older integrations such as ``"cogant" in
-        PRESETS["default"]`` working during the deprecation cycle.
-        """
-        return isinstance(key, str) and key in type(self).model_fields
-
-    def keys(self) -> tuple[str, ...]:
-        """Return section names for structured adapters, not raw config data."""
-        return tuple(type(self).model_fields)

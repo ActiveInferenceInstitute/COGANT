@@ -589,34 +589,31 @@ class TestLanguageDetector:
 
 class TestGetParserForExtension:
     def test_get_parser_for_py_extension(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
-        # .py extension — may return a parser or None depending on env
         result = get_parser_for_extension(".py")
-        # Should not raise; returns parser or None
-        assert result is None or result is not None
+        assert callable(result.parse)
 
     def test_get_parser_for_py_without_dot(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
         result = get_parser_for_extension("py")
-        assert result is None or result is not None
+        assert callable(result.parse)
 
     def test_get_parser_for_unknown_extension(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import LanguageParserUnavailable, get_parser_for_extension
 
-        result = get_parser_for_extension(".xyz")
-        assert result is None
+        with pytest.raises(LanguageParserUnavailable):
+            get_parser_for_extension(".xyz")
 
     def test_get_parser_for_empty_extension(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import LanguageParserUnavailable, get_parser_for_extension
 
-        result = get_parser_for_extension("")
-        assert result is None
+        with pytest.raises(LanguageParserUnavailable):
+            get_parser_for_extension("")
 
     def test_get_parser_for_ts_extension(self):
-        from cogant.ingest.language_detect import get_parser_for_extension
+        from cogant.parsers import get_parser_for_extension
 
         result = get_parser_for_extension(".ts")
-        # May return a parser or None depending on environment
-        assert result is None or result is not None
+        assert callable(result.parse)

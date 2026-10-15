@@ -34,7 +34,7 @@ def _make_simple_matrices():
     """Return a simple namespace with A/B/C/D matrices."""
     m = types.SimpleNamespace(
         A=[[0.9, 0.1], [0.1, 0.9]],
-        B=[[[1.0, 0.0], [0.0, 1.0]]],
+        B=[[[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]],
         C=[1.0, 0.0],
         D=[0.5, 0.5],
     )
@@ -57,7 +57,7 @@ def _make_matrices_with_helpers():
 
     m = types.SimpleNamespace(
         A=[[0.9, 0.1], [0.1, 0.9]],
-        B=[[[1.0, 0.0], [0.0, 1.0]]],
+        B=[[[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]],
         C=[1.0, 0.0],
         D=[0.5, 0.5],
         likelihood=likelihood,
@@ -86,7 +86,7 @@ class TestAgentRuntimeExtended:
         assert rt is not None
         assert hasattr(rt, "_likelihood")
         assert hasattr(rt, "_transition")
-        assert hasattr(rt, "_preference_score")
+        assert rt.step([0.5, 0.5], 0).posterior == pytest.approx([0.9, 0.1])
 
     def test_run_n_steps_with_helpers(self):
         rt = _make_runtime(with_helpers=True)
@@ -119,20 +119,18 @@ class TestAgentRuntimeExtended:
         assert isinstance(result.steps, list)
         assert isinstance(result.final_posterior, list)
 
-    def test_run_episode_empty_D_fallback(self):
-        """When D is empty, fallback uses uniform distribution."""
+    def test_run_episode_empty_D_fallback_rejected(self):
         from cogant.runtime.loop import AgentRuntime
 
-        m = types.SimpleNamespace(
-            A=[[0.9, 0.1], [0.1, 0.9]],
-            B=[[[1.0, 0.0], [0.0, 1.0]]],
-            C=[1.0, 0.0],
-            D=[],  # empty D
-        )
-        rt = AgentRuntime(m)
-        result = rt.run_episode(n_steps=0, initial_state=None)
-        assert result is not None
-        assert isinstance(result.final_posterior, list)
+        with pytest.raises(ValueError, match="prior D"):
+            AgentRuntime(
+                types.SimpleNamespace(
+                    A=[[0.9, 0.1], [0.1, 0.9]],
+                    B=[[[1.0], [0.0]], [[0.0], [1.0]]],
+                    C=[1.0, 0.0],
+                    D=[],
+                )
+            )
 
     def test_update_D_from_posterior_basic(self):
         rt = _make_runtime()
@@ -141,14 +139,11 @@ class TestAgentRuntimeExtended:
         assert len(new_D) == 2
         assert abs(sum(new_D) - 1.0) < 1e-6
 
-    def test_update_D_from_posterior_empty(self):
-        """When D is empty, return D unchanged."""
+    def test_update_D_from_posterior_empty_rejected(self):
         from cogant.runtime.loop import AgentRuntime
 
-        m = types.SimpleNamespace(A=[], B=[], C=[], D=[])
-        rt = AgentRuntime(m)
-        result = rt.update_D_from_posterior([0.5, 0.5])
-        assert result == []
+        with pytest.raises(ValueError, match="prior D"):
+            AgentRuntime(types.SimpleNamespace(A=[], B=[], C=[], D=[]))
 
     def test_update_A_from_counts_basic(self):
         rt = _make_runtime()
@@ -157,14 +152,11 @@ class TestAgentRuntimeExtended:
         assert isinstance(new_A, list)
         assert len(new_A) == 2
 
-    def test_update_A_from_counts_empty_A(self):
-        """When A is empty, return A unchanged."""
+    def test_update_A_from_counts_empty_A_rejected(self):
         from cogant.runtime.loop import AgentRuntime
 
-        m = types.SimpleNamespace(A=[], B=[], C=[], D=[0.5, 0.5])
-        rt = AgentRuntime(m)
-        result = rt.update_A_from_counts([[1.0], [0.0]])
-        assert result == []
+        with pytest.raises(ValueError, match="likelihood A"):
+            AgentRuntime(types.SimpleNamespace(A=[], B=[], C=[], D=[0.5, 0.5]))
 
     def test_update_A_from_counts_degenerate_column(self):
         """Test degenerate column path (all zeros → uniform reset)."""
@@ -178,24 +170,11 @@ class TestAgentRuntimeExtended:
             col_sum = sum(new_A[o][s] for o in range(2))
             assert abs(col_sum - 1.0) < 1e-6
 
-    def test_update_A_from_counts_zero_n_states(self):
-        """When A has empty rows, n_states=0, return A unchanged."""
+    def test_update_A_from_counts_zero_n_states_rejected(self):
         from cogant.runtime.loop import AgentRuntime
 
-        m = types.SimpleNamespace(
-            A=[[], []],  # rows with no states
-            B=[],
-            C=[],
-            D=[0.5, 0.5],
-        )
-        rt = AgentRuntime(m)
-        result = rt.update_A_from_counts([[1.0], [0.0]])
-        assert result == [[], []]
-
-
-# ---------------------------------------------------------------------------
-# config/loaders.py — error paths and build methods
-# ---------------------------------------------------------------------------
+        with pytest.raises(ValueError, match="likelihood A"):
+            AgentRuntime(types.SimpleNamespace(A=[[], []], B=[], C=[], D=[0.5, 0.5]))
 
 
 class TestConfigLoader:

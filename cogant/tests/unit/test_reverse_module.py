@@ -509,7 +509,8 @@ def test_render_matrices_module_likelihood_guards_empty_inputs() -> None:
     source = render_matrices_module(model)
     ns: dict = {}
     exec(compile(source, "matrices.py", "exec"), ns)
-    assert ns["likelihood"]([]) == []
+    with pytest.raises(ValueError, match="prior D"):
+        ns["likelihood"]([])
     with pytest.raises(ValueError):
         ns["likelihood"]([1.0])
 

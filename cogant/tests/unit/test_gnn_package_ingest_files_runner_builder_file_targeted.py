@@ -9,7 +9,7 @@ Covers:
   _is_deterministic, _is_markovian, _count_nodes_by_kind, _count_mappings_by_tier,
   _checksum, _checksum_dict, _generate_dashboard_html, _extract_source_evidence,
   _extract_observation_modalities, _extract_state_variables, _extract_classes,
-  _extract_relationships, _extract_transition_structure, _fallback_chart)
+  _extract_relationships, _extract_transition_structure, _render_distribution_chart)
 - ingest/files.py: _detect_language with various extensions, _is_test_file paths,
   _compute_checksum
 - gnn/runner.py: ExecutionTrace with more field combinations
@@ -232,21 +232,21 @@ class TestGNNPackageBuilderPrivateMethods:
         result = builder._count_mappings_by_tier()
         assert isinstance(result, dict)
 
-    def test_fallback_chart_empty(self):
+    def test_render_distribution_chart_empty(self):
         from cogant.gnn.package import GNNPackageBuilder
 
         graph, ss, pm = _make_builder_components()
         builder = GNNPackageBuilder(graph=graph, state_space=ss, process_model=pm, mappings={})
-        result = builder._fallback_chart("My Chart", {})
+        result = builder._render_distribution_chart("My Chart", {})
         assert isinstance(result, str)
         assert "My Chart" in result
 
-    def test_fallback_chart_with_data(self):
+    def test_render_distribution_chart_with_data(self):
         from cogant.gnn.package import GNNPackageBuilder
 
         graph, ss, pm = _make_builder_components()
         builder = GNNPackageBuilder(graph=graph, state_space=ss, process_model=pm, mappings={})
-        result = builder._fallback_chart("Node Counts", {"function": 5, "class": 2})
+        result = builder._render_distribution_chart("Node Counts", {"function": 5, "class": 2})
         assert isinstance(result, str)
 
     def test_extract_source_evidence(self):
@@ -393,51 +393,19 @@ class TestFileEnumeratorPrivateMethods:
 
 
 class TestExecutionTraceAdditional:
-    def test_execution_trace_minimal(self):
-        from cogant.gnn.runner import ExecutionTrace
+    def test_trace_contains_exported_prior_and_filtered_posterior(self, tmp_path):
+        from tests.gnn_execution_fixture import trace
 
-        trace = ExecutionTrace(step=0, state={})
-        assert trace.step == 0
-        assert trace.state == {}
-        assert trace.action is None
-        assert trace.observation is None
+        record = trace(tmp_path)
+        assert record.step == 0
+        assert list(record.beliefs_prior.values()) == [0.75, 0.25]
+        assert list(record.beliefs.values()) == pytest.approx([27 / 29, 2 / 29])
+        assert list(record.predicted_state.values()) == [0.0, 1.0]
 
-    def test_execution_trace_all_fields(self):
-        from cogant.gnn.runner import ExecutionTrace
+    def test_trace_serializes_without_shared_maps(self, tmp_path):
+        from tests.gnn_execution_fixture import trace
 
-        trace = ExecutionTrace(
-            step=5,
-            state={"s_a": 0.7, "s_b": 0.3},
-            action="act_2",
-            observation="obs_1",
-            reward=3.14,
-            beliefs={"belief_a": 0.6},
-            free_energy_before=2.0,
-            free_energy_after=1.5,
-        )
-        assert trace.step == 5
-        assert trace.reward == 3.14
-        assert trace.beliefs == {"belief_a": 0.6}
-        assert trace.free_energy_before == 2.0
-        assert trace.free_energy_after == 1.5
-
-    def test_execution_trace_default_reward(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        trace = ExecutionTrace(step=1, state={"s": 0.5})
-        assert trace.reward == 0.0
-
-    def test_execution_trace_state_is_dict(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        state = {"hidden_a": 0.9, "hidden_b": 0.1}
-        trace = ExecutionTrace(step=2, state=state)
-        assert isinstance(trace.state, dict)
-        assert trace.state["hidden_a"] == 0.9
-
-    def test_execution_trace_step_sequence(self):
-        from cogant.gnn.runner import ExecutionTrace
-
-        traces = [ExecutionTrace(step=i, state={"s": float(i) / 10.0}) for i in range(5)]
-        steps = [t.step for t in traces]
-        assert steps == [0, 1, 2, 3, 4]
+        record = trace(tmp_path)
+        exported = record.to_dict()
+        exported["state"].clear()
+        assert len(record.state) == 2

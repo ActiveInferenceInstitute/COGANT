@@ -120,37 +120,35 @@ def test_ts_tree_sitter_parser_routes_tsx(tmp_path):
 
 
 def test_get_parser_for_extension_unknown():
-    from cogant.ingest.language_detect import get_parser_for_extension
+    from cogant.parsers import LanguageParserUnavailable, get_parser_for_extension
 
-    # Unknown extensions fall back to None; callers decide how to surface it.
-    assert get_parser_for_extension(".xyz") is None
-    assert get_parser_for_extension("") is None
+    with pytest.raises(LanguageParserUnavailable):
+        get_parser_for_extension(".xyz")
+    with pytest.raises(LanguageParserUnavailable):
+        get_parser_for_extension("")
 
 
 def test_get_parser_for_extension_python():
-    from cogant.ingest.language_detect import get_parser_for_extension
+    from cogant.parsers import get_parser_for_extension
 
     parser = get_parser_for_extension(".py")
     assert parser is not None
-    # Python plugin always comes from the stdlib-ast parser, not tree-sitter.
     assert "python" in getattr(parser, "supported_languages", set())
 
 
 @pytest.mark.skipif(not HAS_JS_GRAMMAR, reason="tree-sitter-javascript not installed")
 def test_get_parser_for_extension_js():
-    from cogant.ingest.language_detect import get_parser_for_extension
+    from cogant.parsers import get_parser_for_extension
 
     parser = get_parser_for_extension(".js")
     assert parser is not None
-    # Must prefer the new tree-sitter JS plugin.
     assert parser.metadata.name in {"javascript", "typescript"}
 
 
 @pytest.mark.skipif(not HAS_TS_GRAMMAR, reason="tree-sitter-typescript not installed")
 def test_get_parser_for_extension_ts():
-    from cogant.ingest.language_detect import get_parser_for_extension
+    from cogant.parsers import get_parser_for_extension
 
     parser = get_parser_for_extension(".ts")
     assert parser is not None
-    # Tree-sitter or compatibility regex TS are both acceptable.
     assert parser.metadata.name == "typescript"

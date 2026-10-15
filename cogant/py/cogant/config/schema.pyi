@@ -158,6 +158,7 @@ class BatchStepsConfig(CogantBaseConfig):
     scan_json: bool
     graph_stdout: bool
     export_gnn: bool
+    inference: bool
     export_gnn_format: str
     render_site: bool
     viz_png: bool
@@ -174,12 +175,10 @@ class BatchStepsConfig(CogantBaseConfig):
     batch_dashboard: bool
 
 class ProjectConfig(CogantBaseConfig):
-    schema_version: str
+    schema_version: Literal["1.0"]
     cogant: CogantConfig
     pipeline: PipelineConfig
     export: ExportConfig
     validation: ValidationConfig
     server: ServerConfig
     batch: BatchConfig
-    def __contains__(self, key: object) -> bool: ...
-    def __getitem__(self, key: str) -> Any: ...

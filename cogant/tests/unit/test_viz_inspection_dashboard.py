@@ -315,12 +315,13 @@ def test_render_detail_pngs_records_evidence_coverage_counts(tmp_path):
     assert sidecar["displayed_counts"]["conflict_events"] == 1
 
 
-def test_render_detail_pngs_writes_native_rule_and_inference_panels(tmp_path):
+def test_render_detail_pngs_omits_inference_without_an_executed_trace(tmp_path):
     _write_run_fixture(tmp_path)
 
     written = render_interpretability_detail_pngs(tmp_path)
 
-    for key in ("rule_trace", "inference_trace", "roundtrip_diff"):
+    assert "inference_trace" not in written
+    for key in ("rule_trace", "roundtrip_diff"):
         assert written[key].is_file()
         assert b"No SVG" not in written[key].read_bytes()
         sidecar = json.loads(written[key].with_suffix(".figure.json").read_text())

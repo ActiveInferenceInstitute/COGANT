@@ -40,6 +40,19 @@ uv run --directory cogant cogant finite verify examples/finite_models/toggle.jso
 These commands consume an explicit model declaration. The repository-analysis
 pipeline continues to produce evidence-bearing candidate models from source.
 
+## Execute exported GNN matrices
+
+From this project root:
+
+```bash
+uv run --directory cogant cogant translate examples/control_positive/calculator -o output/calculator --no-dynamic --layout-output
+uv run --directory cogant cogant infer output/calculator/gnn_package/model.gnn.md --steps 8 -o output/calculator/data/inference_trace.json
+```
+
+The [inference guide](cogant/docs/api/inference.md) describes supplied observations,
+source-bound traces, action scores, admission limits, and native trajectory figures.
+The batch runner performs this inference step for each enabled target.
+
 ## Manuscript variables (madlib)
 
 Run these from the COGANT project root:
@@ -97,7 +110,7 @@ any publication figure is missing.
 Configurable orchestration at the project root (same level as this file):
 
 - **`run_all.sh`** — resolves the project root (works from here or from inner [`cogant/`](cogant/)), then `cd` into the inner package and `uv run python ../run_all.py`
-- **`run_all.py`** — reads **`run_all.json`** (optional; else built-in defaults), runs `cogant translate` → `scan`/`graph` → `export-gnn` → `render` → `viz` → **`validate`** (full COGANT GNN package validation; the optional upstream `gnn` check runs only when `COGANT_ENABLE_UPSTREAM_GNN` is truthy and the `upstream` extra is installed, and `steps.validate_no_upstream_gnn` forces it off) per target
+- **`run_all.py`** — reads **`run_all.json`** (optional; else built-in defaults), runs `cogant translate` → `scan`/`graph` → `export-gnn` → `infer` → `render` → `viz` → **`validate`** (full COGANT GNN package validation; the optional upstream `gnn` check runs only when `COGANT_ENABLE_UPSTREAM_GNN` is truthy and the `upstream` extra is installed, and `steps.validate_no_upstream_gnn` forces it off) per target
 - **`run_all.example.json`** — copy to `run_all.json` and set `targets` / `steps`
 
 **Per-target output folders:** everything for one run goes under **`<output_root>/<target_id>/`** (`data/bundle.json`, `gnn_package/`, `site/`, `figures/` PNGs, `diagrams/`, `analysis/`, `exports/`, `roundtrip/`, `reports/run_summary.md`). The shipped [`run_all.json`](run_all.json) and built-in no-config defaults set `output_root: "cogant/output"`, so corpus runs land at `cogant/output/<target_id>/`; the minimal [`run_all.example.json`](run_all.example.json) sets `output_root: "output"` for project-root-relative smoke tests. A **`<output_root>/run_manifest.json`** records top-level metadata (`started_at`, `staging_root`, `package_root`, `output_root`, `dry_run`) and a **`targets`** array: each entry has `id`, `run_dir`, `commands` (list of `{cmd, step, exit, wall_time_s}`), and for `path`/`git_url` targets the fields described in `run_all.py` (`path`, `absolute_target`, `git_url`, `source_dir`, …). **`summary`** includes `total_wall_time_s`, `target_count`, and `failed_steps` (step labels when a non-zero exit was recorded). A cross-target **`<output_root>/summary.md`** + **`<output_root>/summary.json`** is written at the end with real per-target counts (nodes, edges, mappings), score, GNN-package file count, and presence flags for each layout subdirectory.
@@ -110,6 +123,16 @@ Configurable orchestration at the project root (same level as this file):
 uv run --directory cogant python ../scripts/batch_dashboard.py \
     --output-root cogant/output
 ```
+
+The default `steps.inference: true` executes eight steps from each exported
+`gnn_package/model.gnn.md` and writes `data/inference_trace.json` for organized
+runs or `inference_trace.json` beside a flat bundle. Manifest and
+summary entries record its source, matrix and trace SHA256 digests, step count,
+mode and policy horizon. The summary verifies the trace against the current GNN.
+These are model rollouts with modal predicted observations and one-step
+risk-plus-ambiguity policy scores. Failed translation or GNN export stops that
+target; previous output files remain on disk but are not admitted as current
+results.
 
 Full reference: [`cogant/docs/reference/batch_dashboard.md`](cogant/docs/reference/batch_dashboard.md). Opt out for a single batch via `"steps": { "batch_dashboard": false }` in `run_all.json`.
 

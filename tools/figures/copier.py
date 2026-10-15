@@ -53,7 +53,7 @@ def copy_manuscript_figures(
 
     root = (staging_root or COGANT_STAGING_ROOT).resolve()
     figures = tuple(figures)
-    _prepare_source_figures(root, figures)
+    _prepare_source_figures(root, figures, strict=strict)
     output_dir = root / "output" / "figures"
     output_dir.mkdir(parents=True, exist_ok=True)
 

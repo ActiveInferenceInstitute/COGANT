@@ -19,7 +19,6 @@ _parse_mermaid_gantt: Any
 _parse_mermaid_sequence: Any
 _parse_mermaid_state_diagram: Any
 _read_json: Any
-_render_svg_placeholder_png: Any
 _split_gnn_markdown: Any
 _truncate: Any
 discover_process_model_json: Any

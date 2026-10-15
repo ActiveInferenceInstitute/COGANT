@@ -303,47 +303,58 @@ class TestModelRunnerValidate:
         assert result["action_count"] == 1
 
     def test_simulate_step_unknown_action(self) -> None:
-        runner = self._make_runner()
-        ss = self._make_state_space()
-        result = runner.simulate_step(ss, {"v1": 0}, "unknown_action")
-        assert result["success"] is False
-        assert "Unknown action" in result["error"]
-        assert result["next_state"] == {"v1": 0}
+        from cogant.simulate.runner import ModelRunner
+        from cogant.statespace.compiler import Action, ObservationModality
 
-    def test_simulate_step_precondition_not_met(self) -> None:
-        from cogant.statespace.compiler import Action
+        ss = self._make_ss_with_var("v1", "x")
+        ss.actions["a1"] = Action(id="a1", name="stay", controller_id="ctrl")
+        ss.observations["o"] = ObservationModality(
+            id="o", name="o", source_node_id="v1", modality_type="event"
+        )
+        runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError):
+            runner.simulate_step(ss, {"v1": 1.0}, "unknown_action")
 
-        runner = self._make_runner()
+    def test_simulate_step_missing_probability(self) -> None:
+        from cogant.simulate.runner import ModelRunner
+        from cogant.statespace.compiler import Action, ObservationModality
+
         ss = self._make_ss_with_var("v1", "x")
         ss.actions["a1"] = Action(id="a1", name="move", controller_id="ctrl", preconditions=["v1"])
-        # State doesn't have v1 -> precondition fails
-        result = runner.simulate_step(ss, {}, "a1")
-        assert result["success"] is False
-        assert "Precondition" in result["error"]
+        ss.observations["o"] = ObservationModality(
+            id="o", name="o", source_node_id="v1", modality_type="event"
+        )
+        runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError, match="belief keys"):
+            runner.simulate_step(ss, {}, "a1")
 
-    def test_simulate_step_toggles_boolean(self) -> None:
-        from cogant.statespace.compiler import Action
+    def test_simulate_step_rejects_boolean_value(self) -> None:
+        from cogant.simulate.runner import ModelRunner
+        from cogant.statespace.compiler import Action, ObservationModality
 
-        runner = self._make_runner()
         ss = self._make_ss_with_var("flag", "active", "BOOLEAN", 1)
         ss.actions["a1"] = Action(id="a1", name="toggle", controller_id="ctrl", effects=["flag"])
-        state = {"flag": True}
-        result = runner.simulate_step(ss, state, "a1")
-        assert result["success"] is True
-        assert result["next_state"]["flag"] is False
+        ss.observations["o"] = ObservationModality(
+            id="o", name="o", source_node_id="flag", modality_type="event"
+        )
+        runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError, match="nonempty, finite and non-negative"):
+            runner.simulate_step(ss, {"flag": True}, "a1")
 
-    def test_simulate_step_increments_integer(self) -> None:
-        from cogant.statespace.compiler import Action
+    def test_simulate_step_rejects_integer_value(self) -> None:
+        from cogant.simulate.runner import ModelRunner
+        from cogant.statespace.compiler import Action, ObservationModality
 
-        runner = self._make_runner()
         ss = self._make_ss_with_var("count", "count", "DISCRETE", 10)
         ss.actions["inc"] = Action(
             id="inc", name="increment", controller_id="ctrl", effects=["count"]
         )
-        state = {"count": 5}
-        result = runner.simulate_step(ss, state, "inc")
-        assert result["success"] is True
-        assert result["next_state"]["count"] == 6
+        ss.observations["o"] = ObservationModality(
+            id="o", name="o", source_node_id="count", modality_type="event"
+        )
+        runner = ModelRunner(A=[[1.0]], B=[[[1.0]]], C=[0.0], D=[1.0])
+        with pytest.raises(ValueError, match="sum to 1"):
+            runner.simulate_step(ss, {"count": 5}, "inc")
 
 
 # ---------------------------------------------------------------------------

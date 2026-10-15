@@ -13,6 +13,7 @@ itself is pinned by parsing the actual ``run_all.py`` source AST.
 from __future__ import annotations
 
 import ast
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -56,6 +57,7 @@ def test_print_default_config_returns_zero() -> None:
     )
     assert proc.returncode == 0
     assert proc.stdout.strip().startswith("{")
+    assert json.loads(proc.stdout)["steps"]["inference"] is True
 
 
 def test_target_roundtrip_threshold_is_forwarded() -> None:
@@ -145,6 +147,20 @@ def test_cross_target_summary_invalid_package_is_fatal(tmp_path) -> None:
     assert failures == ["summary_validate:bad_target"]
     summary = (tmp_path / "out" / "summary.json").read_text(encoding="utf-8")
     assert "summary_validate:bad_target" in summary
+
+
+def test_capture_timeout_preserves_decoded_process_output(tmp_path) -> None:
+    captured = tmp_path / "timeout.txt"
+    result = run_all_runner.run_cmd_capture(
+        [sys.executable, "-c", "import time; print('before timeout', flush=True); time.sleep(2)"],
+        cwd=tmp_path,
+        out_path=captured,
+        dry_run=False,
+        log_fp=sys.stdout,
+        timeout=0.2,
+    )
+    assert result.returncode == 124
+    assert captured.read_text() == "before timeout\n"
 
 
 def test_validate_git_args_accepts_wellformed() -> None:
