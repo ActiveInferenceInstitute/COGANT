@@ -50,3 +50,21 @@ def test_roundtrip_table_rejects_invalid_data(value):
     module = _module()
     with pytest.raises((ValueError, KeyError, TypeError)):
         module.format_value_for_path("evaluation.roundtrip.per_target", value)
+
+
+def test_roundtrip_table_rejects_ambiguous_strict_flag():
+    module = _module()
+    with pytest.raises(TypeError, match="must be a boolean"):
+        module.format_value_for_path(
+            "evaluation.roundtrip.per_target", [{"strict_structural": "false"}]
+        )
+
+
+@pytest.mark.parametrize("value, expected", [(True, "yes"), (False, "no")])
+def test_matrix_prior_uniformity_renders_the_measured_flag(value, expected):
+    assert (
+        _module().format_value_for_path(
+            "ablation.matrix_fallback.fixture.d_uniform", value
+        )
+        == expected
+    )

@@ -230,7 +230,14 @@ returns `u_c0` every step, which is the behaviour observed in
 `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md` §3.
 
 The runtime mathematics here are implementation-backed rather than proof-complete.
-Focused checks live behind `uv run --directory cogant pytest --no-cov tests/unit/test_free_energy.py tests/unit/test_inference_trace_artifact.py tests/unit/test_runtime_metrics_config_loop_gnn_runner_kl_targeted.py -q`,
-which exercises the VFE/EFE helper paths, inference trace artifacts, and runner
+Run the focused checks with:
+
+```bash
+uv run --directory cogant pytest --no-cov \
+  tests/unit/test_free_energy.py tests/unit/test_inference_trace_artifact.py \
+  tests/unit/test_runtime_metrics_config_loop_gnn_runner_kl_targeted.py -q
+```
+
+This exercises the VFE/EFE helper paths, inference trace artifacts, and runner
 diagnostics. Passing those tests supports the emitted smoke-trace behavior; it
 does not prove convergence or policy optimality beyond the finite fixture cases.

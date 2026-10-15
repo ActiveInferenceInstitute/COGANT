@@ -95,6 +95,8 @@ def format_value_for_path(path: str, value: Any) -> str:
             return "N/A"
         return ""
     if isinstance(value, bool):
+        if path.endswith(".d_uniform"):
+            return "yes" if value else "no"
         return str(value)
     if isinstance(value, int):
         return str(value)
@@ -315,6 +317,12 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{ABLATION_REQUESTS_LIB_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.requests_lib.c_entries_total",
     "{{ABLATION_JSON_STDLIB_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.json_stdlib.c_entries_zero",
     "{{ABLATION_JSON_STDLIB_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.json_stdlib.c_entries_total",
+    "{{ABLATION_CALCULATOR_D_UNIFORM}}": "ablation.matrix_fallback.calculator.d_uniform",
+    "{{ABLATION_EVENT_PIPELINE_D_UNIFORM}}": "ablation.matrix_fallback.event_pipeline.d_uniform",
+    "{{ABLATION_FLASK_MINI_D_UNIFORM}}": "ablation.matrix_fallback.flask_mini.d_uniform",
+    "{{ABLATION_FLASK_APP_D_UNIFORM}}": "ablation.matrix_fallback.flask_app.d_uniform",
+    "{{ABLATION_REQUESTS_LIB_D_UNIFORM}}": "ablation.matrix_fallback.requests_lib.d_uniform",
+    "{{ABLATION_JSON_STDLIB_D_UNIFORM}}": "ablation.matrix_fallback.json_stdlib.d_uniform",
     # Rule-family ablation: measured per-family total-mapping deltas
     # (baseline minus rule_filter-restricted run) for the two fixtures
     # used in @tbl:rule-family-ablation.

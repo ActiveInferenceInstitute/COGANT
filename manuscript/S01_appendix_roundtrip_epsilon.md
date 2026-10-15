@@ -64,7 +64,8 @@ Run the current freshness and manuscript-facing checks from the project root:
 ```bash
 uv run python tools/check_metrics_fresh.py
 uv run python tools/audit_manuscript_numbers.py
-uv run python tools/claim_ledger.py --manuscript-dir manuscript --output-dir output/claim_ledger --fail-on-literal-numbers
+uv run python tools/claim_ledger.py --manuscript-dir manuscript \
+  --output-dir output/claim_ledger --fail-on-literal-numbers
 ```
 
 When the ledger changes, regenerate `METRICS.yaml`, refresh the manuscript

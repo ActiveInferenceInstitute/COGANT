@@ -17,7 +17,15 @@ Here $\bar{e}$ is the mean evidence confidence, $\delta_d$ is the diversity bonu
 
 The score should be interpreted operationally rather than metaphysically: it is a review-priority score over extracted assertions, not a Bayesian posterior over the true semantics of the program and not an empirically calibrated probability in the reliability-diagram sense [@guo2017calibration]. Its value is that every component is inspectable and trace-backed -- provenance source, parser certainty, rule specificity, conflict penalty, reviewer outcome -- so a high score means "stronger executable evidence for this mapping under the current front end," not "the repository has been proven correct." This distinction keeps COGANT compatible with provenance-oriented artifact review [@moreau2013prov] and with the manuscript's broader claim-ledger discipline, while leaving formal posterior semantics and empirical calibration to future work.
 
-The implemented scoring and state-space claims are paired with focused tests: `uv run pytest --no-cov tests/unit/test_confidence.py tests/unit/test_confidence_model.py tests/unit/test_statespace_compiler.py tests/unit/test_gnn_matrices.py -q` covers confidence aggregation, compiler shape contracts, and matrix stochasticity against `../cogant/py/cogant/translate/confidence.py`, `../cogant/py/cogant/statespace/compiler.py`, and `../cogant/py/cogant/gnn/matrices.py`.
+The implemented scoring and state-space claims are paired with focused tests:
+
+```bash
+uv run pytest --no-cov \
+  tests/unit/test_confidence.py tests/unit/test_confidence_model.py \
+  tests/unit/test_statespace_compiler.py tests/unit/test_gnn_matrices.py -q
+```
+
+These cover confidence aggregation, compiler shape contracts, and matrix stochasticity against `../cogant/py/cogant/translate/confidence.py`, `../cogant/py/cogant/statespace/compiler.py`, and `../cogant/py/cogant/gnn/matrices.py`.
 
 ## State space and behavior {#sec:02-03-state-space-and-behavior}
 
