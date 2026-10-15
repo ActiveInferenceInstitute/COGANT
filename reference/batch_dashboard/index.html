@@ -3460,6 +3460,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execute Exported GNN Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/static/" class="md-nav__link">
         
   
@@ -10603,6 +10631,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/end_to_end_inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    End-to-End Inference Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12763,8 +12819,19 @@ real timings, and the dashboard directory is recorded under
 <code>manifest["post_steps"]["batch_dashboard"]["dir"]</code>. To
 opt out for a particular batch, set <code>"steps": { "batch_dashboard":
 false }</code> in <code>run_all.json</code>.</p>
-<p>A dashboard failure is <strong>advisory</strong> — <code>run_all</code> logs it but does not
-treat the batch as failed.</p>
+<p>A dashboard failure makes the batch fail and is retained in the manifest.</p>
+<p>The default <code>steps.inference: true</code> executes eight steps from each target's
+exported GNN before rendering. <code>data/inference_trace.json</code> (or
+<code>inference_trace.json</code> beside a flat bundle) contains the matrix
+snapshot, filtered posterior, one-step risk-plus-ambiguity policy scores, and
+subsequent prediction. These are model rollouts using modal observations.
+The manifest and cross-target summary retain source/matrix/trace SHA256 digests
+and a verified inference-presence flag. Summarization rechecks source binding;
+a stale trace is a failed result.</p>
+<p>A failed translation or GNN export stops dependent work for that target.
+Existing artifacts are preserved but <code>source_admitted: false</code> excludes them
+from current summary validation and inference. This prevents a previous
+successful run from hiding a failed rerun.</p>
 <h2 id="robustness-notes">Robustness notes</h2>
 <ul>
 <li>Missing or unparseable per-target <code>bundle.json</code> files are tolerated:

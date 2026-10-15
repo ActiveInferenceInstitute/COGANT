@@ -2745,6 +2745,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cogant-infer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cogant infer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cogant-translate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3611,6 +3622,34 @@
     
   
     Explicit Finite Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execute Exported GNN Models
   
 
     
@@ -10649,6 +10688,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rnd/end_to_end_inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    End-to-End Inference Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12609,6 +12676,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cogant-infer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cogant infer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cogant-translate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12739,7 +12817,8 @@
 
 
 <h1 id="cli-reference">CLI Reference</h1>
-<p>COGANT ships a Typer-based CLI (entry point <code>cogant</code>, defined in <code>py/cogant/cli/main.py</code>) with <strong>26</strong> <code>@app.command</code> registrations on the root app, plus <strong><code>plugin</code></strong> and <strong><code>migrate</code></strong> Typer groups — <strong>28</strong> names on <code>cogant --help</code>, and <strong>29</strong> leaf subcommands when counting <code>plugin list</code>, <code>plugin info</code>, and <code>migrate migrate</code>. Every subcommand supports <code>--help</code>; the list below covers the ones most commonly used day-to-day.</p>
+<p>COGANT ships a Typer-based CLI (entry point <code>cogant</code>, defined in <code>py/cogant/cli/main.py</code>).
+Every subcommand supports <code>--help</code>; the list below covers common workflows.</p>
 <p>Run <code>cogant --help</code> to see the authoritative, in-tree list (counts change when new commands ship).</p>
 <h2 id="analysis-visualization-and-export-commands">Analysis, Visualization, And Export Commands</h2>
 <p>These four top-level commands are real package entry points. Each one can print JSON/table output and can write artifacts for scripts or dashboards:</p>
@@ -12769,6 +12848,15 @@
 </tr>
 </tbody>
 </table>
+<h2 id="cogant-infer"><code>cogant infer</code></h2>
+<div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>infer<span class="w"> </span>MODEL.gnn.md<span class="w"> </span><span class="o">[</span>--steps<span class="w"> </span>N<span class="o">]</span><span class="w"> </span><span class="o">[</span>--observations<span class="w"> </span>indices.json<span class="o">]</span>
+<span class="w">                         </span><span class="o">[</span>--output<span class="w"> </span>trace.json<span class="o">]</span><span class="w"> </span><span class="o">[</span>--overwrite<span class="o">]</span><span class="w"> </span><span class="o">[</span>--max-work-units<span class="w"> </span>N<span class="o">]</span>
+</code></pre></div>
+<p>Executes the exported A/B/C/D values and writes a typed, source-bound trace.
+The default uses modal model-generated observations; a JSON array supplies external
+observation indices. Missing matrices, impossible observations, stale artifacts,
+and resource-budget violations fail explicitly. See the
+<a href="../api/inference/">inference API guide</a> for timing, objective, and provenance.</p>
 <h2 id="cogant-translate"><code>cogant translate</code></h2>
 <p>Run the full pipeline: ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate (the <code>dynamic</code> enrichment stage runs by default and is skipped only with <code>--no-dynamic</code>).</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>translate<span class="w"> </span>&lt;repo&gt;<span class="w"> </span><span class="o">[</span>--output<span class="w"> </span>DIR<span class="o">]</span><span class="w"> </span><span class="o">[</span>--layout-output<span class="o">]</span><span class="w"> </span><span class="o">[</span>--no-dynamic<span class="o">]</span>

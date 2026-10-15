@@ -3460,6 +3460,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execute Exported GNN Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/static/" class="md-nav__link">
         
   
@@ -10478,6 +10506,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rnd/end_to_end_inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    End-to-End Inference Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -13717,9 +13773,6 @@ Format follows <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</
   advertised figure was inaccurate. Test counts re-verified unchanged: <strong>9561 passing /
   0 failing / 52 skipped</strong> (9613 collected).</li>
 <li><code>GNNBundle</code> de-duplicated in <code>cogant.__all__</code>.</li>
-<li><code>scripts/empirical_claim_demo.py</code>: roundtrip JSON extraction rewritten to
-  <code>json.JSONDecoder().raw_decode</code> (the prior first-<code>}</code> match truncated nested JSON and
-  crashed the demo with exit 1; it now runs to completion).</li>
 <li>Documentation accuracy corrections: <code>py/cogant/graph/AGENTS.md</code>
   (<code>finalize()</code>/<code>queries.py</code>), <code>py/cogant/gnn/AGENTS.md</code> (<code>formatter/</code> package; 16
   required files), <code>py/cogant/viz/AGENTS.md</code> (21 viz modules incl. <code>ablation_view.py</code>),
