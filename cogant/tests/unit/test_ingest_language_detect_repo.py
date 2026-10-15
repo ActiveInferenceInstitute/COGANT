@@ -8,10 +8,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cogant.ingest.language_detect import (
-    LanguageDetector,
-    get_parser_for_extension,
-)
+import pytest
+
+from cogant.ingest.language_detect import LanguageDetector
+from cogant.parsers import LanguageParserUnavailable, get_parser_for_extension
 
 
 class TestDetectLanguage:
@@ -123,19 +123,23 @@ class TestGetParserForExtension:
         p = get_parser_for_extension(".PY")
         assert p is not None
 
-    def test_unknown_extension_returns_none(self) -> None:
-        assert get_parser_for_extension(".xyz") is None
-        assert get_parser_for_extension("xyz") is None
+    def test_unknown_extension_raises_capability_error(self) -> None:
+        for extension in (".xyz", "xyz"):
+            with pytest.raises(LanguageParserUnavailable, match="no parser owns"):
+                get_parser_for_extension(extension)
 
-    def test_empty_string_returns_none(self) -> None:
-        assert get_parser_for_extension("") is None
+    def test_empty_string_raises_capability_error(self) -> None:
+        with pytest.raises(LanguageParserUnavailable, match="no parser owns"):
+            get_parser_for_extension("")
 
     def test_typescript_extension(self) -> None:
         p = get_parser_for_extension(".ts")
-        # May be None if no TS parser is installed — both outcomes acceptable
-        assert p is None or p is not None
+        assert p.metadata.name == "typescript"
+        symbols = p.extract_symbols(p.parse("function sample(value: number) { return value; }"))
+        assert any(symbol["name"] == "sample" for symbol in symbols)
 
     def test_javascript_extension(self) -> None:
         p = get_parser_for_extension(".js")
-        # May or may not be present depending on JS plugin install
-        assert p is None or p is not None
+        assert p.metadata.name in {"javascript", "typescript"}
+        symbols = p.extract_symbols(p.parse("function sample(value) { return value; }"))
+        assert any(symbol["name"] == "sample" for symbol in symbols)
