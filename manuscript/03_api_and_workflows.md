@@ -27,6 +27,8 @@ flowchart TB
   sourceRoute ~~~ finiteModels
 ```
 
+*Repository analysis and authored finite-model construction. Verification compares the declaration with its artifact; runtime handoff copies the matrices.*
+
 `Session` exposes stepwise methods (`extract_static`, `build_graph`, …) up to `export_all`; `PipelineRunner` executes the full ingest-to-validate DAG — including the `validate` gate that the stepwise `Session` path does not run — under one `PipelineConfig`. Exported files (`model.gnn.md`, JSON companions, `manifest.json`) materialize under the configured output tree. The authoritative command and flag list lives in `../cogant/docs/cli/README.md`.
 
 ## Session-oriented workflow
