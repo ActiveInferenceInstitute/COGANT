@@ -66,7 +66,14 @@ For canonical 19-section Generalized Notation Notation artifacts (`model.gnn.md`
 
 ## Command-line interface
 
-The CLI entry point (`cogant.cli.main`) registers **26** top-level subcommands (`cogant --help`). The high-traffic paths are `cogant translate` (full pipeline, equivalent to `cogant analyze`; accepts `--incremental <git-ref>` for per-commit CI re-runs over a Git diff), `cogant validate`, `cogant reverse`, `cogant roundtrip`, and `cogant doctor` (environment diagnostics). Other commands cover scanning (`scan`, `extract-static`, `extract-dynamic`, `graph`), compilation (`statespace`, `process`), re-export (`export-gnn`, `export`), static/graph analytics (`analyze-static`, `analyze-graph`), visualization (`render`, `viz`, `visualize`, `diff`), review (`explain`), upstream interop (`upstream-gnn` — drives the upstream `generalized-notation-notation` 25-step pipeline against an existing `gnn_package/`, also exposed as `--upstream-gnn-pipeline` on `translate` / `analyze` / `validate`), and lifecycle management (`init`, `plugin`, `migrate`, `benchmark`, `changed`). Exact flags live in `../cogant/docs/cli/README.md` and `../cogant/docs/cli_reference.md`; the manuscript does not duplicate them to avoid drift.
+The CLI entry point (`cogant.cli.main`) exposes direct commands and command groups (`cogant --help`). The high-traffic paths are `cogant translate` (full pipeline, equivalent to `cogant analyze`; accepts `--incremental <git-ref>` for per-commit CI re-runs over a Git diff), `cogant validate`, `cogant reverse`, `cogant roundtrip`, and `cogant doctor` (environment diagnostics). Other commands cover scanning (`scan`, `extract-static`, `extract-dynamic`, `graph`), compilation (`statespace`, `process`, `finite`), re-export (`export-gnn`, `export`), static/graph analytics (`analyze-static`, `analyze-graph`), visualization (`render`, `viz`, `visualize`, `diff`), review (`explain`), upstream interop (`upstream-gnn` — drives the upstream `generalized-notation-notation` 25-step pipeline against an existing `gnn_package/`, also exposed as `--upstream-gnn-pipeline` on `translate` / `analyze` / `validate`), and lifecycle management (`init`, `plugin`, `migrate`, `benchmark`, `changed`). Exact flags live in `../cogant/docs/cli/README.md` and `../cogant/docs/cli_reference.md`; the manuscript does not duplicate them to avoid drift.
+
+`cogant finite compile` accepts an authored finite-model declaration;
+`cogant finite verify` compares its compiled artifact against that declaration.
+These commands expose the model-construction contract in
+@sec:02-03-explicit-finite-models without running repository analysis. Python
+callers use `compile_finite_model` and hand independent matrix copies to the
+runtime through `FiniteModel.to_runtime()`.
 
 **Per-command stage coverage (RedTeam F40 disambiguation).** Not every
 subcommand exercises all {{STAGE_COUNT}} runner stages. `cogant translate` and
