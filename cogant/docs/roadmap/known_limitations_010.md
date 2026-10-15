@@ -67,7 +67,7 @@ Recorded Dulwich-derived graphs at ~1.80 edges/node hit a performance cliff
 206 MB generated package, so this is now a regression watch item rather than a
 current v1.0 blocker.
 
-**Workaround:** Use `cogant translate --incremental <git-ref>` (19.6× no-change speedup).
+**Workaround:** Use `cogant analyze --incremental <git-ref>` for unchanged-snapshot cache reuse.
 Split large monorepos by module: `cogant translate --include src/core/`.
 
 **Target fix:** Keep Dulwich-class fixtures in the performance suite and add streaming graph/export

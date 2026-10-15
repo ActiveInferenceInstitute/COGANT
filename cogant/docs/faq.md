@@ -278,7 +278,7 @@ v0.7.0 ships HTML inspection dashboards and manuscript-facing visual artifacts f
 
 COGANT aims to be a bridge between software engineering and Active Inference research:
 
-1. **Shipped (v0.2–v0.6):** JS/TS parser, Rust PyO3 acceleration, incremental analysis (19.6× speedup), plugin system, 22 translation rules, role-preservation and strict-invariant roundtrip reporting, static/network analysis, 9-format export, 8-page PDF reports, WebSocket streaming API.
+1. **Shipped (v0.2–v0.6):** JS/TS parser, Rust PyO3 acceleration, incremental analysis with unchanged-snapshot cache reuse, plugin system, 22 translation rules, role-preservation and strict-invariant roundtrip reporting, static/network analysis, 9-format export, 8-page PDF reports, WebSocket streaming API.
 2. **Near term (v0.6.x):** Java and Rust parsers, streaming export for >100k-node graphs, intra-procedural type inference, alias analysis.
 3. **Medium term (v0.7.x–v0.9.x):** Dynamic analysis from runtime traces, cross-repository modeling, interprocedural dataflow, VSCode extension, interactive web dashboard.
 4. **Long term (v1.0+):** Codebases as living generative models — continuous CI integration that tracks how a project's Active Inference structure evolves over time, with drift detection when architectural roles shift unexpectedly. Public API freeze, pre-trained GNN node encoder, distributed processing.

@@ -9,6 +9,7 @@
 | [Active Inference Mapping](active_inference_mapping.md) | Code-pattern to Active Inference role mapping notes | Intermediate |
 | [Calibration](calibration.md) | Rule calibration and confidence backlog | Advanced |
 | [Organization State Spaces](organization_state_spaces.md) | Provisional bridge from org charts and process traces to typed state-space models, with a negative-control audit helper | Advanced |
+| [Handwired](handwired.md) | Pinned source review of explicit construction and independent behavioral checks | Advanced |
 
 ## Recommended Reading Order
 

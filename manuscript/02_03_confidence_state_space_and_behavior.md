@@ -51,6 +51,36 @@ When coverage and traces are available, `enrich_graph()` in `../cogant/py/cogant
 
 Both steps also append `dynamic_coverage` and `dynamic_trace` markers to the program graph's evidence sources. The confidence model consumes these markers directly: any mapping whose evidence set now contains both static and dynamic entries becomes eligible for promotion from the `STATIC_ONLY` tier to `STATIC_PLUS_RUNTIME`, and hot-path and branch-coverage metadata raise the underlying score through the diversity bonus $\delta_d$ in @eq:confidence-core. This is the mechanism by which executing the target program, even partially, converts static heuristics into corroborated behavioral facts without rerunning the upstream rule engine [@allamanis2018survey].
 
+### Explicit finite-state construction {#sec:02-03-explicit-finite-models}
+
+A separate authored-model interface makes the state-domain contract explicit.
+`cogant.statespace.FiniteModelSpec` accepts ordered state, action, and observation
+labels, a total controlled transition kernel, a total observation kernel, an
+initial prior, and optional log preferences. Each state label denotes a complete
+configuration supplied by the model author. Distinct states may emit the same
+observation, and transition rows may carry multiple probabilistic outcomes.
+These domains are supplied directly rather than reconstructed from variable
+nodes in a repository graph.
+
+`compile_finite_model` maps the tables into the usual matrix orientations;
+`verify_finite_model` checks source identity and every coefficient, including
+implied zeros. Admission rejects unknown references, duplicate outcomes,
+incomplete input cases, invalid probability mass, and nonfinite coefficients.
+Compilation preserves the authored coefficients and refuses an exceeded dense
+allocation budget. It does not approximate a large declared state axis by
+retaining a subset. The immutable result can create an `AgentRuntime` with
+independent mutable copies of the matrices.
+
+The interface follows the explicit-construction lesson of Handwired
+[@lou2026handwired], with probability kernels as its computational vocabulary.
+The checked contract concerns the declared model. Independently written Python
+toggle and bounded-counter logic supplies application-level reference traces
+in the tests; a normalization-preserving wrong-successor control demonstrates
+why stochasticity alone is insufficient. The construction and checking
+relationship is set out in @sec:S04-explicit-finite-kernels. These results do not
+upgrade the repository roundtrip ledger, infer a physical system's dynamics,
+or establish optimality of the runtime's preference-based action choices.
+
 ### Typed socio-technical state spaces
 
 The same state-space vocabulary also suggests a bounded future extension for socio-technical artifacts. An organization chart can be read as a typed graph whose units, roles, posts, reporting lines, process responsibilities, service ownership records, and escalation paths provide structural priors over coordination rather than direct measurements of organizational behaviour [@w3cOrgOntology2014; @galbraith1974organizationDesign]. In COGANT terms, those artifacts would be analogous to static program nodes and edges: they identify candidate hidden states, action channels, observation surfaces, and controller boundaries, but they do not by themselves determine transition probabilities or policy adequacy.

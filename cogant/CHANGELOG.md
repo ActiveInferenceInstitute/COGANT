@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## Unreleased
+
+### Added
+- Explicit finite generative-model declarations, immutable A/B/C/D compilation,
+  coefficient and source-identity verification, and a runtime handoff that copies
+  the compiled matrices. `cogant finite compile` and `cogant finite verify` expose
+  the interface with total-kernel validation and a dense-allocation budget.
+- Toggle and partially observed counter examples, independent Python reference
+  traces, normalization-preserving corruption controls, and public typing checks.
+- A source-pinned Handwired review and manuscript discussion distinguishing
+  explicit construction, executor agreement, and application-level evidence.
+
+### Corrected
+- Current incremental documentation now describes unchanged-snapshot cache reuse
+  and full-snapshot analysis after source changes. Historical timing records remain
+  separate from current performance claims.
+- Manuscript state axes distinguish declared complete states from graph-derived
+  variable nodes; unmeasured end-to-end Rust timing predictions are withdrawn.
+- New package tests and examples are visible to Git while generated output remains
+  ignored. CLI routing and current strict-type-checking guidance are synchronized.
+
 ## [0.7.0] - 2026-10-14
 
 ### Changed — upstream Generalized_Notation_Notation 4.1.0

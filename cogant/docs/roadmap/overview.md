@@ -28,7 +28,7 @@ configuration; current counts and role-preservation metrics live in
 | GNN bundle emission (AII-spec compliant) | ✅ Production |
 | Roundtrip role preservation (`code → GNN → code → GNN`): current corpus metrics in `evaluation/METRICS.yaml`; strict structural isomorphism tracked separately | ✅ Production |
 | Active Inference agent runtime (multi-episode Bayesian) | ✅ Production |
-| Incremental analysis (19.6× no-change speedup) | ✅ Production |
+| Incremental analysis (unchanged-snapshot cache reuse) | ✅ Production |
 | Static analysis (complexity, coupling, dead code, Halstead) | ✅ Production |
 | Network/graph analysis (centrality, community, SCC) | ✅ Production |
 | Visualization suite (PDF, PNG, Mermaid, SVG) | ✅ Production |

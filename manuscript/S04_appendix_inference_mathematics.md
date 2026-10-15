@@ -32,8 +32,9 @@ POMDP formulation of belief-state planning under partial observability
 discrete active inference [@dacosta2020active; @smith2022stepbystep], with:
 
 > $\mathbf{S} = \{s_1, \ldots, s_{|S|}\}$ — finite set of hidden states.
-> Cardinality is the product of factor cardinalities:
-> $|S| = \prod_f |S_f|$.
+> The explicit finite-model interface declares complete state configurations.
+> For a model whose joint factor space is actually constructed,
+> $|S| = \prod_f |S_f|$; repository variable nodes alone do not construct it.
 >
 > $\mathbf{O} = \{o_1, \ldots, o_{|O|}\}$ — finite set of observations.
 > For multi-modality models, $|O| = \prod_m |O_m|$.
@@ -56,10 +57,11 @@ discrete active inference [@dacosta2020active; @smith2022stepbystep], with:
 > $\mathbf{D}_{\mathrm{mat}} \in \mathbb{R}^{|S|}$,
 > $D_{\mathrm{mat}}[s] = P(s_0 = s)$ — prior over initial states.
 
-All COGANT-extracted matrices satisfy the stochasticity conditions
+A nondegenerate categorical model satisfies the stochasticity conditions
 $\sum_o A_{\mathrm{mat}}[o, s] = 1$ for all $s$ and
 $\sum_{s'} B_{\mathrm{mat}}[s', s, a] = 1$ for all $(s, a)$; the GNN
-validator enforces these invariants at emission time.
+validator checks these invariants at emission time. Empty, truncated, or degraded
+artifacts require their associated validation and provenance reports.
 
 The probability notation is internal to the emitted model. After
 normalisation, $A_{\mathrm{mat}}$, $B_{\mathrm{mat}}$, and
@@ -68,6 +70,41 @@ validation, but they are not learned causal mechanisms or empirical transition
 frequencies unless external traces supply that evidence. Matrix validation
 therefore establishes stochastic well-formedness of the generated artifact,
 not semantic adequacy of the repository interpretation.
+
+### Declared finite kernels {#sec:S04-explicit-finite-kernels}
+
+For the explicit finite-model interface, let $T(s'\mid s,a)$ and
+$L(o\mid s)$ be the authored transition and observation tables on the ordered
+finite domains. The compiler assigns
+
+$$
+B_{\mathrm{mat}}[j,i,k]=T(s_j\mid s_i,a_k),\qquad
+A_{\mathrm{mat}}[\ell,i]=L(o_\ell\mid s_i),
+$$
+
+and copies the declared prior and log preferences into $D_{\mathrm{mat}}$ and
+$C_{\mathrm{mat}}$. Unlisted outcomes have zero mass. The resulting controlled
+prediction for a state distribution $q$ is
+
+$$
+q'(s_j)=\sum_i B_{\mathrm{mat}}[j,i,k]q(s_i)
+       =\sum_i T(s_j\mid s_i,a_k)q(s_i).
+$$
+
+This is a representation identity for the declared kernel. For deterministic
+tables, basis-state columns select the authored successor. The implementation
+preserves the parsed floating-point coefficients and checks unit mass within
+its declared numerical tolerance; it does not certify exact real arithmetic
+for stochastic calculations. The checker compares every coefficient against
+the sparse declaration, rather than accepting normalized shape alone.
+
+This state axis must be distinguished from the repository-derived matrix axis:
+the latter enumerates compiled semantic variable nodes and does not generally
+enumerate their joint value configurations. Thus the authored finite-model
+contract is stronger about its supplied domain, while the source-analysis route
+still requires evidence that its candidate variables and kernels adequately
+represent the analyzed program. Neither declaration checking nor matrix
+simulation alone establishes that evidence.
 
 ### Variational free energy functional {#sec:S04-variational-free-energy}
 

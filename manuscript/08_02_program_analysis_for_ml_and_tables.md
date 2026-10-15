@@ -34,6 +34,24 @@ The comparison is deliberately about **contracts**, not prestige. Compiler IRs, 
 
 ### Feature matrix: COGANT vs. related tools
 
+**Handwired** provides a useful constructive comparison [@lou2026handwired].
+Its operational interface is JavaScript builder code that explicitly assembles
+a numeric program, rather than a compiler for arbitrary existing JavaScript.
+The runtime executes declared numeric operations; the host owns input events,
+state writeback, timing, and rendering. Its documentation and tests distinguish
+the numerical instruction contract, compiler/reference agreement, and agreement
+with an independently implemented application. Numerical range and rounding
+conditions remain part of that contract.
+
+COGANT adopts this construction-and-checking pattern for declared finite
+generative models (@sec:02-03-explicit-finite-models). The representation is a
+controlled transition kernel and an observation kernel, with an explicit prior
+and log preferences. This addition does not translate neural weights into
+Active Inference parameters, add differentiability to discrete actions, or
+establish behavioral equivalence for arbitrary repositories. The common lesson
+is that a restricted modeling interface can carry a precise executable
+contract, while broader source-analysis claims require separate evidence.
+
 The following matrix contrasts COGANT's capabilities with the related tools discussed in this section. Entries marked "yes" indicate first-class support documented as part of the tool's main contract; "partial" indicates limited, indirect, adapter-level, planned, or input-only support; "no" indicates the feature is out of scope for that tool in the cited work or documentation. The labels are therefore operational comparison tags, not measurements.
 
 | Feature | COGANT | code2vec | GGNN | CodeQL | CodeBERT |
@@ -62,6 +80,8 @@ COGANT is distinct from the other toolchains in three scoped ways: first, it exp
 | Approach | Primary input | Primary output | Requires training | Languages (as shipped) | Produces Active Inference model |
 |---|---|---|:---:|---|:---:|
 | **COGANT** (this work) | Source repository (checkout or URL) | Generalized Notation Notation bundle (A/B/C/D, state space, Markov blanket, tensor views) | no | Python; JS/TS optional (`cogant[multilang]` + grammars) | yes (end-to-end) |
+| **COGANT finite models** (this work) | Authored finite probability tables | Checked A/B/C/D artifact and runtime input | no | JSON model declaration | yes (authored model) |
+| Handwired [@lou2026handwired] | Authored JavaScript numeric builder | Numeric program and compiled executor | no (construction) | JavaScript builder | no |
 | code2vec [@alon2019code2vec] / code2seq [@alon2018code2seq] | Single method or function body | Embedding vector or generated name/summary sequence | yes (large supervised corpora) | Java (primary), C\#, Python (partial) | no |
 | Gated GNN for programs [@allamanis2018learning; @li2016gated] | Typed program graph (AST + control + data-flow) | Task-specific prediction (variable misuse, variable naming) | yes (task-specific labels) | C\# (original), Java | no |
 | ProGraML [@cummins2021programl] | Compiler IR / whole-program graph | Graph dataset and task labels for data-flow / compiler optimization learning | yes (for downstream tasks) | LLVM / XLA IR sources | no |

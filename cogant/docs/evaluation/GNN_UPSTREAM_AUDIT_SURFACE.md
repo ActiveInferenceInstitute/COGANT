@@ -109,8 +109,8 @@ CPython 3.12 with the locked `all` and `upstream` extras. Strict version,
 selected-upstream, and supply-chain gates passed; all 20 selected steps
 succeeded. COGANT package validation and both upstream single-file validation
 levels passed. The clean-interpreter `src.gnn` import failed as expected.
-The machine-generated [audit JSON](../../evaluation/gnn_upstream_audit_surface.json)
-and [audit report](../../evaluation/gnn_upstream_audit_surface.md) preserve the
+The machine-generated [audit JSON](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/evaluation/gnn_upstream_audit_surface.json)
+and [audit report](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/evaluation/gnn_upstream_audit_surface.md) preserve the
 per-step statuses and the exact pin/lock/installed commit identity.
 
 ## Historical Result (2026-10-14)
