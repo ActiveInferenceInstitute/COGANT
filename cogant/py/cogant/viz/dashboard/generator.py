@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from cogant import __version__
 from cogant.process.extractor import ProcessModel
 from cogant.runtime.inference import load_inference_trace
 from cogant.runtime.inference_records import InferenceTrace
@@ -80,7 +81,7 @@ class DashboardGenerator:
             Complete HTML string ready for output
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        version = getattr(self.validation_report, "schema_name", "current")
+        version = __version__
 
         html_doc = f"""<!DOCTYPE html>
 <html lang="en">
@@ -88,7 +89,7 @@ class DashboardGenerator:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>COGANT Dashboard - {html.escape(self.repo_name)}</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js"></script>
     <style>
 {self._generate_css()}
     </style>
@@ -193,10 +194,14 @@ class DashboardGenerator:
             "Validation",
         ]
         buttons = "".join(
-            f'<button class="tab-button {"active" if i == 0 else ""}" onclick="switchTab(event, \'{tab.lower().replace(" ", "-")}\')">{tab}</button>'
+            f'<button id="tab-{tab.lower().replace(" ", "-")}" role="tab" '
+            f'aria-controls="{tab.lower().replace(" ", "-")}" '
+            f'aria-selected="{"true" if i == 0 else "false"}" tabindex="{0 if i == 0 else -1}" '
+            f'class="tab-button {"active" if i == 0 else ""}" '
+            f"onclick=\"switchTab(event, '{tab.lower().replace(' ', '-')}')\">{tab}</button>"
             for i, tab in enumerate(tabs)
         )
-        return f'    <div class="tabs">{buttons}</div>'
+        return f'    <div class="tabs" role="tablist" aria-label="Artifact views">{buttons}</div>'
 
     def _generate_tab_content(self) -> str:
         """Generate all tab content sections."""

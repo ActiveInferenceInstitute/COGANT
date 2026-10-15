@@ -27,8 +27,9 @@ chart titles 1.2em and metadata 0.85–0.95em. SVG labels use the existing
 The document owns vertical scrolling. Shared containers have a 1400px maximum
 width and 20px padding. The established spacing steps include 4, 8, 12, 20,
 30 and 40px; table cells retain their existing 12px by 15px spacing.
-Inference SVGs use an 800 by 300 view box with 50-unit margins, scale to their
-container and have no fixed rendered height. Long digests wrap within the panel.
+Inference SVGs use percentage-based horizontal coordinates, a 300px plot height
+and an 800px maximum width. Text stays 12px at phone widths rather than shrinking
+with a view box. Long digests wrap within the panel.
 Record tables own horizontal scrolling on narrow screens.
 
 ## 5. Components and states
@@ -45,9 +46,11 @@ Record tables own horizontal scrolling on narrow screens.
 
 ## 6. Motion and interaction
 
-The inference panel introduces no motion. It uses the existing tab navigation
-and fade-in behavior. Horizontal record scrolling is keyboard reachable, with a
-visible native focus indicator. No decorative hover or animation is added.
+The inference panel introduces no motion. Tabs retain their fade-in behavior;
+arrow keys and Home/End switch tabs only while a tab has keyboard focus.
+Horizontal record scrolling keeps its own keys and visible native focus.
+Mermaid renders only after its containing tab becomes visible, so diagram
+measurement uses a real layout width. The Mermaid dependency is version pinned.
 
 ## 7. Depth and surface
 

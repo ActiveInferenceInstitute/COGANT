@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+from itertools import pairwise
 
 from cogant.runtime.inference_records import InferenceTrace
 
@@ -15,27 +16,31 @@ def _free_energy_chart(trace: InferenceTrace) -> str:
         low, high = low - 0.5, high + 0.5
     span = high - low
     points = [
-        (50 + 700 * index / max(len(records) - 1, 1), 250 - 200 * (value - low) / span)
+        (18 + 76 * index / max(len(records) - 1, 1), 250 - 200 * (value - low) / span)
         for index, value in enumerate(values)
     ]
     ticks = "".join(
-        f'<text x="44" y="{254 - 50 * index}" text-anchor="end">{low + span * index / 4:.3g}</text>'
+        f'<text x="16%" y="{254 - 50 * index}" text-anchor="end">{low + span * index / 4:.3g}</text>'
         for index in range(5)
     )
-    polyline = " ".join(f"{x:.3f},{y:.3f}" for x, y in points)
-    circles = "".join(f'<circle cx="{x:.3f}" cy="{y:.3f}" r="3"/>' for x, y in points)
+    segments = "".join(
+        f'<line x1="{x1:.3f}%" y1="{y1:.3f}" x2="{x2:.3f}%" y2="{y2:.3f}"/>'
+        for (x1, y1), (x2, y2) in pairwise(points)
+    )
+    circles = "".join(f'<circle cx="{x:.3f}%" cy="{y:.3f}" r="3"/>' for x, y in points)
     return (
-        '<svg viewBox="0 0 800 300" role="img" '
+        '<svg width="100%" height="300" role="img" '
         'aria-label="Recorded posterior variational free energy in nats" '
-        'style="width:100%;max-width:800px;color:inherit">'
+        'style="height:300px;max-width:800px;color:inherit">'
         '<g fill="currentColor" font-size="12">'
         f"{ticks}"
-        '<text x="400" y="18" text-anchor="middle">Posterior VFE (nats)</text>'
-        f'<text x="50" y="272" text-anchor="middle">{records[0].t}</text>'
-        f'<text x="750" y="272" text-anchor="middle">{records[-1].t}</text>'
-        '<text x="400" y="292" text-anchor="middle">Observation step</text></g>'
-        '<path d="M50 50V250H750" fill="none" stroke="currentColor"/>'
-        f'<polyline points="{polyline}" fill="none" stroke="currentColor" stroke-width="2"/>'
+        '<text x="50%" y="18" text-anchor="middle">Posterior VFE (nats)</text>'
+        f'<text x="18%" y="272" text-anchor="middle">{records[0].t}</text>'
+        f'<text x="94%" y="272" text-anchor="middle">{records[-1].t}</text>'
+        '<text x="50%" y="292" text-anchor="middle">Observation step</text></g>'
+        '<g stroke="currentColor"><line x1="18%" y1="50" x2="18%" y2="250"/>'
+        '<line x1="18%" y1="250" x2="94%" y2="250"/></g>'
+        f'<g stroke="currentColor" stroke-width="2">{segments}</g>'
         f'<g fill="currentColor">{circles}</g></svg>'
         f"<p>Showing {len(records)} of {len(trace.trace)} recorded observations.</p>"
     )

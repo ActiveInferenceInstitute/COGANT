@@ -168,6 +168,28 @@ class TestMermaidClassDiagramComposition:
 
 
 class TestMermaidStateDiagramObservations:
+    def test_empty_transition_assignments_have_explicit_safe_nodes(self) -> None:
+        transition = Transition(
+            id="empty", source_state={}, target_state={}, action_id="act_unknown"
+        )
+        out = MermaidGenerator().generate_state_diagram(
+            _state_space(transitions={"empty": transition})
+        )
+        assert 'state "Unspecified state assignment" as c0' in out
+        assert "c0 --> c0: act_unknown" in out
+        assert " --> :" not in out
+
+    def test_state_assignment_values_are_labels_not_mermaid_identifiers(self) -> None:
+        transition = Transition(
+            id="typed", source_state={"value": 1}, target_state={"value": "1"}, action_id="act_set"
+        )
+        out = MermaidGenerator().generate_state_diagram(
+            _state_space(transitions={"typed": transition})
+        )
+        assert "c0 --> c1: act_set" in out
+        assert 'state "value=1" as c0' in out
+        assert 'state "value=#quot;1#quot;" as c1' in out
+
     def test_transition_with_observations_includes_obs_label(self) -> None:
         v1 = _state_var("n1", "x")
         v2 = _state_var("n2", "y")

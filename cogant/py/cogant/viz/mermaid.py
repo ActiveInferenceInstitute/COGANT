@@ -6,6 +6,7 @@ Produces class diagrams, dependency graphs, state diagrams, sequence diagrams,
 flowcharts, and Active Inference loop diagrams using Mermaid syntax.
 """
 
+import json
 import logging
 from typing import Any
 
@@ -297,16 +298,10 @@ class MermaidGenerator:
         """
         lines = ["stateDiagram-v2"]
 
-        # Build a state index for cleaner state references
-        state_index = {}
-        state_counter = 0
-
         # Add state variables as states with descriptions
-        for var_id, variable in state_space.variables.items():
+        for index, variable in enumerate(state_space.variables.values()):
             # Use variable name as state ID, cleaned up
-            state_id = f"s{state_counter}"
-            state_index[var_id] = state_id
-            state_counter += 1
+            state_id = f"s{index}"
 
             # Add state with description
             var_label = variable.name
@@ -318,15 +313,23 @@ class MermaidGenerator:
             else:
                 lines.append(f"    {state_id}: {var_label}")
 
-        # Add transitions, including action and (when present) observation labels.
-        for _trans_id, transition in state_space.transitions.items():
-            # Simple representation: use state variable changes
-            source_state = transition.source_state
-            target_state = transition.target_state
+        assignment_ids: dict[str, str] = {}
 
-            # Create human-readable state labels
-            source_label = ",".join([f"{k}={v}" for k, v in sorted(source_state.items())[:2]])
-            target_label = ",".join([f"{k}={v}" for k, v in sorted(target_state.items())[:2]])
+        def assignment_node(assignment: dict[str, Any]) -> str:
+            key = json.dumps(assignment, sort_keys=True, ensure_ascii=False, allow_nan=False)
+            if key not in assignment_ids:
+                node_id = f"c{len(assignment_ids)}"
+                assignment_ids[key] = node_id
+                label = ", ".join(
+                    f"{name}={json.dumps(value, sort_keys=True, ensure_ascii=False, allow_nan=False)}"
+                    for name, value in sorted(assignment.items())
+                ) or "Unspecified state assignment"
+                lines.append(f"    state {_quoted_text(label)} as {node_id}")
+            return assignment_ids[key]
+
+        for _trans_id, transition in state_space.transitions.items():
+            source_id = assignment_node(transition.source_state)
+            target_id = assignment_node(transition.target_state)
 
             # Build transition label with action and optional observation
             action_label = transition.action_id or "transition"
@@ -338,7 +341,7 @@ class MermaidGenerator:
                 obs_label = f"\\n[obs: {', '.join(obs_names)}]"
 
             label = f"{action_label}{obs_label}"
-            lines.append(f"    {source_label} --> {target_label}: {label}")
+            lines.append(f"    {source_id} --> {target_id}: {label}")
 
         return "\n".join(lines)
 

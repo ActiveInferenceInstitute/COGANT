@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from cogant import __version__
 from cogant.process.extractor import ProcessModel
 from cogant.runtime.inference import load_inference_trace, write_inference_trace_artifact
 from cogant.schemas.graph import (
@@ -220,6 +221,7 @@ class TestDashboardGeneratorPopulated:
         assert "<svg" in edge_svg
         html = dg.generate()
         assert "non-empty" in html
+        assert f"<strong>Version:</strong> {__version__}" in html
         # non-empty graph should NOT emit the "No nodes to display" fragment
         assert "No nodes to display" not in html
         assert "No edges to display" not in html
