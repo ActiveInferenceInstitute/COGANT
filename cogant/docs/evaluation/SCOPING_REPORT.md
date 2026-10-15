@@ -33,13 +33,13 @@ the native v0.6 release ledger is Python-centered.
 
 | Evidence area | Current checked-in status | Source |
 |---|---:|---|
-| Collected tests | 9961 | `METRICS.yaml` |
-| Passing tests | 9912 | `METRICS.yaml` |
+| Collected tests | 10068 | `METRICS.yaml` |
+| Passing tests | 10019 | `METRICS.yaml` |
 | Failing tests | 0 | `METRICS.yaml` |
-| Line coverage | 94.55% | `METRICS.yaml` / `coverage.json` |
+| Line coverage | 94.59% | `METRICS.yaml` / `coverage.json` |
 | mypy strict errors | 0 | `METRICS.yaml` |
 | ruff violations | 0 | `METRICS.yaml` |
-| Python source files | 247 | `METRICS.yaml` |
+| Python source files | 251 | `METRICS.yaml` |
 | Roundtrip targets | 24 | `METRICS.yaml` |
 | Role-preserved targets | 24 | `METRICS.yaml` |
 | Drift targets | 0 | `METRICS.yaml` |
