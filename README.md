@@ -3,7 +3,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20705351.svg)](https://doi.org/10.5281/zenodo.20705351)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Public home: <https://github.com/ActiveInferenceInstitute/COGANT> · Archived release: [10.5281/zenodo.20705351](https://doi.org/10.5281/zenodo.20705351) (all versions: [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)).
+Public home: <https://github.com/ActiveInferenceInstitute/COGANT> · Earlier manuscript deposit: [10.5281/zenodo.20705351](https://doi.org/10.5281/zenodo.20705351) (manuscript series: [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)). The current computational artifact is identified by its Git commit.
 
 Codebase-to-GNN translation — **package** under [`cogant/`](cogant/), **manuscript** under [`manuscript/`](manuscript/). This checkout is self-contained at the COGANT project root; when linked into `docxology/template`, the same tree is expected to appear at `projects/working/cogant/` and be rendered with the lifecycle-qualified project name `working/cogant`. See [`PROMOTION.md`](PROMOTION.md) for the render-location checklist.
 

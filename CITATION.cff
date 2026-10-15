@@ -14,7 +14,6 @@ date-released: "2026-10-14"
 license: MIT
 repository-code: "https://github.com/ActiveInferenceInstitute/COGANT"
 url: "https://github.com/ActiveInferenceInstitute/COGANT"
-doi: "10.5281/zenodo.20705350"
 authors:
   - family-names: Friedman
     given-names: Daniel Ari
@@ -29,10 +28,15 @@ keywords:
   - active inference
   - reproducible research
   - codebase-to-model translation
-identifiers:
-  - type: doi
-    value: "10.5281/zenodo.20705350"
-    description: "Concept DOI (all versions)"
-  - type: doi
-    value: "10.5281/zenodo.20705351"
-    description: "Version DOI (v0.6.0)"
+references:
+  - type: article
+    title: "COGANT: Deterministic Codebase-to-GNN Translation"
+    authors:
+      - family-names: Friedman
+        given-names: Daniel Ari
+        orcid: "https://orcid.org/0000-0001-6232-9096"
+    version: "0.6.0"
+    date-published: "2026-06-15"
+    doi: "10.5281/zenodo.20705351"
+    url: "https://zenodo.org/records/20705351"
+    notes: "Earlier manuscript deposit; does not identify the current software or computational results."

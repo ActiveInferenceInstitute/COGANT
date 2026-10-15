@@ -17,16 +17,15 @@ authors:
     corresponding: true
 
 publication:
-  # Concept DOI (all versions) until Zenodo mints the v0.7.0 version DOI;
-  # the v0.6.0 version DOI is 10.5281/zenodo.20705351.
-  doi: "10.5281/zenodo.20705350"
+  doi: ""
+  doi_status: "Not assigned to this revision"
   journal: ""
   volume: ""
   pages: ""
   year: "2026"
-  artifact_doi: "10.5281/zenodo.20705350"
-  artifact_archive: "https://github.com/ActiveInferenceInstitute/COGANT/archive/55e5b01c75a36558c26af633e05514aa14487127.zip"
-  artifact_commit: "55e5b01c75a36558c26af633e05514aa14487127"
+  artifact_doi: ""
+  artifact_archive: "https://github.com/ActiveInferenceInstitute/COGANT/archive/77fcdb8799be3f4bb38e39cddf21f430c556ca65.zip"
+  artifact_commit: "77fcdb8799be3f4bb38e39cddf21f430c556ca65"
 
 keywords:
   - "program analysis"
