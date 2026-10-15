@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import pytest
 
+from cogant.runtime.categorical import CategoricalModel
 from cogant.simulate.distributions import CategoricalDistribution, TransitionMatrix
 from cogant.simulate.free_energy import FreeEnergyCalculator
-from cogant.statespace.compiler import Action, StateSpaceModel, Transition
+from cogant.statespace.compiler import Action, ObservationModality, StateSpaceModel, Transition
 from cogant.statespace.temporal import TimeRegime
 from cogant.statespace.variables import StateVariable, StateVariableType
 
@@ -77,8 +78,26 @@ def test_unobserved_source_rows_stay_uniform() -> None:
 
 def test_free_energy_predicted_beliefs_follow_estimated_transitions() -> None:
     ss = _state_space({"t1": _trans("t1", ["v1"], ["v2", "v3"])})
-    calc = FreeEnergyCalculator(ss)
+    ss.observations["o"] = ObservationModality(
+        id="o", name="Observed outcome", source_node_id="sensor", modality_type="sensor"
+    )
+    states = list(ss.variables)
+    estimated = TransitionMatrix.from_state_space(ss)
+    columns = [estimated.get_next_state_dist(source, "a1").dist for source in states]
+    matrices = CategoricalModel(
+        A=[[1.0] * len(states)],
+        B=[[[column[target]] for column in columns] for target in states],
+        C=[0.0],
+        D=[1 / len(states)] * len(states),
+    )
+    calc = FreeEnergyCalculator(ss, matrices)
 
     predicted = calc._predict_beliefs(CategoricalDistribution(["v1", "v2", "v3"], [1, 0, 0]), "a1")
 
     assert predicted.dist == pytest.approx({"v1": 0.0, "v2": 0.5, "v3": 0.5})
+
+
+def test_free_energy_requires_explicit_observation_and_prior_matrices() -> None:
+    ss = _state_space({})
+    with pytest.raises(ValueError, match="explicit A/B/C/D"):
+        FreeEnergyCalculator(ss)

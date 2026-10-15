@@ -792,7 +792,7 @@ class TestAgentRuntimeExtra:
     def _make_matrices(self):
         # Create minimal A, B, C matrices for 2-state, 2-obs agent
         return {
-            "A": [[0.8, 0.2], [0.3, 0.7]],  # P(obs|state)
+            "A": [[0.8, 0.2], [0.2, 0.8]],  # P(obs|state)
             "B": [[[0.9, 0.1], [0.1, 0.9]], [[0.1, 0.9], [0.9, 0.1]]],  # P(s'|s,a)
             "C": [0.0, 1.0],  # preferences over obs
             "D": [0.5, 0.5],  # initial state dist
@@ -823,6 +823,14 @@ class TestAgentRuntimeExtra:
         results = runtime.run_n_steps(n=3, initial_state=initial)
         assert isinstance(results, list)
         assert len(results) >= 1
+
+    def test_invalid_likelihood_columns_are_rejected(self):
+        from cogant.runtime.loop import AgentRuntime
+
+        matrices = self._make_matrices()
+        matrices["A"] = [[0.8, 0.2], [0.3, 0.7]]
+        with pytest.raises(ValueError, match="likelihood A column"):
+            AgentRuntime.from_matrices_dict(matrices)
 
 
 # ---------------------------------------------------------------------------
