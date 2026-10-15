@@ -35,6 +35,7 @@ review and can be made stricter with its release-only flags.
 | [`audit_synthetic_surfaces.py`](audit_synthetic_surfaces.py) | Classify retained synthetic-surface terms and fail unallowlisted fallback/mock/placeholder/stub occurrences; `--strict` also checks generated manuscript variables and matrix sidecar provenance. |
 | [`audit_manuscript_module_refs.py`](audit_manuscript_module_refs.py) | Resolve backticked `cogant.*` references in manuscript source against the installable package; `--strict` also fails dependency/import errors. |
 | [`release_gate.py`](release_gate.py) | Run the aggregate fail-closed code, package, Rust, documentation, evidence, manuscript, provenance, and freshness gate; writes `output/reports/release_gate.json`. |
+| [`wheel_smoke.py`](wheel_smoke.py) | Build a wheel, install its runtime dependencies in a unique environment under `output/`, and verify imports and parser construction away from the source checkout. |
 | [`gnn_upstream_audit_surface.py`](gnn_upstream_audit_surface.py) | Build (`--collect`) or read a COGANT / upstream GNN audit directory and write JSON / Markdown / SVG evidence that separates version-and-bridge currentness, single-file validation, selected upstream pipeline steps (reconciled against upstream's own plan), and pip-audit findings; the expected upstream commit and version come from the `upstream` extra pin and `cogant/uv.lock`. |
 | [`audit_release_integrity.py`](audit_release_integrity.py) | Validate version consistency, optional-upstream isolation and commit pinning, OpenAPI coverage, wheel `RECORD` hashes, dependency/license inventory, CycloneDX-shaped SBOM output, and reproducible local wheel builds; writes `output/reports/release_integrity.json` plus `output/reports/cogant-sbom.cdx.json`. |
 
@@ -109,6 +110,9 @@ uv run python tools/release_gate.py
 uv run python tools/release_gate.py --skip-tests
 uv run python tools/release_gate.py --dry-run
 ```
+
+`--skip-tests` records an incomplete gate and exits nonzero; the full suite is
+required for a passing release verdict.
 
 Refresh manuscript figure assets and metadata sidecars after `run_all.py` has
 produced package outputs and `cogant/evaluation/figures/generate_figures.py`

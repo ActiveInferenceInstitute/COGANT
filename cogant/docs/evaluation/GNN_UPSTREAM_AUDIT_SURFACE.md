@@ -102,7 +102,18 @@ prerequisite); grey marks a step that did not run. This is a visual claim
 ledger, not a decorative figure: if the all-step lane is red, the docs must not
 say that COGANT's package fully executes through every selected upstream step.
 
-## Recorded Result (2026-10-14)
+## Current Result (2026-10-15)
+
+The pinned commit `46459949944e3217f8a6a804d4ff8c52829ef275` was verified on
+CPython 3.12 with the locked `all` and `upstream` extras. Strict version,
+selected-upstream, and supply-chain gates passed; all 20 selected steps
+succeeded. COGANT package validation and both upstream single-file validation
+levels passed. The clean-interpreter `src.gnn` import failed as expected.
+The machine-generated [audit JSON](../../evaluation/gnn_upstream_audit_surface.json)
+and [audit report](../../evaluation/gnn_upstream_audit_surface.md) preserve the
+per-step statuses and the exact pin/lock/installed commit identity.
+
+## Historical Result (2026-10-14)
 
 Historical result collected on 2026-10-14 with Python 3.13 against
 `b4a583a5851021612a9a5df94e428f78aa6f76a0`, using the

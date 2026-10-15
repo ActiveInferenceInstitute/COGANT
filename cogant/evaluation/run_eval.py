@@ -29,7 +29,7 @@ sys.path.insert(0, str(COGANT_PY))
 # Silence noisy INFO logs so the table output is clean.
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 
-from cogant.api.bundle import ArtifactKey  # noqa: E402
+from cogant.api.bundle import ArtifactKey, Bundle  # noqa: E402
 from cogant.api.pipeline import PipelineConfig, PipelineRunner  # noqa: E402
 
 # Default eval corpus: external Python projects checked out under
@@ -152,7 +152,7 @@ def run_one(repo_name: str, *, skip_dynamic: bool = True) -> dict[str, Any]:
     return _inspect_bundle(bundle, result)
 
 
-def _inspect_bundle(bundle: Any, result: dict[str, Any]) -> dict[str, Any]:
+def _inspect_bundle(bundle: Bundle, result: dict[str, Any]) -> dict[str, Any]:
     errors = list(getattr(bundle, "errors", []) or [])
     result["bundle_error_count"] = len(errors)
     result["bundle_errors"] = errors[:5]  # first 5 for brevity

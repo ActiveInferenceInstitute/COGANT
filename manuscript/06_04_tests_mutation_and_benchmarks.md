@@ -18,10 +18,11 @@ under `../cogant/docs/reference/`.
 | 3.11 | `Programming Language :: Python :: 3.11` | supported (minimum version, `requires-python = ">=3.11"`) |
 | 3.12 | `Programming Language :: Python :: 3.12` | supported (canonical CI interpreter; benchmark runs use {{BENCHMARK_PYTHON_VERSION}}) |
 | 3.13 | `Programming Language :: Python :: 3.13` | supported |
+| 3.14 | `Programming Language :: Python :: 3.14` | included in the CI test matrix |
 
 : Python interpreter matrix. {#tbl:python-interpreter-matrix}
 
-All three interpreters are listed in the `classifiers` block of `../cogant/pyproject.toml`. The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/{{BENCHMARK_SUITE_FILE}}` was executed on CPython {{BENCHMARK_PYTHON_VERSION}} under {{BENCHMARK_OS}}.
+The interpreters in @tbl:python-interpreter-matrix are listed in the `classifiers` block of `../cogant/pyproject.toml`. The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/{{BENCHMARK_SUITE_FILE}}` was executed on CPython {{BENCHMARK_PYTHON_VERSION}} under {{BENCHMARK_OS}}.
 
 Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE_COUNT}}** packaged fixtures exercise end-to-end. @tbl:coverage-stmt-modules records statement coverage (`coverage.py` **Stmts** / **Cover**) for the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, validation, simulation helpers) --- the modules whose correctness is load-bearing for the claims in this manuscript. Figures match the `uv run pytest tests/ --cov=py/cogant` run that produced the {{TEST_COUNT}}/{{TEST_COUNT_SKIPPED}} pass/skip summary in `METRICS.yaml` (**{{METRICS_GENERATED_AT}}**).
 
@@ -101,19 +102,19 @@ A reproducible benchmark harness lives at `../cogant/benchmarks/bench_suite.py` 
 
 | Fixture | Wall-clock median (ms) | Wall-clock p95 (ms) | Nodes | Edges | Mappings | Peak memory (MB) |
 |---|---:|---:|---:|---:|---:|---:|
-| `calculator` | 57 | 64 | 12 | 27 | 11 | 0.0 |
-| `event_pipeline` | 62 | 62 | 24 | 39 | 22 | 0.1 |
-| `flask_mini` | 59 | 66 | 26 | 43 | 25 | 0.0 |
-| `flask_app` | 124 | 135 | 101 | 187 | 75 | 0.0 |
-| `requests_lib` | 114 | 116 | 100 | 187 | 64 | 0.0 |
-| `json_stdlib` | 84 | 113 | 29 | 46 | 16 | 0.0 |
+| `calculator` | 38 | 38 | 12 | 27 | 11 | 0.0 |
+| `event_pipeline` | 40 | 44 | 24 | 44 | 22 | 0.0 |
+| `flask_mini` | 40 | 41 | 26 | 46 | 24 | 0.0 |
+| `flask_app` | 67 | 73 | 101 | 182 | 74 | 0.1 |
+| `requests_lib` | 59 | 61 | 100 | 190 | 69 | 0.0 |
+| `json_stdlib` | 56 | 61 | 29 | 42 | 16 | 0.0 |
 
 : Benchmark suite results (`{{BENCHMARK_SUITE_FILE}}`, three iterations per fixture, CPython {{BENCHMARK_PYTHON_VERSION}}). {#tbl:benchmark-suite-results}
 
 Node and mapping columns use the same fixture definitions as @tbl:repo-pipeline-metrics. The edge columns are pinned to the benchmark snapshot named in the caption, while the refreshed public API metric table can include newer import-edge extraction. The `mappings` count is from the same post-`statespace` in-memory `semantic_mappings` dict that `../cogant/evaluation/figures/metrics.json` uses (`pipeline_api_metrics` samples immediately after `run_statespace`); conflict resolution in `TranslationEngine` applies **sorted** iteration over colliding mapping pairs so this count is stable across `bench_suite` and `generate_figures` runs.
 
-The benchmark harness times the pipeline up through `statespace` (no `process` / `export` / `validate`), so its wall-clock medians are much smaller than the end-to-end times in @tbl:repo-pipeline-metrics, which add process model extraction, GNN package build, and validation. For pure translation, every shipped fixture in this run finishes in under 130 ms median wall time; the stage breakdown in `{{BENCHMARK_SUITE_FILE}}` shows `ingest` and `graph` as the main contributors on the larger fixtures.
+The benchmark harness times the pipeline up through `statespace` (no `process` / `export` / `validate`), so its wall-clock medians are much smaller than the end-to-end times in @tbl:repo-pipeline-metrics, which add process model extraction, GNN package build, and validation. The per-fixture medians and stage breakdown in `{{BENCHMARK_SUITE_FILE}}` describe this local run; they do not establish a performance bound for other repositories or machines.
 
 The manuscript therefore keeps two timing views separate: @tbl:benchmark-suite-results is a repeated harness measurement of the pre-export pipeline, while @fig:cogant-eval-pipeline-latency is a single-run provenance figure for the public API path that also builds and validates the GNN package.
 
-Approximate stage breakdown from the same file: per-fixture `ingest` is on the order of 45--55 ms; `graph` reaches roughly 6--15 ms on the larger fixtures. The benchmark file records GNN tensor shapes from `GNNMatrices` on the post-`statespace` bundle; for example `flask_app` shows $A \in \mathbb{R}^{22 \times 13}$, $B \in \mathbb{R}^{13 \times 13 \times 31}$, $C \in \mathbb{R}^{22}$, $D \in \mathbb{R}^{13}$, which line up with the Markov structure implied by the observation and hidden-state rows in the summary section of `{{BENCHMARK_SUITE_FILE}}` (exported `gnn_package/` modalities in @tbl:state-space-compilation can still differ from the post-`statespace` GNN read when `run_process` refines the bundle).
+The per-stage breakdown and each fixture's GNN tensor shapes are recorded in `{{BENCHMARK_SUITE_FILE}}`. These are structural inspection measurements; the exported modalities in @tbl:state-space-compilation can differ from the post-`statespace` bundle when `run_process` refines it.

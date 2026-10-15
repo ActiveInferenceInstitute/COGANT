@@ -38,6 +38,18 @@ def test_nonzero_process_is_a_failed_gate() -> None:
     assert result.output_tail == "required failure"
 
 
+def test_gate_references_existing_pytest_files() -> None:
+    module = _module()
+    referenced = [
+        step.cwd / argument
+        for step in module.build_steps()
+        for argument in step.command
+        if argument.startswith("tests/") and argument.endswith(".py")
+    ]
+    assert referenced
+    assert all(path.is_file() for path in referenced), referenced
+
+
 def test_skipped_package_suite_is_recorded() -> None:
     module = _module()
     results, _ = module.run_gate(include_tests=False, dry_run=True)

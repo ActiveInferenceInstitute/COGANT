@@ -8,7 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.7.0] - 2026-10-14
 
 ### Changed — upstream Generalized_Notation_Notation 4.1.0
-- **Optional `upstream` extra pinned to GNN 4.1.0** (main@`b4a583a5`, 12 commits past the
+- **Optional `upstream` extra pinned to GNN 4.1.0** (main@`46459949`, 13 commits past the
   `v4.1.0` tag `9255e19f`; previously v2.0.0 `11a89f06`). GNN >= 4.0 ships the top-level
   `gnn` package; the bridge imports it directly, gates on distribution version >= 4.0 and on
   `gnn` being owned by `generalized-notation-notation`, and routes the renamed validators

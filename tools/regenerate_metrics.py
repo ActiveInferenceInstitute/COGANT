@@ -319,21 +319,11 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
 
 
 def get_mypy_errors() -> int:
-    """Run mypy --strict and count ``error:`` lines in the combined output.
-
-    Returns ``-1`` on timeout (sentinel — CI should flag a negative value).
-    Shell-pipe parsing was previously used; counting ``error:`` occurrences
-    in Python is equivalent and avoids depending on ``grep`` / ``wc``.
-    """
-    try:
-        rc, out = _run(
-            "MYPYPATH=py uv run mypy --package cogant --strict",
-            cwd=COGANT_DIR,
-            timeout=120,
-        )
-    except subprocess.TimeoutExpired:
-        print("WARNING: mypy --strict timed out after 120s", file=sys.stderr)
-        return -1
+    _, out = _run(
+        "MYPYPATH=py uv run mypy --package cogant --strict",
+        cwd=COGANT_DIR,
+        timeout=120,
+    )
     if "Success: no issues found" not in out:
         raise MetricsProbeError(f"Could not parse successful mypy result:\n{out}")
     return 0
@@ -349,17 +339,12 @@ def get_ruff_violations() -> int:
 
     Prefers ``--output-format=json`` (unambiguous, robust across ruff
     versions), falls back to parsing ``Found N error(s)`` summary lines.
-    Returns ``-1`` on timeout.
     """
-    try:
-        rc, out = _run(
-            "uv run ruff check --output-format=json py/cogant/",
-            cwd=COGANT_DIR,
-            timeout=60,
-        )
-    except subprocess.TimeoutExpired:
-        print("WARNING: ruff check timed out after 60s", file=sys.stderr)
-        return -1
+    _, out = _run(
+        "uv run ruff check --output-format=json py/cogant/",
+        cwd=COGANT_DIR,
+        timeout=60,
+    )
     # JSON path: ruff emits a JSON array of violations on stdout; stderr may
     # carry warnings. Extract just the JSON portion.
     json_start = out.find("[")
@@ -374,7 +359,6 @@ def get_ruff_violations() -> int:
     m = re.search(r"Found\s+(\d+)\s+error", out)
     if m:
         return int(m.group(1))
-    # If exit code 0 and no "Found N" line, assume clean.
     raise MetricsProbeError(f"Could not parse ruff JSON diagnostics:\n{out}")
 
 
