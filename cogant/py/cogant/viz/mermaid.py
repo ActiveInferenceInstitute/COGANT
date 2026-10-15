@@ -17,6 +17,15 @@ from cogant.statespace.compiler import StateSpaceModel
 logger = logging.getLogger(__name__)
 
 
+def _flowchart_id(prefix: str, raw: Any) -> str:
+    return prefix + str(raw).encode("utf-8").hex()
+
+
+def _quoted_text(text: Any) -> str:
+    cleaned = " ".join(str(text).split()).replace('"', "#quot;")
+    return f'"{cleaned}"'
+
+
 def _infer_class_stereotype(node: Node, graph: ProgramGraph) -> str | None:
     """Infer class stereotype from node metadata and relationships."""
     if not node.metadata:
@@ -460,75 +469,40 @@ class MermaidGenerator:
         """
         lines = ["graph TD"]
 
-        # Central components
-        lines.append("    HS['Hidden States']")
-        lines.append("    OBS['Observations']")
-        lines.append("    BELIEFS['Beliefs<br/>(Posterior)']")
-        lines.append("    ACTIONS['Actions']")
-        lines.append("    PREFS['Preferences']")
+        lines.append(f"    HS[{_quoted_text('Hidden States')}]")
+        lines.append(f"    OBS[{_quoted_text('Observations')}]")
+        lines.append(f"    BELIEFS[{_quoted_text('Beliefs<br/>(Posterior)')}]")
+        lines.append(f"    ACTIONS[{_quoted_text('Actions')}]")
+        lines.append(f"    PREFS[{_quoted_text('Preferences')}]")
 
-        # Add specific state variables
-        if state_space.variables:
-            var_names = list(state_space.variables.keys())[:5]
-            for var_id in var_names:
-                var = state_space.variables[var_id]
-                safe_name = var.name.replace(" ", "_")
-                lines.append(f"    HS__{safe_name}['{var.name}']")
+        sections: tuple[tuple[str, str, dict[str, Any]], ...] = (
+            ("HS", "HS__", state_space.variables),
+            ("OBS", "OBS__", state_space.observations),
+            ("ACTIONS", "ACT__", state_space.actions),
+        )
+        for hub, prefix, elements in sections:
+            if not elements:
+                continue
+            element_ids = list(elements.keys())[:5]
+            for element_id in element_ids:
+                node_id = _flowchart_id(prefix, element_id)
+                lines.append(f"    {node_id}[{_quoted_text(elements[element_id].name)}]")
             lines.append(
-                "    HS --> "
-                + " --> ".join(
-                    [
-                        f"HS__{var_id.replace('-', '_').replace('.', '_')}"
-                        for var_id in var_names[:3]
-                    ]
-                )
+                f"    {hub} --> "
+                + " --> ".join(_flowchart_id(prefix, element_id) for element_id in element_ids[:3])
             )
 
-        # Add specific observations
-        if state_space.observations:
-            obs_names = list(state_space.observations.keys())[:5]
-            for obs_id in obs_names:
-                obs = state_space.observations[obs_id]
-                safe_name = obs.name.replace(" ", "_")
-                lines.append(f"    OBS__{safe_name}['{obs.name}']")
-            lines.append(
-                "    OBS --> "
-                + " --> ".join(
-                    [
-                        f"OBS__{obs_id.replace('-', '_').replace('.', '_')}"
-                        for obs_id in obs_names[:3]
-                    ]
-                )
-            )
-
-        # Add specific actions
-        if state_space.actions:
-            action_names = list(state_space.actions.keys())[:5]
-            for action_id in action_names:
-                action = state_space.actions[action_id]
-                safe_name = action.name.replace(" ", "_")
-                lines.append(f"    ACT__{safe_name}['{action.name}']")
-            lines.append(
-                "    ACTIONS --> "
-                + " --> ".join(
-                    [
-                        f"ACT__{action_id.replace('-', '_').replace('.', '_')}"
-                        for action_id in action_names[:3]
-                    ]
-                )
-            )
-
-        # Core Active Inference loop with labels
         lines.append("")
         lines.append("    %% Active Inference Loop")
-        lines.append("    HS -->|Likelihood:<br/>P(o|h)| OBS")
-        lines.append("    OBS -->|Inference:<br/>P(h|o)| BELIEFS")
-        lines.append("    BELIEFS -->|Policy:<br/>π(a|o)| ACTIONS")
-        lines.append("    ACTIONS -->|Transition:<br/>P(h'|a,h)| HS")
+        lines.append(f"    HS -->|{_quoted_text('Likelihood:<br/>P(o|h)')}| OBS")
+        lines.append(f"    OBS -->|{_quoted_text('Inference:<br/>P(h|o)')}| BELIEFS")
+        lines.append(f"    BELIEFS -->|{_quoted_text('Policy:<br/>π(a|o)')}| ACTIONS")
+        transition_text = _quoted_text("Transition:<br/>P(h'|a,h)")
+        lines.append(f"    ACTIONS -->|{transition_text}| HS")
         lines.append("")
         lines.append("    %% Preferences")
-        lines.append("    PREFS -->|Guides| ACTIONS")
-        lines.append("    BELIEFS -->|Updates| PREFS")
+        lines.append(f"    PREFS -->|{_quoted_text('Guides')}| ACTIONS")
+        lines.append(f"    BELIEFS -->|{_quoted_text('Updates')}| PREFS")
 
         # Style the components
         lines.append("")

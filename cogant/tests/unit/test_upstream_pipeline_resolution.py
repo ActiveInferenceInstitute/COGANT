@@ -238,32 +238,26 @@ def test_skip_llm_removes_step_13_from_the_selection(tmp_path: Path) -> None:
     assert resolve_steps(cfg.only_steps, pipeline_mod._effective_skip(cfg)) == [3]
 
 
-def test_auto_included_prerequisites_are_reported_not_hidden(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_auto_included_prerequisites_are_reported_not_hidden(tmp_path: Path) -> None:
     """Steps upstream adds as prerequisites appear in steps/executed/auto_included."""
-    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
-
-    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
-    fake_run, _ = _fake_run_writing(
+    driver = _driver_package(
+        tmp_path,
         _summary(
             {"script_name": "3_gnn.py", "status": "SUCCESS"},
             {"script_name": "7_export.py", "status": "SUCCESS"},
             {"script_name": "16_analysis.py", "status": "SUCCESS_WITH_WARNINGS"},
-        )
+        ),
     )
-    monkeypatch.setattr(pipeline_mod.subprocess, "run", fake_run)
     cfg = UpstreamPipelineConfig(
         target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3, 16]
     )
 
-    result = pipeline_mod.run_upstream_pipeline(cfg)
+    result = _run_driver(cfg, driver)
 
-    assert [s.step_index for s in result.steps] == [3, 7, 16]
-    assert result.auto_included == [7]
-    assert result.executed == [3, 7, 16]
-    assert 7 not in result.skipped and 12 in result.skipped
-    assert result.to_dict()["auto_included"] == [7]
+    assert [s["step_index"] for s in result["steps"]] == [3, 7, 16]
+    assert result["auto_included"] == [7]
+    assert result["executed"] == [3, 7, 16]
+    assert 7 not in result["skipped"] and 12 in result["skipped"]
 
 
 def test_child_env_scopes_llm_model_and_drops_inherited_run_identity(
@@ -348,49 +342,83 @@ def test_steps_from_summary_maps_every_requested_step(tmp_path: Path) -> None:
     assert failed.error is not None and "Undefined variable" in failed.error
 
 
-def _fake_run_writing(summary: dict[str, object] | None, returncode: int = 0):
-    import json as _json
-    import subprocess as _subprocess
+def _driver_package(
+    root: Path, summary: dict[str, object] | None, returncode: int = 0, delay: float = 0
+) -> Path:
+    import json
+    import textwrap
 
-    captured: dict[str, object] = {}
+    package = root / "driver" / "gnn"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    body = (
+        "import json, pathlib, sys, time\n"
+        f"time.sleep({delay!r})\n"
+        "print('upstream console line', flush=True)\n"
+        "print('last line of output', flush=True)\n"
+        "out = pathlib.Path(sys.argv[sys.argv.index('--output-dir') + 1])\n"
+        "(out / 'driver_args.json').write_text(json.dumps(sys.argv))\n"
+        f"summary = json.loads({json.dumps(summary)!r})\n"
+        "if summary is not None:\n"
+        "    target = out / '00_pipeline_summary' / 'pipeline_execution_summary.json'\n"
+        "    target.parent.mkdir(parents=True, exist_ok=True)\n"
+        "    target.write_text(json.dumps(summary))\n"
+        f"sys.exit({returncode})\n"
+    )
+    (package / "main.py").write_text("if __name__ == '__main__':\n" + textwrap.indent(body, "    "))
+    return package.parent
 
-    def _run(cmd, cwd, env, stdout, stderr, timeout, check):
-        captured.update(cmd=cmd, cwd=cwd, env=env, timeout=timeout)
-        stdout.write("upstream console line\nlast line of output\n")
-        if summary is not None:
-            out = Path(cmd[cmd.index("--output-dir") + 1])
-            target = out / "00_pipeline_summary" / "pipeline_execution_summary.json"
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(_json.dumps(summary), encoding="utf-8")
-        return _subprocess.CompletedProcess(cmd, returncode)
 
-    return _run, captured
+def _run_driver(cfg: UpstreamPipelineConfig, driver: Path) -> dict:
+    import json
+    import subprocess
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join(
+        (str(driver), str(Path(__file__).resolve().parents[2] / "py"))
+    )
+    config = {
+        "target_dir": str(cfg.target_dir),
+        "output_dir": str(cfg.output_dir),
+        "only_steps": cfg.only_steps,
+        "skip_steps": cfg.skip_steps,
+        "timeout_s": cfg.timeout_s,
+    }
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import json, sys; from cogant.gnn.upstream_bridge.pipeline import "
+            "UpstreamPipelineConfig, run_upstream_pipeline; "
+            "print(json.dumps(run_upstream_pipeline(UpstreamPipelineConfig("
+            "**json.loads(sys.argv[1]))).to_dict()))",
+            json.dumps(config),
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(proc.stdout)
 
 
-def test_run_upstream_pipeline_reads_current_invocation_summary(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_upstream_pipeline_reads_current_invocation_summary(tmp_path: Path) -> None:
     import json
 
-    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
-
-    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
-    fake_run, captured = _fake_run_writing(
-        _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "exit_code": 0})
+    driver = _driver_package(
+        tmp_path, _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "exit_code": 0})
     )
-    monkeypatch.setattr(pipeline_mod.subprocess, "run", fake_run)
     cfg = UpstreamPipelineConfig(
         target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3], timeout_s=42
     )
 
-    result = pipeline_mod.run_upstream_pipeline(cfg)
+    result = _run_driver(cfg, driver)
 
-    assert result.available and result.error is None
-    assert result.executed == [3]
-    assert result.upstream_status == "SUCCESS_WITH_WARNINGS" and result.run_id == "abc123"
-    assert [s.status for s in result.steps] == ["SUCCESS"]
-    assert captured["cwd"] == cfg.output_dir and captured["timeout"] == 42
-    cmd = captured["cmd"]
+    assert result["available"] and result["error"] is None
+    assert result["executed"] == [3]
+    assert result["upstream_status"] == "SUCCESS_WITH_WARNINGS" and result["run_id"] == "abc123"
+    assert [s["status"] for s in result["steps"]] == ["SUCCESS"]
+    cmd = json.loads((cfg.output_dir / "driver_args.json").read_text())
     assert cmd[cmd.index("--target-dir") + 1] == str(cfg.output_dir / "_cogant_input")
     log = (cfg.output_dir / "upstream_pipeline.log").read_text(encoding="utf-8")
     assert "upstream console line" in log
@@ -401,13 +429,9 @@ def test_run_upstream_pipeline_reads_current_invocation_summary(
     assert bridge_summary["steps"][0]["status"] == "SUCCESS"
 
 
-def test_run_upstream_pipeline_ignores_stale_summary(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_upstream_pipeline_ignores_stale_summary(tmp_path: Path) -> None:
     """A summary left by an earlier run is never reported as this run's evidence."""
     import json
-
-    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
 
     out = tmp_path / "out"
     stale = out / "00_pipeline_summary" / "pipeline_execution_summary.json"
@@ -416,58 +440,38 @@ def test_run_upstream_pipeline_ignores_stale_summary(
         json.dumps(_summary({"script_name": "3_gnn.py", "status": "SUCCESS"})), encoding="utf-8"
     )
     os.utime(stale, (1_000_000, 1_000_000))
-    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
-    fake_run, _ = _fake_run_writing(None, returncode=1)
-    monkeypatch.setattr(pipeline_mod.subprocess, "run", fake_run)
+    driver = _driver_package(tmp_path, None, returncode=1)
     cfg = UpstreamPipelineConfig(target_dir=_package(tmp_path), output_dir=out, only_steps=[3, 5])
 
-    result = pipeline_mod.run_upstream_pipeline(cfg)
+    result = _run_driver(cfg, driver)
 
-    assert [s.status for s in result.steps] == ["BRIDGE_ERROR", "BRIDGE_ERROR"]
-    assert result.failure_count == 2
-    assert result.error is not None
-    assert "exited 1 without a pipeline summary" in result.error
-    assert "last line of output" in result.error
+    assert [s["status"] for s in result["steps"]] == ["BRIDGE_ERROR", "BRIDGE_ERROR"]
+    assert result["failure_count"] == 2
+    assert "exited 1 without a pipeline summary" in result["error"]
+    assert "last line of output" in result["error"]
 
 
-def test_run_upstream_pipeline_reports_timeout(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    import subprocess
-
-    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
-
-    def _timeout(cmd, **kwargs):
-        raise subprocess.TimeoutExpired(cmd, kwargs["timeout"])
-
-    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
-    monkeypatch.setattr(pipeline_mod.subprocess, "run", _timeout)
+def test_run_upstream_pipeline_reports_timeout(tmp_path: Path) -> None:
+    driver = _driver_package(tmp_path, None, delay=30)
     cfg = UpstreamPipelineConfig(
         target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3], timeout_s=5
     )
 
-    result = pipeline_mod.run_upstream_pipeline(cfg)
+    result = _run_driver(cfg, driver)
 
-    assert [s.status for s in result.steps] == ["TIMEOUT"]
-    assert result.error == "upstream gnn.main exceeded the 5s bridge timeout"
+    assert [s["status"] for s in result["steps"]] == ["TIMEOUT"]
+    assert result["error"] == "upstream gnn.main exceeded the 5s bridge timeout"
 
 
-def test_run_upstream_pipeline_empty_selection_is_a_noop(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
-
-    def _never(*args, **kwargs):
-        raise AssertionError("upstream must not be launched for an empty selection")
-
-    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
-    monkeypatch.setattr(pipeline_mod.subprocess, "run", _never)
+def test_run_upstream_pipeline_empty_selection_is_a_noop(tmp_path: Path) -> None:
+    driver = _driver_package(tmp_path, None, returncode=99)
     cfg = UpstreamPipelineConfig(
         target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3], skip_steps=[3]
     )
-    result = pipeline_mod.run_upstream_pipeline(cfg)
-    assert result.available and result.steps == [] and result.executed == []
-    assert len(result.skipped) == 25
+    result = _run_driver(cfg, driver)
+    assert result["available"] and result["steps"] == [] and result["executed"] == []
+    assert len(result["skipped"]) == 25
+    assert not (cfg.output_dir / "driver_args.json").exists()
 
 
 # ---------------------------------------------------------------------------

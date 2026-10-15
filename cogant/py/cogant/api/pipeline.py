@@ -540,6 +540,9 @@ class PipelineRunner:
 
         key = self._cache_key(target, config)
         cache_dir = Path(config.cache_dir) if config.cache_dir else None
+        if bundle.metadata.get("source_content_digest") != key.content_hash:
+            logger.warning("Incremental cache: source changed during analysis; not saving")
+            return
         store = CacheStore(cache_dir=cache_dir)
 
         safe_results = _json.loads(_json.dumps(bundle.stage_results, default=_json_default))

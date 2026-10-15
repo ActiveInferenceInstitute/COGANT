@@ -6,12 +6,10 @@ import importlib.util
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
-from typing import Any
 
 import pytest
 
 from cogant.api.bundle import ArtifactKey, Bundle
-from cogant.config.pipeline import PipelineConfig
 
 _RUN_EVAL = Path(__file__).resolve().parents[2] / "evaluation" / "run_eval.py"
 
@@ -25,49 +23,27 @@ def _load_run_eval() -> ModuleType:
     return module
 
 
-class _RecordingRunner:
-    """Stand-in ``PipelineRunner`` that records the config it was given."""
-
-    configs: list[PipelineConfig] = []
-    bundle_factory: Any = None
-
-    def run(self, target: str, config: PipelineConfig) -> Bundle:
-        type(self).configs.append(config)
-        factory = type(self).bundle_factory
-        return factory(target) if factory else Bundle(target=target)
-
-
 @pytest.fixture
 def run_eval(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> ModuleType:
     module = _load_run_eval()
     (tmp_path / "demo").mkdir()
+    (tmp_path / "demo" / "main.py").write_text("def add(a, b):\n    return a + b\n")
     monkeypatch.setattr(module, "EVAL_REPOS", tmp_path)
-    _RecordingRunner.configs = []
-    _RecordingRunner.bundle_factory = None
-    monkeypatch.setattr(module, "PipelineRunner", _RecordingRunner)
     return module
 
 
-def _runs_stage(config: PipelineConfig, stage: str) -> bool:
-    skipped = set(config.skip_stages) | ({"dynamic"} if config.skip_dynamic else set())
-    return stage in config.stages and stage not in skipped
-
-
 def test_include_dynamic_runs_the_dynamic_stage(run_eval: ModuleType) -> None:
-    run_eval.run_one("demo", skip_dynamic=False)
-
-    (config,) = _RecordingRunner.configs
-    assert _runs_stage(config, "dynamic")
-    # Stage order must follow the pipeline's canonical order.
-    assert config.stages.index("graph") < config.stages.index("dynamic")
-    assert config.stages.index("dynamic") < config.stages.index("translate")
+    result = run_eval.run_one("demo", skip_dynamic=False)
+    assert result["node_count"] > 0
+    assert "dynamic" in result["stage_outcomes"]
+    stages = list(result["stage_outcomes"])
+    assert stages.index("graph") < stages.index("dynamic") < stages.index("translate")
 
 
 def test_default_evaluation_skips_the_dynamic_stage(run_eval: ModuleType) -> None:
-    run_eval.run_one("demo")
-
-    (config,) = _RecordingRunner.configs
-    assert not _runs_stage(config, "dynamic")
+    result = run_eval.run_one("demo")
+    assert result["node_count"] > 0
+    assert "dynamic" not in result["stage_outcomes"]
 
 
 def _bundle_with_graph(target: str) -> Bundle:
@@ -78,20 +54,12 @@ def _bundle_with_graph(target: str) -> Bundle:
     return bundle
 
 
-def test_gnn_matrix_failure_is_not_reported_as_pass(
-    run_eval: ModuleType, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _RecordingRunner.bundle_factory = _bundle_with_graph
+def _empty_result() -> dict:
+    return {"node_count": 0, "edge_count": 0, "exception": None}
 
-    import cogant.gnn.matrices as matrices
 
-    class _BrokenMatrices:
-        def __init__(self, *_args: object) -> None:
-            raise ValueError("state space has no factors")
-
-    monkeypatch.setattr(matrices, "GNNMatrices", _BrokenMatrices)
-
-    result = run_eval.run_one("demo")
+def test_gnn_matrix_failure_is_not_reported_as_pass(run_eval: ModuleType) -> None:
+    result = run_eval._inspect_bundle(_bundle_with_graph("demo"), _empty_result())
 
     assert result["node_count"] == 1
     assert any("GNNMatrices error" in err for err in result["bundle_errors"])
@@ -99,14 +67,9 @@ def test_gnn_matrix_failure_is_not_reported_as_pass(
 
 
 def test_bundle_error_count_is_not_capped_by_the_error_preview(run_eval: ModuleType) -> None:
-    def bundle_with_many_errors(target: str) -> Bundle:
-        bundle = _bundle_with_graph(target)
-        bundle.errors.extend(f"Stage s{i} failed: boom" for i in range(7))
-        return bundle
-
-    _RecordingRunner.bundle_factory = bundle_with_many_errors
-
-    result = run_eval.run_one("demo")
+    bundle = _bundle_with_graph("demo")
+    bundle.errors.extend(f"Stage s{i} failed: boom" for i in range(7))
+    result = run_eval._inspect_bundle(bundle, _empty_result())
 
     assert result["bundle_error_count"] >= 7
     assert len(result["bundle_errors"]) <= 5 + 1  # preview plus evaluation errors

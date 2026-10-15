@@ -82,6 +82,20 @@ def _edit_and_commit(repo: Path) -> None:
     _git(repo, "commit", "-q", "-m", "edit agent0")
 
 
+def test_source_edit_before_cache_save_does_not_cache_old_analysis(
+    four_module_repo: Path, tmp_path: Path
+) -> None:
+    from cogant.cache.store import CacheStore
+
+    runner = PipelineRunner()
+    config = _config(tmp_path, "HEAD")
+    bundle = runner.run(str(four_module_repo), PipelineConfig(stages=["ingest"]))
+    _edit_and_commit(four_module_repo)
+    runner._incremental_cache_save(str(four_module_repo), bundle, config)
+    key = runner._cache_key(str(four_module_repo), config)
+    assert CacheStore(cache_dir=Path(config.cache_dir)).get(key) is None
+
+
 def test_partial_change_rebuilds_model_over_every_file(
     four_module_repo: Path, tmp_path: Path
 ) -> None:

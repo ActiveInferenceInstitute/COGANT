@@ -146,7 +146,13 @@ def run_one(repo_name: str, *, skip_dynamic: bool = True) -> dict[str, Any]:
         result["traceback"] = traceback.format_exc().splitlines()[-5:]
         return result
     result["elapsed_s"] = round(time.time() - start, 2)
+    result["stage_outcomes"] = {
+        name: outcome.value for name, outcome in bundle.stage_outcomes.items()
+    }
+    return _inspect_bundle(bundle, result)
 
+
+def _inspect_bundle(bundle: Any, result: dict[str, Any]) -> dict[str, Any]:
     errors = list(getattr(bundle, "errors", []) or [])
     result["bundle_error_count"] = len(errors)
     result["bundle_errors"] = errors[:5]  # first 5 for brevity

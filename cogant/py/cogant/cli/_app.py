@@ -229,7 +229,7 @@ def stage_status_label(bundle: "Bundle", stage: str, skipped: set[str]) -> str:
 
     ``bundle.stage_outcomes`` is authoritative: a stage present in
     ``stage_results`` may still have failed (validate returning
-    ``passed=False``) or been skipped (the ``--no-dynamic`` placeholder).
+    ``passed=False``) or been skipped (the ``--no-dynamic`` stage result).
     Bundles without a recorded outcome fall back to presence in
     ``stage_results`` / ``skipped``.
     """
