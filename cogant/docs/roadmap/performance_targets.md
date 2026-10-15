@@ -91,7 +91,7 @@ processing reduces wall clock (v1.0).
 ## Historical Coverage Snapshot and Targets
 
 The component estimates below are historical planning values. Current aggregate
-coverage is **94.54%**; see `METRICS.yaml` and the generated coverage report.
+coverage is **94.55%**; see `METRICS.yaml` and the generated coverage report.
 
 | Component | Historical estimate | v0.6.x Target | v1.0 Target |
 |-----------|--------------|--------------|------------|
