@@ -74,6 +74,22 @@ def is_nullable_path(path: str) -> bool:
 
 def format_value_for_path(path: str, value: Any) -> str:
     """Format a METRICS value for manuscript substitution (aligned with inject tool)."""
+    if path == "evaluation.roundtrip.per_target":
+        if not isinstance(value, list):
+            raise TypeError("Roundtrip per_target must be a list")
+        rows = []
+        for row in value:
+            if not isinstance(row, dict):
+                raise TypeError("Roundtrip target must be a mapping")
+            if not isinstance(row["strict_structural"], bool):
+                raise TypeError("Roundtrip strict_structural must be a boolean")
+            score = format_value_for_path("role_preservation_score", row["role_preservation_score"])
+            strict = "yes" if row["strict_structural"] else "no"
+            rows.append(
+                f"| `{row['name']}` | {row['group']} | {score} | "
+                f"`{row['roundtrip_status']}` | {strict} |"
+            )
+        return "\n".join(rows)
     if value is None:
         if is_nullable_path(path):
             return "N/A"
@@ -209,6 +225,7 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{FAILED_COUNT}}": "evaluation.roundtrip.failed_count",  # Failed roundtrips
     "{{NON_NATIVE_COUNT}}": "evaluation.roundtrip.non_native_count",  # Rows outside current native counts
     "{{TOTAL_TARGETS}}": "evaluation.roundtrip.total_targets",  # Total roundtrip targets
+    "{{ROUNDTRIP_TARGET_ROWS}}": "evaluation.roundtrip.per_target",
     # ---------------------------------------------------------------
     # Roundtrip evaluation — role-preservation statistics
     # ---------------------------------------------------------------

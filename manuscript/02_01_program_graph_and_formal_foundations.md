@@ -33,12 +33,12 @@ The formal choices below are intentionally conservative. They borrow the finite-
 A **program graph** is a tuple $G = (V, E, \lambda_V, \lambda_E, \tau)$ where
 
 - $V$ is a finite set of program nodes (modules, classes, methods, functions, and --- on languages where the front end emits them --- variables and control-flow sites);
-- $E \subseteq V \times V \times K$ is a finite set of typed directed edges drawn from the edge-kind alphabet $K \supseteq \{\text{READS}, \text{WRITES}, \text{CALLS}, \text{CONTAINS}, \text{INHERITS}, \text{IMPORTS}, \text{OBSERVES}, \text{MUTATES}, \text{DEPENDS\_ON}\}$;
-- $\lambda_V : V \to \mathcal{N}$ labels each node with a node kind $\mathcal{N} \supseteq \{\text{MODULE}, \text{CLASS}, \text{METHOD}, \text{FUNCTION}, \text{CONFIGURATION}, \ldots\}$;
+- $E \subseteq V \times V \times K$ is a finite set of typed directed edges drawn from the edge-kind alphabet $K$, which includes `READS`, `WRITES`, `CALLS`, `CONTAINS`, `INHERITS`, `IMPORTS`, `OBSERVES`, `MUTATES`, and `DEPENDS_ON`;
+- $\lambda_V : V \to \mathcal{N}$ labels each node with a node kind from $\mathcal{N}$, which includes `MODULE`, `CLASS`, `METHOD`, `FUNCTION`, and `CONFIGURATION`;
 - $\lambda_E : E \to K$ is the (trivial) projection onto the edge kind;
 - $\tau : V \to (T \cup \{\bot\})$ maps each node to a type annotation recovered from the front end or to $\bot$ when no annotation is available.
 
-The shipped Python front end populates the kinds $\{\text{MODULE}, \text{CLASS}, \text{METHOD}, \text{FUNCTION}\}$ and the edge kinds $\{\text{CALLS}, \text{CONTAINS}, \text{READS}, \text{WRITES}, \text{IMPORTS}, \text{INHERITS}\}$; the remaining kinds in $\mathcal{N}$ and $K$ are declared in `cogant.schemas.core` but currently emitted only when other parsers or dynamic enrichment stages fire. The empirical distribution on the six packaged fixtures is recorded in @tbl:repo-pipeline-metrics and @tbl:fixture-graph-metrics in @sec:06-experimental-setup.
+The shipped Python front end populates the kinds `MODULE`, `CLASS`, `METHOD`, and `FUNCTION` and the edge kinds `CALLS`, `CONTAINS`, `READS`, `WRITES`, `IMPORTS`, and `INHERITS`; the remaining kinds in $\mathcal{N}$ and $K$ are declared in `cogant.schemas.core` but currently emitted only when other parsers or dynamic enrichment stages fire. The empirical distribution on the six packaged fixtures is recorded in @tbl:repo-pipeline-metrics and @tbl:fixture-graph-metrics in @sec:06-experimental-setup.
 
 **Mapping kinds vs graph roles.** Translation rules emit `SemanticMapping` records whose `kind` field uses `MappingKind` from `cogant.schemas.semantic`. The seven names highlighted in the abstract are the Active Inference subset of that enum; additional `MappingKind` members (`DATA_FLOW`, `CONTROL_FLOW`, `ORCHESTRATION`, …) cover non-AI structural patterns. Separately, `SemanticRole` in `cogant.schemas.semantic_mapping` enumerates a broader set of graph-level role labels (for example `PARAMETER`, `CONFIGURATION`); `METRICS.yaml` `ir_schema.active_inf_role_count` tracks the seven-name AI subset verified against `MappingKind`.
 
@@ -63,7 +63,7 @@ The algebraic scope is deliberately smaller than provenance semiring semantics [
 A **translation rule** is a quadruple $r = (\varphi_r, \kappa_r, w_r, p_r)$ where
 
 - $\varphi_r : \mathcal{G} \to 2^{\mathcal{F}}$ is a computable predicate that, given a program graph $G \in \mathcal{G}$, returns a (possibly empty) set of matched fragments $\mathcal{F}$ --- each fragment a finite tuple of node ids and optional edge ids;
-- $\kappa_r \in \mathcal{K}_M$ is the mapping kind the rule assigns on success, drawn from the mapping-kind alphabet $\mathcal{K}_M = \{\text{HIDDEN\_STATE}, \text{OBSERVATION}, \text{ACTION}, \text{POLICY}, \text{CONSTRAINT}, \text{PREFERENCE}, \text{CONTEXT}, \text{DATA\_FLOW}, \text{ERROR\_HANDLING}, \text{CIRCUIT\_BREAKER}, \text{ORCHESTRATION}\}$;
+- $\kappa_r \in \mathcal{K}_M$ is the mapping kind the rule assigns on success, drawn from the mapping-kind alphabet $\mathcal{K}_M$, with labels `HIDDEN_STATE`, `OBSERVATION`, `ACTION`, `POLICY`, `CONSTRAINT`, `PREFERENCE`, `CONTEXT`, `DATA_FLOW`, `ERROR_HANDLING`, `CIRCUIT_BREAKER`, and `ORCHESTRATION`;
 - $w_r \in (0, 1]$ is the base confidence weight attached to mappings produced by $r$;
 - $p_r \in \mathbb{Z}$ is the rule priority consulted during conflict resolution (@alg:conflict-resolution).
 

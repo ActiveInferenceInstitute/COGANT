@@ -152,7 +152,7 @@ with the `scaffolding_fraction` field described below. ∎
 For any `P ∈ Prog`, the roundtrip
 `P → F(P) → R(F(P))` preserves the role distribution up to
 
-> **ε(P, R(F(P))) = JS(ρ_norm(P) ∥ ρ_norm(R(F(P))))**
+> $\varepsilon(P, R(F(P))) = \operatorname{JS}(\rho_{\mathrm{norm}}(P) \parallel \rho_{\mathrm{norm}}(R(F(P))))$
 
 where `ρ_norm` is the role multiset normalized to a probability distribution
 over `Roles`, and `JS` is the Jensen–Shannon distance [@lin1991divergence]. When the
@@ -206,10 +206,9 @@ real-world libraries: each raises the CONSTRAINT (or POLICY/CONTEXT) component
 of `count_synth` from a small scaffold constant toward `count_origin` (proportional),
 so `min = count_origin` and the per-role ratio jumps to 1.0.  ∎
 
-The strict row in the current ledger, `roundtrip_strict_minimal`, is therefore
-best read as a normal-form fixed point for a deliberately narrow reversible
-subset. It shows that the strict invariant tier is operational, but it does not
-promote the unrestricted forward/reverse pair to an exact lens.
+A normal-form fixed point on a narrow reversible subset would demonstrate the
+strict invariant tier without promoting the unrestricted forward/reverse pair
+to an exact lens. The current native ledger contains no such strict match.
 
 **Scaffolding diagnostic emitted with every per-target row.** As of
 v{{VERSION}}, `tools/regenerate_metrics.py` emits a `scaffolding_fraction`

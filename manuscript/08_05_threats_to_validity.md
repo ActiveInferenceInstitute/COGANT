@@ -213,9 +213,9 @@ Three caveats bound this result. First, **role preservation is symmetric
 role-overlap, not isomorphism and not recall**: the strict subset contains
 {{STRICT_ISOMORPHISM_COUNT}} of {{TOTAL_TARGETS}} targets that clear the strict bar (zero node/edge deltas,
 preserved edge-kind counts, matrix shape/value preservation, GNN-section
-preservation, generated-code compile success). The strict target is the
-hand-authored `roundtrip_strict_minimal` reversible subset, so a role-preserved
-verdict on the remaining application fixtures means the synthesized package's role multiset has high per-role
+preservation, generated-code compile success). No current native ledger row
+meets that strict contract. A role-preserved verdict on an application fixture
+means the synthesized package's role multiset meets the public threshold for per-role
 `min/max` overlap with the original's [@wu2018weightedMinhash] — not that the
 two program graphs are isomorphic. Graph edit distance and graph-similarity
 measures expose a much broader structural comparison space than this role
