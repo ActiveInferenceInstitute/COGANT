@@ -74,8 +74,8 @@ class TestSimulationVisualizer:
     def test_fe_trajectory_no_fe_data(self):
         v = self._viz()
         trace = [{"step": 0, "state": {}, "action": None}]  # no free_energy key
-        result = v.plot_free_energy_trajectory(trace)
-        assert "<svg" in result
+        with pytest.raises(ValueError, match="finite numeric free_energy"):
+            v.plot_free_energy_trajectory(trace)
 
     def test_fe_trajectory_single_step(self):
         v = self._viz()
@@ -93,8 +93,8 @@ class TestSimulationVisualizer:
     def test_fe_trajectory_non_numeric_fe(self):
         v = self._viz()
         trace = [{"free_energy": "bad", "step": 0, "state": {}}]
-        result = v.plot_free_energy_trajectory(trace)
-        assert "<svg" in result
+        with pytest.raises(ValueError, match="finite numeric free_energy"):
+            v.plot_free_energy_trajectory(trace)
 
     # plot_belief_evolution
     def test_belief_evolution_empty(self):

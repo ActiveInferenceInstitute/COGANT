@@ -7,6 +7,8 @@ Generates SVG plots and HTML reports of simulation traces.
 from collections import defaultdict
 from typing import Any
 
+from cogant.simulate.report import observed_free_energy
+
 
 class SimulationVisualizer:
     """Generate visualizations of simulation traces."""
@@ -29,13 +31,8 @@ class SimulationVisualizer:
             return self._empty_svg("No trace data")
 
         # Extract free energy values
-        fe_values = []
-        for step in trace:
-            fe = step.get("free_energy", 0.0)
-            if isinstance(fe, int | float):
-                fe_values.append(float(fe))
-            else:
-                fe_values.append(0.0)
+        samples = [step for step in trace if step.get("phase") != "initial"]
+        fe_values = [observed_free_energy(step.get("free_energy")) for step in samples]
 
         if not fe_values:
             return self._empty_svg("No free energy data")
@@ -75,14 +72,14 @@ class SimulationVisualizer:
 
         # Draw grid and labels
         n_steps = len(fe_values)
-        for i in range(n_steps + 1):
-            x = margin + (i / n_steps) * plot_width
+        for i, sample in enumerate(samples):
+            x = margin + (i / max(1, n_steps - 1)) * plot_width
             svg_lines.append(
                 f'<line x1="{x}" y1="{height - margin}" x2="{x}" y2="{height - margin + 3}" class="axis"/>'
             )
             if i % max(1, n_steps // 5) == 0:
                 svg_lines.append(
-                    f'<text x="{x}" y="{height - margin + 20}" text-anchor="middle" class="text">{i}</text>'
+                    f'<text x="{x}" y="{height - margin + 20}" text-anchor="middle" class="text">{sample.get("step", i)}</text>'
                 )
 
         # Draw free energy line
@@ -97,11 +94,13 @@ class SimulationVisualizer:
                     path_parts.append(f"L {x} {y}")
             svg_lines.append(f'<path d="{" ".join(path_parts)}" class="line"/>')
 
-            # Draw points
-            for i, fe in enumerate(fe_values):
-                x = margin + (i / (n_steps - 1)) * plot_width
-                y = height - margin - ((fe - min_fe) / range_fe) * plot_height
-                svg_lines.append(f'<circle cx="{x}" cy="{y}" r="3" class="point" opacity="0.6"/>')
+        # Draw points
+        for i, fe in enumerate(fe_values):
+            x = margin + (i / max(1, n_steps - 1)) * plot_width
+            y = height - margin - ((fe - min_fe) / range_fe) * plot_height
+            svg_lines.append(
+                f'<circle cx="{x}" cy="{y}" r="3" class="point" opacity="0.6" data-step="{samples[i].get("step", i)}" data-free-energy="{fe}"/>'
+            )
 
         # Draw y-axis labels
         for i in range(5):
@@ -381,19 +380,18 @@ class SimulationVisualizer:
             f"    <p>Generated for state space: {state_space.schema_name if hasattr(state_space, 'schema_name') else 'Unknown'}</p>",
         ]
 
+        executed = [step for step in trace if step.get("phase") != "initial"]
         # Statistics
         html_lines.extend(
             [
                 "    <div class='section stats'>",
-                f"      <div class='stat-box'><div class='stat-value'>{len(trace)}</div><div class='stat-label'>Steps</div></div>",
+                f"      <div class='stat-box'><div class='stat-value'>{len(executed)}</div><div class='stat-label'>Steps</div></div>",
                 f"      <div class='stat-box'><div class='stat-value'>{len({s.get('action') for s in trace if s.get('action')})}</div><div class='stat-label'>Unique Actions</div></div>",
             ]
         )
 
         # Add mean free energy if available
-        fe_values = [
-            s.get("free_energy", 0) for s in trace if isinstance(s.get("free_energy"), int | float)
-        ]
+        fe_values = [observed_free_energy(s.get("free_energy")) for s in executed]
         if fe_values:
             mean_fe = sum(fe_values) / len(fe_values)
             html_lines.append(

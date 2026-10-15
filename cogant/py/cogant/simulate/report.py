@@ -1,7 +1,14 @@
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from typing import Any
+
+
+def observed_free_energy(value: float | None) -> float:
+    if type(value) not in (int, float) or value is None or not math.isfinite(value):
+        raise ValueError("executed observation requires finite numeric free_energy")
+    return float(value)
 
 
 def generate_report(trace: list[dict[str, Any]]) -> str:
@@ -14,11 +21,12 @@ def generate_report(trace: list[dict[str, Any]]) -> str:
     Returns:
         Markdown string.
     """
+    executed = [step for step in trace if step.get("phase") != "initial"]
     lines = [
         "# Active Inference Simulation Report",
         "",
         "## Summary",
-        f"- Total steps: {len(trace)}",
+        f"- Total steps: {len(executed)}",
         "- Initial beliefs: declared prior D",
         "",
         "## Free Energy Dynamics",
@@ -26,7 +34,7 @@ def generate_report(trace: list[dict[str, Any]]) -> str:
     ]
 
     # Extract free energy trajectory
-    fe_values = [step.get("free_energy", 0.0) for step in trace]
+    fe_values = [observed_free_energy(step.get("free_energy")) for step in executed]
     if fe_values:
         mean_fe = sum(fe_values) / len(fe_values)
         min_fe = min(fe_values)
@@ -39,11 +47,13 @@ def generate_report(trace: list[dict[str, Any]]) -> str:
                 "",
             ]
         )
+    else:
+        lines.append("- No observed inference updates with free-energy data")
 
     # Action distribution
     lines.append("## Actions Taken")
     action_counts: dict[str, int] = defaultdict(int)
-    for step in trace:
+    for step in executed:
         action = step.get("action")
         if action:
             action_counts[action] += 1
@@ -77,7 +87,10 @@ def generate_report(trace: list[dict[str, Any]]) -> str:
     for idx in sample_indices:
         step = trace[idx]
         beliefs = step.get("beliefs", {})
-        lines.append(f"### Step {step.get('step', idx)}")
+        title = (
+            "Initial prior" if step.get("phase") == "initial" else f"Step {step.get('step', idx)}"
+        )
+        lines.append(f"### {title}")
         if beliefs:
             top_beliefs = sorted(beliefs.items(), key=lambda x: x[1], reverse=True)[:3]
             for state, prob in top_beliefs:

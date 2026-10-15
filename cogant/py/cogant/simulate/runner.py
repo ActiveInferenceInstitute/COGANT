@@ -210,10 +210,11 @@ class ModelRunner:
         trace = [
             {
                 "step": 0,
+                "phase": "initial",
                 "beliefs": belief.copy(),
                 "observation": None,
                 "action": None,
-                "free_energy": 0.0,
+                "free_energy": None,
                 "predicted_state": {},
             }
         ]
@@ -226,6 +227,7 @@ class ModelRunner:
             trace.append(
                 {
                     "step": t,
+                    "phase": "observation",
                     "beliefs": result["new_beliefs"],
                     "observation": obs,
                     "action": result["selected_action"],
