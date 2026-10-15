@@ -6,7 +6,7 @@ Semantic Lead
 ## Responsibilities
 - Define ~70 Pydantic/dataclass models for entire COGANT pipeline
 - Ensure type safety and validation across all subpackages
-- Maintain backward compatibility and semantic versioning
+- Maintain versioned public contracts and semantic versioning
 - Stabilize public API via __init__.py exports
 
 ## Coordination

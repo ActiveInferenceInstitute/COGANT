@@ -6,8 +6,8 @@ Covers:
 - TypeInferencer: infer_types_from_source (all branches), _infer_from_function,
   _infer_from_class, _infer_from_assign, _infer_from_annassign,
   _infer_init_attributes, _infer_return_from_body, _infer_literal_type,
-  _annotation_to_str, _safe_unparse, _call_name, _infer_type_from_value,
-  _infer_function_return_type, _infer_variable_type, _resolve_symbol_ids
+  _annotation_to_str, _safe_unparse, _call_name,
+  _resolve_symbol_ids
 - RepoMetadata dataclass
 - RepoSnapshot dataclass
 - RepoIngester: init, ingest_local (normal, not-exists, not-dir),
@@ -130,85 +130,6 @@ class TestCallName:
 
         node = ast.Constant(value=1)
         assert TypeInferencer._call_name(node) is None
-
-
-class TestInferTypeFromValue:
-    def test_none_string(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("None") == "None"
-
-    def test_true_false(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("True") == "bool"
-        assert TypeInferencer._infer_type_from_value("False") == "bool"
-
-    def test_list_literal(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("[1, 2]") == "list"
-
-    def test_dict_literal(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value('{"k": "v"}') == "dict"
-
-    def test_set_literal(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("{1, 2}") == "set"
-
-    def test_tuple_literal(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("(1, 2)") == "tuple"
-
-    def test_string_literal(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value('"hello"') == "str"
-        assert TypeInferencer._infer_type_from_value("'world'") == "str"
-
-    def test_integer(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("42") == "int"
-
-    def test_negative_integer(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("-5") == "int"
-
-    def test_float(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("3.14") == "float"
-
-    def test_constructor_call_dict(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("dict()") == "dict"
-
-    def test_constructor_call_list(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("list()") == "list"
-
-    def test_empty_string_returns_none(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("") is None
-
-    def test_none_input_returns_none(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value(None) is None
-
-    def test_unrecognized_returns_none(self):
-        from cogant.static.types import TypeInferencer
-
-        assert TypeInferencer._infer_type_from_value("some_variable") is None
 
 
 # ---------------------------------------------------------------------------

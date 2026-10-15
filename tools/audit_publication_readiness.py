@@ -28,7 +28,7 @@ DEFAULT_JSON_OUTPUT = ANALYSIS_ROOT / "publication_readiness.json"
 DEFAULT_MARKDOWN_OUTPUT = ANALYSIS_ROOT / "publication_readiness.md"
 
 FIXED_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
-LEGACY_FIXED_DATE_RE = re.compile(r"\b(?:2026-05-22|May\s+22(?:nd)?)\b", re.IGNORECASE)
+HISTORICAL_FIXED_DATE_RE = re.compile(r"\b(?:2026-05-22|May\s+22(?:nd)?)\b", re.IGNORECASE)
 ACTIVE_MANUSCRIPT_PATHS = (
     Path("manuscript"),
     Path("output/manuscript"),
@@ -132,9 +132,9 @@ def _scan_active_date_text(root: Path) -> list[str]:
                 continue
             text = path.read_text(encoding="utf-8", errors="replace")
             for line_no, line in enumerate(text.splitlines(), start=1):
-                if LEGACY_FIXED_DATE_RE.search(line):
+                if HISTORICAL_FIXED_DATE_RE.search(line):
                     rel = _relative_to_root(path, root)
-                    issues.append(f"legacy fixed publication date text in {rel}:{line_no}")
+                    issues.append(f"historical fixed publication date text in {rel}:{line_no}")
     return issues
 
 

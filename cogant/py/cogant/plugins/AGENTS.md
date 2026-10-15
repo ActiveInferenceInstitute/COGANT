@@ -6,7 +6,7 @@ Infra Lead
 
 ## Responsibilities
 
-Define plugin protocol system via abstract base classes. Specify extension points for language analysis, trace ingestion, normalization, translation rules, state space compilation, process extraction, export formats, validation, and visualization. Ensure plugin API is stable and backward compatible. Support plugin lifecycle management (initialization, shutdown).
+Define plugin protocol system via abstract base classes. Specify extension points for language analysis, trace ingestion, normalization, translation rules, state space compilation, process extraction, export formats, validation, and visualization. Maintain stable, versioned public plugin contracts. Support plugin lifecycle management (initialization, shutdown).
 
 ## Extending
 

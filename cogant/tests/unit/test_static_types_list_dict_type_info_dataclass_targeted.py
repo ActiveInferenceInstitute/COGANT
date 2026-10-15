@@ -5,10 +5,8 @@ Covers:
 - TypeInferencer.infer_types_from_source: SyntaxError path (lines 108-110),
   symbol extraction failure (lines 116-118), class body ast.Assign path (line 236),
   _infer_from_assign returns [] when type is None (line 318)
-- TypeInferencer._infer_function_return_type: symbol not found (None), with annotation,
-  with @property decorator, without annotation
-- TypeInferencer._infer_variable_type: symbol not found (None), with annotation,
-  with value inference (no annotation but has value), fully None
+- Public source inference: annotated and literal returns, property methods,
+  annotated and literal variables, and unknown-return exclusion
 - TypeInferencer._annotation_to_str: None input, Name node fallback, Constant fallback
 - TypeInferencer._safe_unparse: None input
 - TypeInferencer._infer_literal_type: None node, bool, bytes, list, tuple, set, dict,
@@ -19,7 +17,6 @@ Covers:
 """
 
 import ast
-from pathlib import Path
 
 import pytest
 
@@ -394,101 +391,39 @@ class TestInferReturnFromBody:
         assert result is None
 
 
-# ---------------------------------------------------------------------------
-# TypeInferencer removed helpers — _infer_function_return_type
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "source,name,kind,expected",
+    [
+        ("def foo() -> int:\n    return 1\n", "foo", "function", "int"),
+        ("def compute():\n    return 42\n", "compute", "function", None),
+        (
+            "class C:\n    @property\n    def value(self):\n        return 'x'\n",
+            "value",
+            "method",
+            "Any",
+        ),
+        ("x: int = 1\n", "x", "variable", "int"),
+        ("x = 1.5\n", "x", "variable", "float"),
+    ],
+)
+def test_public_source_inference_preserves_supported_types(tmp_path, source, name, kind, expected):
+    from cogant.static.types import TypeInferencer
+
+    results = TypeInferencer(tmp_path).infer_types_from_source(source, tmp_path / "source.py")
+    matches = [
+        result for result in results if result.symbol_name == name and result.symbol_kind == kind
+    ]
+    if expected is None:
+        assert matches == []
+    else:
+        assert len(matches) == 1
+        assert matches[0].inferred_type == expected
 
 
-class TestInferFunctionReturnType:
-    def _make_symbol_table(self, source: str, path: Path):
-        from cogant.static.symbols import SymbolExtractor
+def test_public_source_inference_does_not_invent_unknown_return(tmp_path):
+    from cogant.static.types import TypeInferencer
 
-        extractor = SymbolExtractor(path.parent)
-        return extractor.extract_from_source(source, path)
-
-    def _parse_funcdef(self, source: str):
-        """Parse source and return the first FunctionDef from the parser."""
-        from cogant.static.parser import PythonASTParser
-
-        parser = PythonASTParser()
-        module = parser.parse_string(source)
-        return module.functions[0] if module.functions else None
-
-    def test_symbol_not_found_returns_none(self, tmp_path):
-        from cogant.static.symbols import SymbolExtractor
-        from cogant.static.types import TypeInferencer
-
-        inf = TypeInferencer(repo_root=tmp_path)
-        source = "def foo() -> int:\n    return 1\n"
-        st = SymbolExtractor(tmp_path).extract_from_source(source, tmp_path / "t.py")
-
-        # Create a FunctionDef with a name not in the symbol table
-        funcdef = self._parse_funcdef("def bar() -> str:\n    return 'hi'\n")
-        result = inf._infer_function_return_type(funcdef, st)
-        assert result is None
-
-    def test_with_return_annotation(self, tmp_path):
-        from cogant.static.symbols import SymbolExtractor
-        from cogant.static.types import TypeInferencer
-
-        inf = TypeInferencer(repo_root=tmp_path)
-        source = "def foo() -> int:\n    return 1\n"
-        st = SymbolExtractor(tmp_path).extract_from_source(source, tmp_path / "t.py")
-        funcdef = self._parse_funcdef(source)
-        result = inf._infer_function_return_type(funcdef, st)
-        # Either None (if symbol not matched) or a TypeInfo
-        assert result is None or hasattr(result, "inferred_type")
-
-    def test_no_annotation_returns_none(self, tmp_path):
-        from cogant.static.symbols import SymbolExtractor
-        from cogant.static.types import TypeInferencer
-
-        inf = TypeInferencer(repo_root=tmp_path)
-        source = "def compute():\n    return 42\n"
-        st = SymbolExtractor(tmp_path).extract_from_source(source, tmp_path / "t.py")
-        funcdef = self._parse_funcdef(source)
-        result = inf._infer_function_return_type(funcdef, st)
-        assert result is None
-
-
-# ---------------------------------------------------------------------------
-# TypeInferencer removed helpers — _infer_variable_type
-# ---------------------------------------------------------------------------
-
-
-class TestInferVariableType:
-    def _parse_assign(self, source: str):
-        """Parse source and return first AssignmentDef."""
-        from cogant.static.parser import PythonASTParser
-
-        module = PythonASTParser().parse_string(source)
-        return module.assignments[0] if module.assignments else None
-
-    def test_symbol_not_found_returns_none(self, tmp_path):
-        from cogant.static.symbols import SymbolExtractor
-        from cogant.static.types import TypeInferencer
-
-        inf = TypeInferencer(repo_root=tmp_path)
-        source = "x = 1\n"
-        st = SymbolExtractor(tmp_path).extract_from_source(source, tmp_path / "t.py")
-
-        # Parse an assignment with a different name
-        assign = self._parse_assign("z = 42\n")
-        if assign is None:
-            pytest.skip("No assignment parsed")
-        result = inf._infer_variable_type(assign, st)
-        assert result is None
-
-    def test_with_annotation(self, tmp_path):
-        from cogant.static.symbols import SymbolExtractor
-        from cogant.static.types import TypeInferencer
-
-        inf = TypeInferencer(repo_root=tmp_path)
-        source = "x: int = 1\n"
-        st = SymbolExtractor(tmp_path).extract_from_source(source, tmp_path / "t.py")
-        assign = self._parse_assign(source)
-        if assign is None:
-            pytest.skip("No assignment parsed")
-        result = inf._infer_variable_type(assign, st)
-        # Either a TypeInfo or None
-        assert result is None or hasattr(result, "inferred_type")
+    results = TypeInferencer(tmp_path).infer_types_from_source(
+        "def unresolved(value):\n    return value\n", tmp_path / "source.py"
+    )
+    assert not any(result.symbol_name == "unresolved" for result in results)

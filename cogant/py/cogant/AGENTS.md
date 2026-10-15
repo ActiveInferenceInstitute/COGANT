@@ -12,7 +12,7 @@ Runtime Lead
 ## Coordination
 - Subsystem modules (api/, cli/, ingest/, etc.) implement functionality; Runtime Lead ensures cohesion
 - Static analysis helpers (static/) and schema definitions (schemas/) are shared resources
-- Plugins (plugins/) extend this core; Plugin system must remain backward-compatible
+- Plugins (plugins/) extend this core through stable, versioned public contracts
 
 ## Files
 - __init__.py — Package root and version

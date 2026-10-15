@@ -7,8 +7,8 @@ Covers:
   _ast_to_str fallback paths, parse_string edge cases
 - static/types.py: TypeInfo dataclass, TypeInferencer (infer_types_from_source,
   _infer_from_class, _infer_from_assign, _infer_from_annassign,
-  _annotation_to_str, _safe_unparse, _infer_literal_type, _infer_type_from_value,
-  _call_name, _infer_function_return_type, _infer_return_from_body)
+  _annotation_to_str, _safe_unparse, _infer_literal_type,
+  _call_name, _infer_return_from_body)
 - export/bundle.py: BundleManifest, BundleExporter (_manifest_to_dict,
   _compute_checksum, _generate_html, _create_manifest), FORMATS list
 """
@@ -269,42 +269,6 @@ class Counter:
 
         result = TypeInferencer._safe_unparse(None)
         assert result is None
-
-    def test_infer_type_from_value_int(self):
-        from cogant.static.types import TypeInferencer
-
-        result = TypeInferencer._infer_type_from_value("42")
-        assert result == "int"
-
-    def test_infer_type_from_value_float(self):
-        from cogant.static.types import TypeInferencer
-
-        result = TypeInferencer._infer_type_from_value("3.14")
-        assert result == "float"
-
-    def test_infer_type_from_value_string(self):
-        from cogant.static.types import TypeInferencer
-
-        result = TypeInferencer._infer_type_from_value("'hello'")
-        assert result == "str"
-
-    def test_infer_type_from_value_true(self):
-        from cogant.static.types import TypeInferencer
-
-        result = TypeInferencer._infer_type_from_value("True")
-        assert result == "bool"
-
-    def test_infer_type_from_value_none(self):
-        from cogant.static.types import TypeInferencer
-
-        result = TypeInferencer._infer_type_from_value(None)
-        assert result is None
-
-    def test_infer_type_from_value_list(self):
-        from cogant.static.types import TypeInferencer
-
-        result = TypeInferencer._infer_type_from_value("[1, 2, 3]")
-        assert result == "list"
 
     def test_infer_literal_type_constant_int(self, tmp_path):
         inferencer = self._make_inferencer()

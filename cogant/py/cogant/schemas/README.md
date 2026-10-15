@@ -142,7 +142,7 @@ state_space = StateSpaceModel(
 - Dataclasses for lightweight, performance-critical records (ProvenanceRecord, SemanticMapping)
 - Explicit confidence/provenance on every mapping and type
 - Immutable where possible (StableID, SemanticVersion)
-- Backward compatible via semantic versioning and deprecation flags
+- Versioned public contracts use semantic versioning and deprecation flags
 
 ## Dependencies
 - pydantic — validation and JSON serialization

@@ -7,8 +7,8 @@ shape, and the scorers must read all of them:
   :func:`cogant.api.orchestration.program_graph_to_dict`) stores
   ``nodes`` and ``edges`` as dicts keyed by id, and each edge payload
   names its endpoints ``source_id`` / ``target_id``.
-* Hand-built and legacy fixture bundles use lists of payloads and name
-  edge endpoints ``source`` / ``target``.
+* Orchestrator graph exports and Cytoscape edge payloads name endpoints
+  ``source`` / ``target``; collections may be lists or id-keyed dictionaries.
 
 The helpers here reduce every shape to a list of payload dicts, so the
 analyzers never iterate dict keys by accident.
@@ -71,8 +71,8 @@ def iter_records(collection: Any, id_key: str = "id") -> list[dict[str, Any]]:
 def edge_endpoints(edge: dict[str, Any]) -> tuple[str | None, str | None]:
     """Return ``(source, target)`` ids for a serialized edge payload.
 
-    Reads the canonical ``source_id`` / ``target_id`` fields and falls
-    back to the legacy ``source`` / ``target`` names. Empty values are
+    Reads API ``source_id`` / ``target_id`` fields or the orchestrator
+    and Cytoscape ``source`` / ``target`` fields. Empty values are
     returned as ``None``.
     """
     source = edge.get("source_id") or edge.get("source")

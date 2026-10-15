@@ -29,7 +29,6 @@ class DataFlowGraph:
 class DataFlowAnalyzer:
     repo_root: Path | None
     parser: Any
-    symbol_extractor: Any
     def __init__(self, repo_root: Path | None = None) -> None: ...
     def analyze_file(self, file_path: Path) -> list[DataFlowEdge]: ...
     def analyze_source(self, source: str, file_path: Path) -> list[DataFlowEdge]: ...
@@ -39,14 +38,12 @@ class DataFlowAnalyzer:
 class DataFlowVisitor(ast.NodeVisitor):
     file_path: Path
     context: str
-    symbol_extractor: Any
     flows: list[DataFlowEdge]
     def __init__(
         self,
         file_path: Path,
         context: str,
         body: list[ast.stmt],
-        symbol_extractor: Any | None = None,
     ) -> None: ...
     def visit_Assign(self, node: ast.Assign) -> None: ...
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None: ...

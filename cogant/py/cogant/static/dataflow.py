@@ -26,7 +26,6 @@ from pathlib import Path
 from typing import Any
 
 from cogant.static.parser import PythonASTParser
-from cogant.static.symbols import SymbolExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +175,6 @@ class DataFlowAnalyzer:
         """
         self.repo_root = Path(repo_root or "/")
         self.parser = PythonASTParser()
-        self.symbol_extractor = SymbolExtractor(repo_root)
 
     def analyze_file(self, file_path: Path) -> list[DataFlowEdge]:
         """Analyze data flow in a Python file.
@@ -320,7 +318,6 @@ class DataFlowVisitor(ast.NodeVisitor):
         file_path: Path,
         context: str,
         body: list[ast.stmt],
-        symbol_extractor: Any | None = None,
     ):
         """Initialize data flow visitor.
 
@@ -328,13 +325,9 @@ class DataFlowVisitor(ast.NodeVisitor):
             file_path: Source file path.
             context: Context (function/method name or ``"module"``).
             body: AST body nodes to analyze.
-            symbol_extractor: Optional SymbolExtractor for symbol resolution.
-                Kept for backwards compatibility; not required for edge
-                emission.
         """
         self.file_path = file_path
         self.context = context
-        self.symbol_extractor = symbol_extractor
         self.flows: list[DataFlowEdge] = []
         self._assignments: dict[str, int] = {}
         self._reads: set[str] = set()

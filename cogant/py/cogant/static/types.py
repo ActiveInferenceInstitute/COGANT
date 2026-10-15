@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from cogant.static.parser import AssignmentDef, FunctionDef, PythonASTParser
+from cogant.static.parser import PythonASTParser
 from cogant.static.symbols import SymbolExtractor
 
 logger = logging.getLogger(__name__)
@@ -340,68 +340,6 @@ class TypeInferencer:
         )
 
     # ------------------------------------------------------------------
-    # Removed single-item helpers retained for backwards compatibility
-    # ------------------------------------------------------------------
-
-    def _infer_function_return_type(self, func: FunctionDef, symbol_table: Any) -> TypeInfo | None:
-        """Infer return type of a function from a parser FunctionDef."""
-        symbol = next((s for s in symbol_table.symbols if s.name == func.name), None)
-        if symbol is None:
-            return None
-
-        annotation = func.return_annotation
-        inferred_type = annotation
-        confidence = 1.0 if annotation else 0.0
-
-        if inferred_type is None and any(d == "property" for d in func.decorators):
-            inferred_type = "Any"
-            confidence = 0.6
-
-        if inferred_type is None:
-            return None
-
-        return TypeInfo(
-            symbol_id=symbol.id,
-            symbol_name=symbol.name,
-            symbol_kind="function",
-            inferred_type=inferred_type,
-            annotation=annotation,
-            confidence=confidence,
-            metadata={"is_async": func.is_async},
-        )
-
-    def _infer_variable_type(self, assign: AssignmentDef, symbol_table: Any) -> TypeInfo | None:
-        """Infer type of a variable from a parser AssignmentDef."""
-        symbol = next(
-            (s for s in symbol_table.symbols if s.name == assign.target_name),
-            None,
-        )
-        if symbol is None:
-            return None
-
-        annotation = assign.annotation
-        inferred_type = annotation
-        confidence = 1.0 if annotation else 0.0
-
-        if inferred_type is None and assign.value:
-            inferred_type = self._infer_type_from_value(assign.value)
-            if inferred_type:
-                confidence = 0.7
-
-        if inferred_type is None:
-            return None
-
-        return TypeInfo(
-            symbol_id=symbol.id,
-            symbol_name=symbol.name,
-            symbol_kind="variable",
-            inferred_type=inferred_type,
-            annotation=annotation,
-            confidence=confidence,
-            metadata={"value": assign.value},
-        )
-
-    # ------------------------------------------------------------------
     # Utilities
     # ------------------------------------------------------------------
 
@@ -489,47 +427,6 @@ class TypeInferencer:
             return node.id
         if isinstance(node, ast.Attribute):
             return node.attr
-        return None
-
-    @staticmethod
-    def _infer_type_from_value(value: str | None) -> str | None:
-        """Try to infer type from the string repr of an assigned value.
-
-        Retained from the original implementation for callers using the
-        parser-level :class:`AssignmentDef`.
-        """
-        if not value:
-            return None
-
-        value = value.strip()
-        if value == "None":
-            return "None"
-        if value in {"True", "False"}:
-            return "bool"
-        if value.startswith("["):
-            return "list"
-        if value.startswith("{"):
-            return "dict" if ":" in value else "set"
-        if value.startswith("("):
-            return "tuple"
-        if value.startswith('"') or value.startswith("'"):
-            return "str"
-        if value.isdigit() or (len(value) > 1 and value[0] == "-" and value[1:].isdigit()):
-            return "int"
-        if "." in value and all(c.isdigit() or c == "." or c == "-" for c in value):
-            return "float"
-        for ctor in (
-            "dict(",
-            "list(",
-            "set(",
-            "tuple(",
-            "str(",
-            "int(",
-            "float(",
-            "bool(",
-        ):
-            if value.startswith(ctor):
-                return ctor[:-1]
         return None
 
     def _resolve_symbol_ids(self, infos: list[TypeInfo], symbol_table: Any) -> None:

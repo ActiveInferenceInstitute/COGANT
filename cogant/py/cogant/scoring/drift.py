@@ -209,7 +209,7 @@ class DriftAnalyzer:
         Compares node ids and ``(source, target, kind)`` edge keys
         between ``self.graph_a`` and ``self.graph_b``; endpoints come
         from ``source_id``/``target_id`` (the serialized program graph)
-        or the legacy ``source``/``target`` names. A node that exists in
+        or the orchestrator/Cytoscape ``source``/``target`` fields. A node that exists in
         both but compares non-equal at the dict level is counted as
         "changed" (the entire subdict must be identical to be stable,
         so cosmetic changes such as renamed labels flag as drift). Run
@@ -236,8 +236,8 @@ class DriftAnalyzer:
         nodes_b = {n.get("id"): n for n in nodes_list_b}
 
         # Edges are identified by (source, target, kind), read from the
-        # serialized ``source_id``/``target_id`` fields with the legacy
-        # ``source``/``target`` names as fallback. A multiset keeps
+        # API ``source_id``/``target_id`` fields or orchestrator/Cytoscape
+        # ``source``/``target`` fields. A multiset keeps
         # parallel edges distinct.
         edges_a = Counter(
             edge_key(e) for e in self._iter_graph_collection(self.graph_a.get("edges"))

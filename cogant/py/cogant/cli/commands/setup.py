@@ -102,8 +102,8 @@ def init(
     config_created = False
     if not config_file.exists():
         # Canonical ProjectConfig sections only, so the scaffold loads with
-        # ``cogant translate -c .cogant/config.json`` without legacy
-        # migration warnings or unknown-key errors.
+        # ``cogant translate -c .cogant/config.json`` with the current
+        # typed configuration contract.
         config_file.write_text(
             """{
   "schema_version": "1.0",

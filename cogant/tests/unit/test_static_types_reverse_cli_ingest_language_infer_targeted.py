@@ -4,7 +4,7 @@ ingest/language_detect, ingest/manifest deeper paths.
 
 Covers:
 - static/types.py: TypeInferencer._infer_literal_type, _infer_return_from_body,
-  _call_name, _infer_type_from_value, _annotation_to_str, _safe_unparse,
+  _call_name, _annotation_to_str, _safe_unparse,
   _resolve_symbol_ids, _infer_from_annassign, _infer_from_assign, _infer_from_class
 - reverse/cli.py: _render_plan_summary, _render_roundtrip_result
 - ingest/language_detect.py: detect_language, detect_repo_languages,
@@ -148,91 +148,6 @@ class TestCallName:
         node = ast.Constant(value=42)
         result = inf._call_name(node)
         assert result is None
-
-
-class TestInferTypeFromValue:
-    """Test TypeInferencer._infer_type_from_value static method."""
-
-    def _inferencer(self, tmp_path):
-        from cogant.static.types import TypeInferencer
-
-        return TypeInferencer(tmp_path)
-
-    def test_none_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value(None) is None
-
-    def test_empty_string(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("") is None
-
-    def test_none_literal(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("None") == "None"
-
-    def test_true_bool(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("True") == "bool"
-
-    def test_false_bool(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("False") == "bool"
-
-    def test_list_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("[1, 2, 3]") == "list"
-
-    def test_dict_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value('{"key": "val"}') == "dict"
-
-    def test_set_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("{1, 2, 3}") == "set"
-
-    def test_tuple_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("(1, 2)") == "tuple"
-
-    def test_str_value_double_quote(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value('"hello"') == "str"
-
-    def test_str_value_single_quote(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("'world'") == "str"
-
-    def test_int_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("42") == "int"
-
-    def test_negative_int_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("-5") == "int"
-
-    def test_float_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("3.14") == "float"
-
-    def test_list_ctor(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("list()") == "list"
-
-    def test_dict_ctor(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("dict()") == "dict"
-
-    def test_set_ctor(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("set()") == "set"
-
-    def test_tuple_ctor(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("tuple()") == "tuple"
-
-    def test_unknown_value(self, tmp_path):
-        inf = self._inferencer(tmp_path)
-        assert inf._infer_type_from_value("some_variable") is None
 
 
 class TestAnnotationToStr:

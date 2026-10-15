@@ -176,8 +176,8 @@ class CoverageIngester:
         """
         Parse .coverage file from coverage.py.
 
-        Line-mode (``line_bits``), branch-mode (``arc``) and the legacy
-        ``line`` schema are supported. Rows recorded under different
+        Line-mode (``line_bits``) and branch-mode (``arc``) schemas
+        are supported. Rows recorded under different
         dynamic contexts are merged, so each file appears once with the
         union of its executed lines.
 
@@ -270,18 +270,6 @@ class CoverageIngester:
                         executed_by_file.setdefault(filepath, set()).update(
                             n for n in (fromno, tono) if n > 0
                         )
-            elif "line" in tables:
-                # Older coverage.py schema with explicit line table
-                cursor.execute("SELECT id, path FROM file ORDER BY id")
-                file_rows = cursor.fetchall()
-                for file_id, filepath in file_rows:
-                    cursor.execute(
-                        "SELECT lineno FROM line WHERE file_id = ?",
-                        (file_id,),
-                    )
-                    executed_by_file.setdefault(filepath, set()).update(
-                        row[0] for row in cursor.fetchall()
-                    )
             else:
                 logger.warning(
                     f"Unrecognized coverage.py schema in {coverage_file}; "

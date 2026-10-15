@@ -91,7 +91,7 @@ class ValidationResult:
 
     @property
     def warnings(self) -> list[str]:
-        """Backward-compatible view of non-fatal validation advisories."""
+        """Current public view of non-fatal validation advisories."""
 
         return self.advisories
 

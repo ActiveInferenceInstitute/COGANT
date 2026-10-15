@@ -106,8 +106,8 @@ def _make_coverage_db_line_bits(tmp_path: Path) -> Path:
 
 
 def _make_coverage_db_line_table(tmp_path: Path) -> Path:
-    """Create an older coverage.py schema with an explicit line table."""
-    path = tmp_path / "old.coverage"
+    """Create an unsupported explicit-line SQLite input."""
+    path = tmp_path / "unsupported.coverage"
     conn = sqlite3.connect(str(path))
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE file (id INTEGER PRIMARY KEY, path TEXT)")
@@ -134,12 +134,13 @@ def test_ingest_coverage_py_line_bits_schema(tmp_path):
     assert data["summary"]["percent_covered"] is None
 
 
-def test_ingest_coverage_py_line_table_schema(tmp_path):
+def test_explicit_line_table_is_reported_unsupported(tmp_path, caplog):
     path = _make_coverage_db_line_table(tmp_path)
     data = CoverageIngester().ingest_coverage_py(str(path))
-    assert len(data["files"]) == 1
-    assert data["files"][0]["covered_lines"] == [10, 20, 30]
-    assert data["summary"]["covered_lines"] == 3
+    assert data["files"] == []
+    assert data["summary"]["covered_lines"] == 0
+    assert data["summary"]["percent_covered"] is None
+    assert "Unrecognized coverage.py schema" in caplog.text
 
 
 def test_ingest_coverage_py_missing_file_returns_empty(tmp_path):
