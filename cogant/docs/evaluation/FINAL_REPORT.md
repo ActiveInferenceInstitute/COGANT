@@ -11,7 +11,7 @@ GNN-style Active Inference artifacts, then synthesizing a Python package from
 that emitted GNN and measuring what survives a second forward pass.
 
 The current evidence supports a **scoped artifact-generation and role-preservation
-claim**. It also includes one deliberately minimal strict-roundtrip fixed point.
+claim**. No current native ledger row meets the strict structural contract.
 It does not support broad strict graph isomorphism, semantic equivalence for
 arbitrary programs, or calibrated behavioral modeling.
 
@@ -75,7 +75,7 @@ strict structural preservation.
 | Failure mode | Current status | Required improvement |
 | --- | --- | --- |
 | Scaffold-introduced roles on degenerate inputs | Current ledger has 0 DRIFT rows | Keep zero-origin controls rejected by freshness checks and promote the held-out pilot into metrics/claim gates |
-| Strict graph/matrix/section deltas | 1 strict success, confined to the minimal reversible fixture | Preserve node/edge counts, edge-kind distributions, GNN sections, and matrix values on ordinary fixtures |
+| Strict graph/matrix/section deltas | No strict successes in the current native ledger | Preserve node/edge counts, edge-kind distributions, GNN sections, and matrix values on ordinary fixtures |
 | Dynamic enrichment workflow | Implemented but operator-dependent | Add a complete trace-collection tutorial and fixture |
 | Held-out generalization | Not established | Freeze an unseen repository corpus and rerun the ledger |
 | Probability calibration | Not established | Build a reviewed gold corpus and calibrate confidence/matrix defaults |
@@ -105,7 +105,7 @@ uv run --directory cogant ruff check py/cogant tests
 uv run --directory cogant mypy py/cogant
 uv run python tools/check_metrics_fresh.py
 uv run python tools/audit_docs_constants.py
-uv run python tools/claim_ledger.py --manuscript-dir manuscript --output-dir /tmp/cogant_claim_ledger --fail-on-literal-numbers
+uv run python tools/claim_ledger.py --manuscript-dir manuscript --output-dir output/reports/claim_ledger --fail-on-literal-numbers
 uv run --directory cogant python docs/verify_doc_links.py
 uv run --directory cogant python docs/verify_manuscript_links.py
 ```

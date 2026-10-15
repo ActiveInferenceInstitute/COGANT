@@ -20,6 +20,11 @@ artifacts through a reproducible static-analysis pipeline:
 5. export GNN, JSON, GraphML, Parquet, HTML, and dashboard artifacts;
 6. validate generated artifacts and expose provenance.
 
+A separate [finite-model interface](../api/finite_models.md) compiles authored
+transition and observation tables into checked A/B/C/D matrices. Its coefficient
+checks and independent toggle/counter reference tests concern the declared model;
+they do not increase the repository roundtrip success counts.
+
 The project is strongest for Python static analysis and GNN export. JavaScript
 and TypeScript support exist as forward parsers and cross-language fixtures, but
 the native v0.6 release ledger is Python-centered.
@@ -82,5 +87,5 @@ uv run python tools/audit_manuscript_crossrefs.py
 uv run python tools/audit_manuscript_citations.py
 uv run --directory cogant python docs/verify_doc_links.py
 uv run --directory cogant python docs/verify_manuscript_links.py
-uv run python tools/claim_ledger.py --manuscript-dir manuscript --output-dir /tmp/cogant_claim_ledger --fail-on-literal-numbers
+uv run python tools/claim_ledger.py --manuscript-dir manuscript --output-dir output/reports/claim_ledger --fail-on-literal-numbers
 ```
