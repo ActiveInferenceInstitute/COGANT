@@ -5,8 +5,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## Unreleased
-
 ### Added
 - Explicit finite generative-model declarations, immutable A/B/C/D compilation,
   coefficient and source-identity verification, and a runtime handoff that copies
