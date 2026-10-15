@@ -93,6 +93,19 @@ with an external environment.
 
 ## Mathematical and scientific interpretation
 
+For a single persisted example that also records the current repository
+roundtrip verdict, run from the inner package root:
+
+```bash
+uv run python scripts/repository_inference.py \
+  examples/control_positive/calculator --output output/repository_execution
+```
+
+The output directory must be new. It retains translation logs, the forward
+package and typed inference trace, roundtrip intermediates and JSON, and a
+report identifying the `model_rollout` scope. A failed translation or roundtrip
+exits nonzero; role preservation is not promoted to strict isomorphism.
+
 Filtering uses the incoming predicted prior and the observed likelihood.
 VFE at the exact represented posterior equals negative log observation
 evidence. It need not decrease monotonically across changing observations

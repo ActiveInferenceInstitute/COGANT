@@ -122,9 +122,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   advertised figure was inaccurate. Test counts re-verified unchanged: **9561 passing /
   0 failing / 52 skipped** (9613 collected).
 - `GNNBundle` de-duplicated in `cogant.__all__`.
-- `scripts/empirical_claim_demo.py`: roundtrip JSON extraction rewritten to
-  `json.JSONDecoder().raw_decode` (the prior first-`}` match truncated nested JSON and
-  crashed the demo with exit 1; it now runs to completion).
 - Documentation accuracy corrections: `py/cogant/graph/AGENTS.md`
   (`finalize()`/`queries.py`), `py/cogant/gnn/AGENTS.md` (`formatter/` package; 16
   required files), `py/cogant/viz/AGENTS.md` (21 viz modules incl. `ablation_view.py`),

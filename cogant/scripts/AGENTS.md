@@ -6,12 +6,12 @@ Runtime Lead (thin orchestrators)
 
 ## Responsibilities
 
-Repository-level helper scripts that are not part of `cogant` package imports. Currently includes demonstration or analysis drivers (for example empirical claim demos).
+Repository-level orchestration scripts that use public COGANT APIs and persist inspectable artifacts.
 
 ## Coordination
 
-Business logic stays in `py/cogant/`; scripts coordinate only. Run from repository root with `uv run python cogant/scripts/<name>.py` as documented per script.
+Business logic stays in `py/cogant/`; scripts coordinate only. Run from the inner package root with `uv run python scripts/<name>.py` as documented per script.
 
 ## Files
 
-- `empirical_claim_demo.py` — empirical claim demonstration driver.
+- `repository_inference.py` — source translation, typed model rollout and independent roundtrip evidence; requires a new output directory.

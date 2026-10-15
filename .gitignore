@@ -33,6 +33,9 @@ cogant/*
 !cogant/py/
 !cogant/tests/
 !cogant/examples/
+!cogant/scripts/
+cogant/scripts/*
+!cogant/scripts/repository_inference.py
 !cogant/benchmarks/
 cogant/benchmarks/*
 !cogant/benchmarks/results/
