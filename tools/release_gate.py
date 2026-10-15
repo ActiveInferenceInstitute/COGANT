@@ -79,7 +79,14 @@ def build_steps(*, include_tests: bool = True) -> list[GateStep]:
         steps.append(
             _step(
                 "package-tests",
-                ("uv", "run", "pytest", "tests/", "-q"),
+                (
+                    "uv",
+                    "run",
+                    "pytest",
+                    "tests/",
+                    "-q",
+                    f"--cov-report=json:{ROOT / 'output' / 'reports' / 'package_coverage.json'}",
+                ),
                 cwd=INNER,
                 timeout_seconds=1_800,
             )
