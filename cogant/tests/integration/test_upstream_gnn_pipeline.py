@@ -133,7 +133,11 @@ def test_cogant_package_passes_upstream_validation_steps(
         pytest.skip(f"upstream gnn.main not importable: {result.error}")
     assert result.error is None
     statuses = {s.script: s.status for s in result.steps}
-    assert all(s.success for s in result.steps), statuses
+    assert all(s.success for s in result.steps), (
+        statuses,
+        result.to_dict(),
+        (out / "upstream_pipeline.log").read_text(encoding="utf-8")[-8000:],
+    )
     assert result.upstream_status in {"SUCCESS", "SUCCESS_WITH_WARNINGS"}
 
 

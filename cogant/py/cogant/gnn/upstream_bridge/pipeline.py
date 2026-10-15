@@ -423,6 +423,7 @@ def _child_env(cfg: UpstreamPipelineConfig) -> dict[str, str]:
     """Environment for the upstream child; the caller's env is not mutated."""
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
+    env["PYTHONSAFEPATH"] = "1"
     # Let upstream mint a fresh invocation ID: an inherited ID or run-context
     # file would claim an unrelated run's identity.
     env.pop("GNN_RUN_ID", None)

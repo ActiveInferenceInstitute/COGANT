@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -278,6 +279,37 @@ def test_child_env_scopes_llm_model_and_drops_inherited_run_identity(
     assert "GNN_RUN_ID" not in env and "GNN_RUN_CONTEXT_FILE" not in env
     assert "OLLAMA_MODEL" not in os.environ
     assert os.environ["GNN_RUN_ID"] == "stale-run"
+
+
+def test_upstream_worker_cannot_shadow_standard_library_types(tmp_path: Path) -> None:
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    (tmp_path / "types.py").write_text('raise RuntimeError("stdlib-shadow")\n', encoding="utf-8")
+    worker = tmp_path / "worker.py"
+    worker.write_text("import types\nprint(types.GenericAlias.__module__)\n", encoding="utf-8")
+    cfg = UpstreamPipelineConfig(target_dir=tmp_path, output_dir=tmp_path / "out")
+    environment = pipeline_mod._child_env(cfg)
+    unsafe = environment.copy()
+    unsafe.pop("PYTHONSAFEPATH", None)
+    control = subprocess.run(
+        [sys.executable, "-S", str(worker)],
+        env=unsafe,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert control.returncode != 0
+    assert "stdlib-shadow" in control.stderr
+
+    result = subprocess.run(
+        [sys.executable, "-S", str(worker)],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "types"
 
 
 def test_stage_target_dir_stages_only_gnn_markdown(tmp_path: Path) -> None:
