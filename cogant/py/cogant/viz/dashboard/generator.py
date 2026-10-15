@@ -700,7 +700,7 @@ class DashboardGenerator:
 
             stages_rows += f"""
             <tr>
-                <td><code>{html.escape(stage.name[:20])}</code></td>
+                <td><code>{html.escape(stage.name)}</code></td>
                 <td>{html.escape(stage.description or "-")[:40]}</td>
                 <td>{len(stage.node_ids)}</td>
                 <td>{preds[:30]}</td>
@@ -755,7 +755,7 @@ class DashboardGenerator:
         total_stages = len(stages)
 
         gantt_html = '<div class="gantt-container">'
-        gantt_html += '<div class="gantt-header">Timeline</div>'
+        gantt_html += '<div class="gantt-header">Stage order</div>'
 
         for i, stage in enumerate(stages):
             width_pct = 95 / total_stages if total_stages > 0 else 0
@@ -764,11 +764,11 @@ class DashboardGenerator:
 
             gantt_html += f"""
             <div class="gantt-bar" style="left: {left_pct}%; width: {width_pct}%; background: {color};">
-                <span class="gantt-label">{html.escape(stage.name[:15])}</span>
+                <span class="gantt-label" title="{html.escape(stage.name)}">{html.escape(stage.name)}</span>
             </div>
 """
 
-        gantt_html += "</div>"
+        gantt_html += "</div><p>Equal-width slots show declared stage order, not measured execution time. Full names appear in the stage table.</p>"
 
         gantt_css = """
         <style>
@@ -810,6 +810,10 @@ class DashboardGenerator:
             }
 
             .gantt-label {
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
                 color: white;
                 font-size: 0.85em;
                 font-weight: bold;

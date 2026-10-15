@@ -43,6 +43,9 @@ children allow shrinking so intrinsic table widths cannot expand the document.
   selected policy score, posterior energy and probabilities. Bound display size
   and state every truncation explicitly.
 - Identity block: source and matrix digests, mode, objective and horizon.
+- Stage-order strip: equal-width ordinal slots, explicitly distinguished from
+  measured durations. Labels ellipsize within slots; titles and the stage table
+  preserve complete names.
 - Empty state: no trace available. Present invalid evidence raises an error before
   HTML generation; no fabricated empty-success state.
 
