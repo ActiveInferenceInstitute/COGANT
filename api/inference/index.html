@@ -3534,6 +3534,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fixed-policy-preference-sensitivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed-policy preference sensitivity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#stored-traces-and-figures" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10606,6 +10617,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/differentiable_programming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12566,6 +12605,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fixed-policy-preference-sensitivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed-policy preference sensitivity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#stored-traces-and-figures" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12600,6 +12650,9 @@
 <p>COGANT runs complete A/B/C/D matrices directly from GNN Markdown. This route
 uses the same categorical kernel as the package runner, simulation, and generated
 matrix modules. It does not execute generated Python.</p>
+<p>When compiled observation channels are present, A rows and C entries follow their order.
+Mappings spanning multiple graph nodes expand into those distinct channels;
+repeated mappings to one node do not add duplicate matrix rows.</p>
 <p>From the inner package root:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>cogant<span class="w"> </span>translate<span class="w"> </span>examples/control_positive/calculator<span class="w"> </span>-o<span class="w"> </span>output/calculator<span class="w"> </span>--no-dynamic<span class="w"> </span>--layout-output
 uv<span class="w"> </span>run<span class="w"> </span>cogant<span class="w"> </span>infer<span class="w"> </span>output/calculator/gnn_package/model.gnn.md<span class="w"> </span>--steps<span class="w"> </span><span class="m">8</span><span class="w"> </span>-o<span class="w"> </span>output/calculator/data/inference_trace.json
@@ -12637,6 +12690,25 @@ in the kernel does not make this interface an optimal long-horizon planner.</p>
 work is steps times actions times (states squared plus states times observations).
 <code>InferenceOptions.max_work_units</code> and CLI <code>--max-work-units</code> admit a bounded run.
 Parser allocation limits apply before execution.</p>
+<h2 id="fixed-policy-preference-sensitivity">Fixed-policy preference sensitivity</h2>
+<p>To inspect how the existing policy objective changes with C, load the same
+GNN matrices through the parsed-model interface:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">cogant.reverse.callable</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatrixFunctions</span>
+
+<span class="n">functions</span> <span class="o">=</span> <span class="n">MatrixFunctions</span><span class="o">.</span><span class="n">from_gnn_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="n">gradient</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">score_preference_gradient</span><span class="p">(</span><span class="n">functions</span><span class="o">.</span><span class="n">prior</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</code></pre></div>
+<p>The returned vector follows the C observation axis. For normalized outcomes
+and a fixed H-action sequence, it is <code>H * softmax(C) - sum_t predicted_outcomes_t</code>.
+The implementation retains the actual outcome mass admitted within stochastic
+column tolerance. It holds A, B, beliefs, and every supplied action fixed,
+changes no parameters, and rejects empty policies or invalid axes.</p>
+<p><code>CategoricalModel</code> and generated standalone <code>matrices.py</code> modules expose the
+same <code>score_preference_gradient</code> method/helper. It differentiates the model
+objective with respect to log preferences; it does not differentiate selected
+actions, the extraction pipeline, or original program execution. See the
+<a href="../../rnd/differentiable_programming/">DiffProg review</a> for the derivation,
+primary sources, verification design, and research proposals.</p>
 <h2 id="stored-traces-and-figures">Stored traces and figures</h2>
 <p><code>write_inference_trace_artifact(run_dir, steps=8)</code> reads the run's
 <code>gnn_package/model.gnn.md</code> and writes <code>data/inference_trace.json</code> when the data

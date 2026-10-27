@@ -10534,6 +10534,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/differentiable_programming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -15549,7 +15577,7 @@
 <h2 id="4-gnn-tooling-and-notation-generalized-notation-notation">4. GNN Tooling and Notation (Generalized Notation Notation)</h2>
 <p><strong>Scope:</strong> The Active Inference Institute's Generalized Notation Notation (GNN) standard, which is the <em>output format</em> of COGANT. GNN here is a human-readable scientific notation, not graph neural networks.</p>
 <h3 id="smekal2023gnn-smekal-friedman-et-al-2023-generalized-notation-notation-a-text-based-format-for-active-inference-generative-models-details-need-verification">[smekal2023gnn] Smekal, Friedman et al. (2023) — "Generalized Notation Notation: A Text-Based Format for Active Inference Generative Models" (details need verification)</h3>
-<p><strong>Relevance</strong>: The specification lineage for the GNN format. COGANT's optional upstream check uses the <code>generalized-notation-notation</code> reference implementation pinned to its 4.1.0 release line (import package <code>gnn</code>); COGANT's own header value <code>GNN v2.0.0</code> is COGANT's schema identifier, not the upstream release. Every COGANT output is a GNN bundle validated against this required-section surface plus COGANT's own package invariants.
+<p><strong>Relevance</strong>: The specification lineage for the GNN format. COGANT's optional upstream check uses the <code>generalized-notation-notation</code> reference implementation pinned to its v5.0.1 release (import package <code>gnn</code>); COGANT's own header value <code>GNN v2.0.0</code> is COGANT's schema identifier, not the upstream release. Every COGANT output is a GNN bundle validated against this required-section surface plus COGANT's own package invariants.
 <strong>Key contribution</strong>: A Markdown-structured, section-based syntax for declaring state variables, observations, actions, matrices (A/B/C/D), time horizons, and Markov blankets in a form that is both human-readable and machine-parseable.
 <strong>Connection</strong>: COGANT emits GNN bundles whose upstream header is checked against the pinned upstream validator, with COGANT extension sections below it. The <code>GNNValidator</code> in <code>py/cogant/gnn/validator.py</code> checks the upstream section order, the COGANT package sidecars, matrix consistency, and, when explicitly enabled, upstream <code>gnn.validate_gnn_syntax</code> results through the bridge; <code>GNN_VALIDATION_REPORT.md</code> tracks the current compliance boundary.</p>
 <h3 id="activeinferenceinstitute2022gnn-active-inference-institute-20222026-generalized-notation-notation-reference-implementation-and-examples">[activeInferenceInstitute2022gnn] Active Inference Institute (2022–2026) — "Generalized Notation Notation Reference Implementation and Examples"</h3>

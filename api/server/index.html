@@ -10900,6 +10900,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/differentiable_programming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -13309,7 +13337,7 @@ zip plus a small metadata envelope.</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"package_zip_b64"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UEsDBBQAAAAIAA..."</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"file_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"cogant_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.7.0"</span>
+<span class="w">  </span><span class="nt">"cogant_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.8.0"</span>
 <span class="p">}</span>
 </code></pre></div>
 <p><code>package_zip_b64</code> decodes to a standard zip containing the same module
@@ -13410,7 +13438,10 @@ docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> 
 </tbody>
 </table>
 <h2 id="authentication-security">Authentication &amp; Security</h2>
-<p>v0.7.0 <strong>does not</strong> ship token-based authentication. Treat the packaged server as a local demo or an internal service that sits behind infrastructure you control. The application implements:</p>
+<p>The packaged server binds to loopback by default. Configuring a non-loopback
+bind requires an authentication token. When a token is configured, non-public
+routes require an <code>Authorization: Bearer ...</code> header. This is a local analysis
+service, not a sandbox for arbitrary code. The application also implements:</p>
 <ul>
 <li><strong>Rate limiting</strong> (configurable via <code>COGANT_RATE_LIMIT</code> env var): 100 requests/minute per IP by default.</li>
 <li><strong>CORS middleware</strong> (default: all origins allowed; tighten via <code>COGANT_CORS_ORIGINS</code>).</li>

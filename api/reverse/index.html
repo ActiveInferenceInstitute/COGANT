@@ -3456,6 +3456,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cogant.reverse.MatrixFunctions.score_preference_gradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        score_preference_gradient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cogant.reverse.MatrixFunctions.best_action" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3981,6 +3992,17 @@
     <span class="md-ellipsis">
       
         prior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cogant.reverse.callable.MatrixFunctions.score_preference_gradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        score_preference_gradient
       
     </span>
   </a>
@@ -11748,6 +11770,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/differentiable_programming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -13798,6 +13848,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cogant.reverse.MatrixFunctions.score_preference_gradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        score_preference_gradient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cogant.reverse.MatrixFunctions.best_action" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14323,6 +14384,17 @@
     <span class="md-ellipsis">
       
         prior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cogant.reverse.callable.MatrixFunctions.score_preference_gradient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        score_preference_gradient
       
     </span>
   </a>
@@ -15081,7 +15153,11 @@ strict invariant tier says they did.</p>
 <span class="normal">70</span>
 <span class="normal">71</span>
 <span class="normal">72</span>
-<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MatrixFunctions</span><span class="p">:</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MatrixFunctions</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Copied source matrices with categorical filtering and policy operations."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">ReverseGNNModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -15127,6 +15203,10 @@ strict invariant tier says they did.</p>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_free_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Evaluate one-step outcome risk plus expected likelihood ambiguity."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical</span><span class="p">()</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">state_dist</span><span class="p">,</span> <span class="p">[</span><span class="n">action</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">score_preference_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">policy</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return fixed-policy score sensitivity along the C observation axis."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical</span><span class="p">()</span><span class="o">.</span><span class="n">score_preference_gradient</span><span class="p">(</span><span class="n">state_dist</span><span class="p">,</span> <span class="n">policy</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">best_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return argmin EFE over the declared action axis."""</span>
@@ -15218,6 +15298,33 @@ strict invariant tier says they did.</p>
 <div class="doc doc-object doc-function">
 
 
+<h4 id="cogant.reverse.MatrixFunctions.score_preference_gradient" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">score_preference_gradient</span><span class="p">(</span><span class="n">state_dist</span><span class="p">,</span> <span class="n">policy</span><span class="p">)</span></code>
+
+</h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return fixed-policy score sensitivity along the C observation axis.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>py/cogant/reverse/callable.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">score_preference_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">policy</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return fixed-policy score sensitivity along the C observation axis."""</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical</span><span class="p">()</span><span class="o">.</span><span class="n">score_preference_gradient</span><span class="p">(</span><span class="n">state_dist</span><span class="p">,</span> <span class="n">policy</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h4 id="cogant.reverse.MatrixFunctions.best_action" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">best_action</span><span class="p">(</span><span class="n">state_dist</span><span class="p">)</span></code>
 
@@ -15231,18 +15338,18 @@ strict invariant tier says they did.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/reverse/callable.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">61</span>
 <span class="normal">62</span>
 <span class="normal">63</span>
 <span class="normal">64</span>
 <span class="normal">65</span>
 <span class="normal">66</span>
 <span class="normal">67</span>
-<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">best_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">best_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return argmin EFE over the declared action axis."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_actions</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"policy selection requires at least one action"</span><span class="p">)</span>
@@ -23276,7 +23383,11 @@ No code generation, no <code>exec()</code> — plain Python function calls.</p>
 <span class="normal">70</span>
 <span class="normal">71</span>
 <span class="normal">72</span>
-<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MatrixFunctions</span><span class="p">:</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MatrixFunctions</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Copied source matrices with categorical filtering and policy operations."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">ReverseGNNModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -23322,6 +23433,10 @@ No code generation, no <code>exec()</code> — plain Python function calls.</p>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_free_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Evaluate one-step outcome risk plus expected likelihood ambiguity."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical</span><span class="p">()</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">state_dist</span><span class="p">,</span> <span class="p">[</span><span class="n">action</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">score_preference_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">policy</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return fixed-policy score sensitivity along the C observation axis."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical</span><span class="p">()</span><span class="o">.</span><span class="n">score_preference_gradient</span><span class="p">(</span><span class="n">state_dist</span><span class="p">,</span> <span class="n">policy</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">best_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return argmin EFE over the declared action axis."""</span>
@@ -23372,18 +23487,18 @@ No code generation, no <code>exec()</code> — plain Python function calls.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/reverse/callable.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">61</span>
 <span class="normal">62</span>
 <span class="normal">63</span>
 <span class="normal">64</span>
 <span class="normal">65</span>
 <span class="normal">66</span>
 <span class="normal">67</span>
-<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">best_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">best_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return argmin EFE over the declared action axis."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_actions</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"policy selection requires at least one action"</span><span class="p">)</span>
@@ -23449,6 +23564,33 @@ No code generation, no <code>exec()</code> — plain Python function calls.</p>
 <span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">prior</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Return D vector (initial state prior)."""</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_D</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="cogant.reverse.callable.MatrixFunctions.score_preference_gradient" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">score_preference_gradient</span><span class="p">(</span><span class="n">state_dist</span><span class="p">,</span> <span class="n">policy</span><span class="p">)</span></code>
+
+</h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return fixed-policy score sensitivity along the C observation axis.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>py/cogant/reverse/callable.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">score_preference_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">policy</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return fixed-policy score sensitivity along the C observation axis."""</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical</span><span class="p">()</span><span class="o">.</span><span class="n">score_preference_gradient</span><span class="p">(</span><span class="n">state_dist</span><span class="p">,</span> <span class="n">policy</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -27000,7 +27142,12 @@ matrices module.</p>
 <span class="normal">174</span>
 <span class="normal">175</span>
 <span class="normal">176</span>
-<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_matrices_module</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">ReverseGNNModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_matrices_module</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">ReverseGNNModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Embed the shared stdlib categorical kernel with the exact source matrices."""</span>
     <span class="n">_validate_matrix_semantics</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">kernel</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">categorical</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"from __future__ import annotations</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
@@ -27031,6 +27178,11 @@ matrices module.</p>
 
 <span class="s2">def expected_free_energy(state_dist: list[float], action: int) -&gt; float:</span>
 <span class="s2">    return CategoricalModel(A, B, C, D).score(state_dist, [action])</span>
+
+
+<span class="s2">def score_preference_gradient(state_dist: list[float], policy: list[int]) -&gt; list[float]:</span>
+<span class="s2">    '''Return fixed-policy score sensitivity along the C observation axis.'''</span>
+<span class="s2">    return CategoricalModel(A, B, C, D).score_preference_gradient(state_dist, policy)</span>
 
 
 <span class="s2">def best_action(state_dist: list[float]) -&gt; int:</span>

@@ -10534,6 +10534,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/differentiable_programming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -12737,7 +12765,7 @@
 <h2 id="active-inference-and-the-free-energy-principle">Active Inference and the Free Energy Principle</h2>
 <p>COGANT targets the Active Inference Institute's Generalized Notation Notation, and its theoretical substrate is the Free Energy Principle (FEP) as stated by Friston (2010) and elaborated in the Parr, Pezzulo, and Friston (2022) textbook. The discrete-time POMDP formulation — with A, B, C, D matrices and an explicit variational free energy functional — is the reference that COGANT's <code>statespace</code> and <code>process</code> stages derive from program graphs. Da Costa et al. (2020) provide the synthesis paper whose pseudocode COGANT's implementation most closely tracks, and Friston, Kilner, and Harrison (2006) remain the reference for the accuracy-complexity decomposition that informally motivates COGANT's confidence tiers. The claim COGANT instantiates — that a codebase implicitly specifies a generative model whose hidden states, observations, and policies can be read off by static analysis — is a software-engineering instance of FEP, not a novel theoretical commitment. COGANT does not compute free energy at runtime; it represents the generative model in a form downstream active-inference tools can consume.</p>
 <h2 id="generalized-notation-notation">Generalized Notation Notation</h2>
-<p>COGANT's output format is the Active Inference Institute's Generalized Notation Notation, whose reference implementation is the <code>generalized-notation-notation</code> package (optionally installed and pinned to its 4.1.0 release line): a Markdown-structured, section-based notation declaring state variables, observations, actions, matrices, time horizons, equations, and Markov blankets. Every COGANT fixture is scored by COGANT's package validator, which checks the emitted markdown sections, JSON package structure, A/B/C/D matrix validity, state-space alignment, provenance, and checksums; upstream AII validation and pipeline checks run through the <code>cogant.gnn.upstream_bridge</code> facade only when the optional <code>upstream</code> extra is installed and the check is requested. Champion, Grześ, and Bowman's branching-time active inference (approx. 2022) extends GNN to hierarchical branching models; COGANT currently emits only flat GNN, but the scoping report identifies branching-time extraction as a v0.2 goal.</p>
+<p>COGANT's output format is the Active Inference Institute's Generalized Notation Notation, whose reference implementation is the <code>generalized-notation-notation</code> package (optionally installed and pinned to its v5.0.1 release): a Markdown-structured, section-based notation declaring state variables, observations, actions, matrices, time horizons, equations, and Markov blankets. Every COGANT fixture is scored by COGANT's package validator, which checks the emitted markdown sections, JSON package structure, A/B/C/D matrix validity, state-space alignment, provenance, and checksums; upstream AII validation and pipeline checks run through the <code>cogant.gnn.upstream_bridge</code> facade only when the optional <code>upstream</code> extra is installed and the check is requested. Champion, Grześ, and Bowman's branching-time active inference (approx. 2022) extends GNN to hierarchical branching models; COGANT currently emits only flat GNN, but the scoping report identifies branching-time extraction as a v0.2 goal.</p>
 <h2 id="program-synthesis-and-reverse-engineering">Program Synthesis and Reverse Engineering</h2>
 <p>The <code>cogant.reverse</code> module is a program synthesizer, and the SyGuS framework of Alur et al. (2013) gives the clearest statement of the problem class: synthesis from a formal specification together with a grammar constraining the output. COGANT specializes this to the case where the grammar is Python's AST and the specification is a GNN bundle. Because the forward extract function is deterministic and rule-based, reverse synthesis is strictly simpler than general SyGuS whenever the GNN came from <code>extract</code> — it is essentially an inversion problem. Solar-Lezama's sketching paradigm (2008) frames the more interesting case in which the GNN has been hand-edited or partially authored: the reverse output is a skeleton with holes, and filling them is sketch completion. Gulwani's FlashFill (2011) and Seshia's oracle-guided synthesis survey (2015) complete the picture of the synthesis landscape COGANT reverses into.</p>
 <h2 id="markov-blankets-beyond-biology">Markov Blankets Beyond Biology</h2>

@@ -10534,6 +10534,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rnd/differentiable_programming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -11096,6 +11124,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#current-compatibility-2026-10-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Compatibility (2026-10-26)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependency-scan-for-cogant-080-2026-10-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency Scan for COGANT 0.8.0 (2026-10-27)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#claims-kept-separate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11129,10 +11179,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-result-2026-10-15" class="md-nav__link">
+  <a href="#historical-result-2026-10-15" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Result (2026-10-15)
+        Historical Result (2026-10-15)
       
     </span>
   </a>
@@ -11151,10 +11201,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-boundary" class="md-nav__link">
+  <a href="#historical-boundary-410" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Boundary
+        Historical Boundary (4.1.0)
       
     </span>
   </a>
@@ -12621,6 +12671,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#current-compatibility-2026-10-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Compatibility (2026-10-26)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependency-scan-for-cogant-080-2026-10-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency Scan for COGANT 0.8.0 (2026-10-27)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#claims-kept-separate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12654,10 +12726,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-result-2026-10-15" class="md-nav__link">
+  <a href="#historical-result-2026-10-15" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Result (2026-10-15)
+        Historical Result (2026-10-15)
       
     </span>
   </a>
@@ -12676,10 +12748,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-boundary" class="md-nav__link">
+  <a href="#historical-boundary-410" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Boundary
+        Historical Boundary (4.1.0)
       
     </span>
   </a>
@@ -12709,7 +12781,7 @@
 <h1 id="gnn-upstream-audit-surface">GNN Upstream Audit Surface</h1>
 <p>This page records the verifier boundary for COGANT's optional integration with
 the Active Inference Institute <code>generalized-notation-notation</code> package, and the
-results recorded against the currently pinned upstream release.</p>
+current compatibility scope. Dated earlier results are retained separately.</p>
 <h2 id="pinned-upstream-release">Pinned Upstream Release</h2>
 <table>
 <thead>
@@ -12725,15 +12797,15 @@ results recorded against the currently pinned upstream release.</p>
 </tr>
 <tr>
 <td>Pin (<code>cogant/pyproject.toml</code>, mirrored in <code>cogant/uv.lock</code>)</td>
-<td><code>46459949944e3217f8a6a804d4ff8c52829ef275</code> (upstream <code>main</code> on 2026-10-15)</td>
+<td><code>e54813b4197df36f7ae0054d5e79f3ad2d5db0ff</code></td>
 </tr>
 <tr>
 <td>Distribution version / <code>gnn.__version__</code></td>
-<td><code>4.1.0</code> / <code>4.1.0</code></td>
+<td><code>5.0.1</code> / <code>5.0.1</code></td>
 </tr>
 <tr>
 <td>Release tag</td>
-<td><code>v4.1.0</code> at <code>9255e19f951d4c9c1461514464d420bd3fc8b912</code>; the pin is 13 commits past the tag</td>
+<td><a href="https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.1">v5.0.1</a>, published 2026-10-25; annotated tag <code>35e71d1a6f109f6e0d08fda2acd5a94376482cf4</code>, peeled to the exact pinned commit</td>
 </tr>
 <tr>
 <td>Import package</td>
@@ -12749,6 +12821,45 @@ results recorded against the currently pinned upstream release.</p>
 <code>model.gnn.md</code> is COGANT's own schema identifier
 (<code>cogant.schema.versions.CURRENT_GNN_VERSION</code>). It is independent of the
 upstream package release above.</p>
+<h2 id="current-compatibility-2026-10-26">Current Compatibility (2026-10-26)</h2>
+<p>The latest published, non-prerelease GNN release at review time was v5.0.1.
+The installed source's PEP 610 record, lockfile, and peeled release tag all
+resolved to the exact commit above; distribution and engine versions were
+both <code>5.0.1</code>. Upstream's default branch had moved beyond that release and is
+not used as the dependency target.</p>
+<p>On CPython 3.13.17 with the locked <code>all</code> and <code>upstream</code> extras, a freshly
+translated calculator package passed COGANT package validation and upstream
+single-file validation at <code>standard</code> and <code>strict</code>. The audit helper's
+<code>--strict-version --strict-upstream</code> collection passed all 20 selected steps
+with <code>SUCCESS_WITH_WARNINGS</code> overall. The selection excluded setup, upstream
+tests, render, execute, and LLM steps (<code>1, 2, 11, 12, 13</code>). Warnings retained
+missing render/execute prerequisites and optional capabilities. No supply-chain
+scan was run in this review; the older scan results below do not apply to this
+environment.</p>
+<p>The retained <a href="../gnn_v5_0_1_compatibility.json">machine-readable compatibility receipt</a>
+records exact source identities, selected steps, validator results, and the
+unscanned supply-chain lane. Raw run paths in that receipt locate this local
+collection; the JSON is a dated compatibility record, not a portable runtime.</p>
+<p>The installed-release regression compares distribution/import versions and
+PEP 610 source identity to <code>uv.lock</code>. A subprocess regression runs the actual
+COGANT bridge with an importable retired namespace present, verifying that
+only the installed top-level provider determines availability and version.
+Existing real pipeline tests also exercised parsing, typing, and validation
+on a package emitted by the current formatter.</p>
+<p>The release adds numerical witnesses, an offline inspector, and bounded file
+workers. Updating the parser/pipeline dependency does not establish admission
+of every COGANT-derived model to a witness or validate source-program behavior.
+See the <a href="../../rnd/differentiable_programming/">DiffProg review</a> for scoped
+connections and further admission requirements.</p>
+<h2 id="dependency-scan-for-cogant-080-2026-10-27">Dependency Scan for COGANT 0.8.0 (2026-10-27)</h2>
+<p>The <a href="../dependency_audit_0_8_0.json">separate dependency-scan receipt</a> records the
+locked <code>all</code> + <code>upstream</code> environment after upgrading certifi from 2026.7.22 to
+2026.10.23 for <a href="https://github.com/advisories/GHSA-6q48-6c7w-9gw2">GHSA-6q48-6c7w-9gw2</a>.
+No known vulnerabilities were returned for the registry packages audited.
+COGANT and GNN themselves were excluded because their installed versions have
+no PyPI advisory records. Their source identity and compatibility are checked
+separately; the scan does not establish advisory coverage for those packages.
+The 2026-10-26 receipt's unscanned lane remains unchanged.</p>
 <h2 id="claims-kept-separate">Claims Kept Separate</h2>
 <ol>
 <li><strong>Version currentness.</strong> The installed upstream commit (PEP 610
@@ -12860,7 +12971,7 @@ pale red marks a step upstream ran outside the bridge selection (a hard
 prerequisite); grey marks a step that did not run. This is a visual claim
 ledger, not a decorative figure: if the all-step lane is red, the docs must not
 say that COGANT's package fully executes through every selected upstream step.</p>
-<h2 id="current-result-2026-10-15">Current Result (2026-10-15)</h2>
+<h2 id="historical-result-2026-10-15">Historical Result (2026-10-15)</h2>
 <p>The pinned commit <code>46459949944e3217f8a6a804d4ff8c52829ef275</code> was verified on
 CPython 3.12 with the locked <code>all</code> and <code>upstream</code> extras. Strict version,
 selected-upstream, and supply-chain gates passed; all 20 selected steps
@@ -13090,8 +13201,8 @@ excluded by <code>skip_llm=True</code>):</p>
   2.6.3) came from an environment built from the pre-refresh lock; the
   refreshed lock resolves newer releases of every one of them.</li>
 </ul>
-<h2 id="current-boundary">Current Boundary</h2>
-<p>Against the pinned 4.1.0 release line, COGANT's validation, type-check,
+<h2 id="historical-boundary-410">Historical Boundary (4.1.0)</h2>
+<p>Against the former 4.1.0 release-line pin, COGANT's validation, type-check,
 export, visualization, roundtrip, and runner paths pass, the generated
 calculator model passes upstream validation at <code>standard</code> and <code>strict</code>, and
 every selected upstream step succeeds. Render and execute (<code>11</code>/<code>12</code>) are off
