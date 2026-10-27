@@ -7,8 +7,8 @@ This page records the current evaluation posture for release-facing readers.
 | Metric | Value |
 | --- | ---: |
 | Version | 0.8.0 |
-| Tests | 10,019 passing / 0 failing / 49 skipped |
-| Coverage | 94.59% |
+| Tests | `testing.test_count_*` in [METRICS.yaml](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/evaluation/METRICS.yaml) |
+| Coverage | `testing.coverage_percent` in METRICS.yaml |
 | mypy strict errors | 0 |
 | ruff violations | 0 |
 | Runner stages | 10 |

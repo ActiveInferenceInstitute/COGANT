@@ -20,8 +20,8 @@ arbitrary programs, or calibrated behavioral modeling.
 | Metric | Current value |
 | --- | ---: |
 | Package version | 0.8.0 |
-| Test count | 10,019 passing / 0 failing / 49 skipped |
-| Coverage | 94.59% |
+| Test count | `testing.test_count_*` in the linked METRICS.yaml |
+| Coverage | `testing.coverage_percent` in METRICS.yaml |
 | mypy strict errors | 0 |
 | ruff violations | 0 |
 | Runner stages | 10 |

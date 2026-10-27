@@ -20,22 +20,40 @@ from cogant.gnn.upstream_bridge import (
 )
 
 
-def test_retired_src_gnn_import_surface_is_absent(tmp_path: Path) -> None:
-    # Given: an isolated interpreter and an empty directory outside the checkout.
+def test_bridge_ignores_a_retired_src_gnn_provider(tmp_path: Path) -> None:
+    # Given: an importable legacy namespace that fails if the bridge selects it.
+    legacy = tmp_path / "src"
+    legacy.mkdir()
+    (legacy / "__init__.py").write_text("", encoding="utf-8")
+    (legacy / "gnn.py").write_text(
+        "raise AssertionError('retired provider selected')\n", encoding="utf-8"
+    )
+    try:
+        expected_version = importlib.metadata.version(UPSTREAM_DISTRIBUTION)
+    except importlib.metadata.PackageNotFoundError:
+        expected_version = None
     env = os.environ.copy()
-    env.pop("PYTHONPATH", None)
-    # When: attempting the retired GNN 2.x import surface.
+    env["PYTHONPATH"] = str(tmp_path)
+    program = (
+        "import json; from cogant.gnn.upstream_bridge import "
+        "is_upstream_gnn_available, upstream_version; "
+        "print(json.dumps({'available':is_upstream_gnn_available(),"
+        "'version':upstream_version()}))"
+    )
+    # When: resolving the real COGANT bridge with the conflicting namespace present.
     result = subprocess.run(
-        [sys.executable, "-I", "-c", "import src.gnn"],
+        [sys.executable, "-c", program],
         cwd=tmp_path,
         capture_output=True,
         text=True,
         env=env,
-        check=False,
+        check=True,
     )
-    # Then: an unrelated src namespace cannot satisfy the bridge contract.
-    assert result.returncode != 0
-    assert "No module named" in result.stderr
+    # Then: only the installed top-level provider controls availability and version.
+    assert json.loads(result.stdout) == {
+        "available": expected_version is not None,
+        "version": expected_version,
+    }
 
 
 def test_installed_upstream_matches_locked_release_identity() -> None:

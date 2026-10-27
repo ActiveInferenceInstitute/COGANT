@@ -44,8 +44,9 @@ unscanned supply-chain lane. Raw run paths in that receipt locate this local
 collection; the JSON is a dated compatibility record, not a portable runtime.
 
 The installed-release regression compares distribution/import versions and
-PEP 610 source identity to `uv.lock`. Its retired-namespace negative control
-runs `import src.gnn` under `python -I` from an empty temporary directory.
+PEP 610 source identity to `uv.lock`. A subprocess regression runs the actual
+COGANT bridge with an importable retired namespace present, verifying that
+only the installed top-level provider determines availability and version.
 Existing real pipeline tests also exercised parsing, typing, and validation
 on a package emitted by the current formatter.
 
