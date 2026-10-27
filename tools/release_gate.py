@@ -88,7 +88,9 @@ def build_steps(*, include_tests: bool = True) -> list[GateStep]:
                     f"--cov-report=json:{ROOT / 'output' / 'reports' / 'package_coverage.json'}",
                 ),
                 cwd=INNER,
-                timeout_seconds=1_800,
+                # Use the metrics collector's cap: the canonical suite can
+                # exceed thirty minutes on a shared workstation.
+                timeout_seconds=5_400,
             )
         )
     steps.extend(

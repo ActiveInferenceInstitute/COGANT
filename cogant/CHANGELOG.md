@@ -25,6 +25,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   explicit construction, executor agreement, and application-level evidence.
 
 ### Changed
+- Align the aggregate gate's full-suite timeout with the metrics collector so
+  a real suite run can complete on a shared workstation.
 - Refresh the locked certifi trust bundle to a patched release for
   GHSA-6q48-6c7w-9gw2; retain before/after dependency-scan evidence.
 - The optional GNN integration now pins the exact published v5.0.1 source commit
