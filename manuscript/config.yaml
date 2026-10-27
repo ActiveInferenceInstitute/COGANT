@@ -24,8 +24,8 @@ publication:
   pages: ""
   year: "2026"
   artifact_doi: ""
-  artifact_archive: "https://github.com/ActiveInferenceInstitute/COGANT/archive/64143cfe0b21866e9c959726442331ee8c4641b0.zip"
-  artifact_commit: "64143cfe0b21866e9c959726442331ee8c4641b0"
+  artifact_archive: "https://github.com/ActiveInferenceInstitute/COGANT/archive/47348edc9bf741e880f0e2dc1ae588832d7f7028.zip"
+  artifact_commit: "47348edc9bf741e880f0e2dc1ae588832d7f7028"
 
 keywords:
   - "program analysis"
