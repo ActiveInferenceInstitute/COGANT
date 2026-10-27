@@ -35,6 +35,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   rather than assuming a fixed supported major release.
 
 ### Corrected
+- A/C matrix rows follow the compiled observation channels and their order,
+  preserving multi-node mappings and deduplication instead of counting mappings
+  as channels. A real Click export exposed the previous dimension disagreement.
 - SQLite coverage ingestion closes connections and cursors on successful reads,
   schema refusals, and database errors, preserving its empty-result contract.
 - Shared categorical filtering and risk-plus-ambiguity policy scoring across

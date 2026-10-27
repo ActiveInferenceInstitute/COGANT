@@ -15,6 +15,8 @@ The fixture builds a minimal but realistic Active Inference model with:
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from cogant.gnn.matrices import GNNMatrices
@@ -29,6 +31,7 @@ from cogant.schemas.semantic import (
 from cogant.statespace.compiler import (
     Action,
     ObservationModality,
+    StateSpaceCompiler,
     StateSpaceModel,
 )
 from cogant.statespace.temporal import TimeRegime
@@ -285,6 +288,46 @@ class TestGNNMatricesDimensions:
 
     def test_n_obs_reflects_observation_mappings(self, matrices: GNNMatrices) -> None:
         assert matrices.n_obs == 2
+
+    @pytest.mark.parametrize("case", ["multi_node", "duplicate", "missing_node", "reordered"])
+    def test_compiled_observation_channels_define_matrix_rows(
+        self, sample_graph_and_ids, semantic_mappings, case: str
+    ) -> None:
+        graph, ids = sample_graph_and_ids
+        if case == "multi_node":
+            semantic_mappings["m:o0"].graph_fragment_node_ids.append(ids["o1"])
+            del semantic_mappings["m:o1"]
+        elif case in {"duplicate", "missing_node"}:
+            semantic_mappings["m:extra"] = replace(
+                semantic_mappings["m:o0"],
+                id="m:extra",
+                graph_fragment_node_ids=[ids["o0"] if case == "duplicate" else "missing"],
+            )
+        space = StateSpaceCompiler(graph, schema_name="observation_axis").compile(semantic_mappings)
+        expected_rows = [[18 / 19, 1 / 19, 0.5], [1 / 19, 18 / 19, 0.5]]
+        expected_preferences = [0.75, 0.0]
+        if case == "reordered":
+            space.observations = dict(reversed(list(space.observations.items())))
+            expected_rows.reverse()
+            expected_preferences.reverse()
+
+        matrices = GNNMatrices(graph, semantic_mappings, space)
+        assert len(space.observations) == 2
+        assert matrices.n_obs == 2
+        assert [variable.node_id for variable in space.variables.values()] == [
+            ids["s0"],
+            ids["s1"],
+            ids["s2"],
+        ]
+        likelihood = matrices.compute_A()
+        assert len(likelihood) == 2
+        for actual, expected in zip(likelihood, expected_rows, strict=True):
+            assert actual == pytest.approx(expected)
+        assert matrices.compute_C() == pytest.approx(expected_preferences)
+        exported = matrices.to_dict()
+        assert exported["dimensions"]["n_obs"] == 2
+        assert exported["shapes"]["A"] == [2, 3]
+        assert exported["shapes"]["C"] == [2]
 
     def test_n_actions_reflects_action_mappings(self, matrices: GNNMatrices) -> None:
         assert matrices.n_actions == 2

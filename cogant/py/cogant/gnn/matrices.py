@@ -184,10 +184,9 @@ class GNNMatrices:
     @property
     def n_obs(self) -> int:
         """Number of observation dimensions."""
-        if self._observations:
-            return len(self._observations)
-        # Use compiled observation modalities when no observation mappings exist.
-        return len(self.state_space.observations)
+        if self.state_space.observations:
+            return len(self.state_space.observations)
+        return len(self._observations)
 
     @property
     def n_actions(self) -> int:
@@ -219,6 +218,10 @@ class GNNMatrices:
 
     def _obs_node_ids(self) -> list[str]:
         """Return the ordered list of graph node IDs backing observations."""
+        # The compiler expands multi-node mappings and deduplicates channels.
+        # Use its axis for both A and C, including its declared row order.
+        if self.state_space.observations:
+            return [o.source_node_id for o in self.state_space.observations.values()]
         if self._observations:
             ids: list[str] = []
             for mapping in self._observations:
@@ -227,7 +230,7 @@ class GNNMatrices:
                 else:
                     ids.append("")
             return ids
-        return [o.source_node_id for o in self.state_space.observations.values()]
+        return []
 
     def _action_node_ids(self) -> list[str]:
         """Return the ordered list of graph node IDs backing actions."""

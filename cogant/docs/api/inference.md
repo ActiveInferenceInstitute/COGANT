@@ -4,6 +4,10 @@ COGANT runs complete A/B/C/D matrices directly from GNN Markdown. This route
 uses the same categorical kernel as the package runner, simulation, and generated
 matrix modules. It does not execute generated Python.
 
+When compiled observation channels are present, A rows and C entries follow their order.
+Mappings spanning multiple graph nodes expand into those distinct channels;
+repeated mappings to one node do not add duplicate matrix rows.
+
 From the inner package root:
 
 ```bash
