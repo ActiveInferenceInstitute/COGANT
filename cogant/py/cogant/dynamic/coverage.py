@@ -6,28 +6,10 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+from cogant.dynamic.coverage_sqlite import _decode_numbits as _decode_numbits
+from cogant.dynamic.coverage_sqlite import _read_sqlite_coverage
+
 logger = logging.getLogger(__name__)
-
-
-def _decode_numbits(numbits_blob: bytes) -> list[int]:
-    """Decode a coverage.py numbits blob into a list of line numbers.
-
-    The numbits format stores executed line numbers as a compressed
-    bitmap. Each byte encodes 8 line numbers; bytes are stored in
-    little-endian order.
-
-    Args:
-        numbits_blob: Raw bytes from the line_bits.numbits column.
-
-    Returns:
-        Sorted list of 1-based line numbers that were executed.
-    """
-    lines: list[int] = []
-    for byte_index, byte_val in enumerate(numbits_blob):
-        for bit_index in range(8):
-            if byte_val & (1 << bit_index):
-                lines.append(byte_index * 8 + bit_index)
-    return sorted(lines)
 
 
 class CoverageIngester:
@@ -212,26 +194,8 @@ class CoverageIngester:
         executed_by_file: dict[str, set[int]] = {}
 
         try:
-            conn = sqlite3.connect(coverage_file)
-            cursor = conn.cursor()
-
-            # coverage.py SQLite schema: tables 'file', 'line_bits' and 'arc'
-            # 'file' has columns: id, path
-            # 'line_bits' has columns: file_id, context_id, numbits
-            # numbits is a binary blob encoding which lines were executed.
-            # 'arc' has columns: file_id, context_id, fromno, tono and is the
-            # only populated table when coverage ran in branch mode
-            # (``--branch`` / ``--cov-branch``); both tables always exist.
-
-            # Check which tables exist to handle schema variations.
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-            tables = {row[0] for row in cursor.fetchall()}
-
-            if "file" not in tables:
-                logger.warning(
-                    f"No 'file' table in {coverage_file}; may not be a coverage.py database"
-                )
-                conn.close()
+            rows = _read_sqlite_coverage(coverage_file, logger)
+            if rows is None:
                 self.coverage_data = {
                     "type": "coverage",
                     "format": "coverage_py",
@@ -243,40 +207,7 @@ class CoverageIngester:
                     },
                 }
                 return self.coverage_data
-
-            # Rows are stored per (file, context): with dynamic contexts
-            # (``--cov-context=test``) one file has many rows, so executed
-            # lines are unioned per file before any entry is emitted.
-            if "line_bits" in tables or "arc" in tables:
-                # coverage.py >= 5.x schema with line_bits blob
-                if "line_bits" in tables:
-                    cursor.execute(
-                        "SELECT f.path, lb.numbits FROM file f "
-                        "JOIN line_bits lb ON f.id = lb.file_id ORDER BY f.id"
-                    )
-                    for filepath, numbits_blob in cursor.fetchall():
-                        executed_by_file.setdefault(filepath, set()).update(
-                            _decode_numbits(numbits_blob)
-                        )
-                if "arc" in tables:
-                    # Branch-mode databases store executed arcs instead of
-                    # line bitmaps. Every positive arc endpoint is an executed
-                    # line; negative endpoints mark code-object entry/exit.
-                    cursor.execute(
-                        "SELECT f.path, a.fromno, a.tono FROM file f "
-                        "JOIN arc a ON f.id = a.file_id ORDER BY f.id"
-                    )
-                    for filepath, fromno, tono in cursor.fetchall():
-                        executed_by_file.setdefault(filepath, set()).update(
-                            n for n in (fromno, tono) if n > 0
-                        )
-            else:
-                logger.warning(
-                    f"Unrecognized coverage.py schema in {coverage_file}; "
-                    f"available tables: {tables}"
-                )
-
-            conn.close()
+            executed_by_file = dict(rows)
         except sqlite3.DatabaseError as exc:
             logger.error(f"Failed to read coverage database {coverage_file}: {exc}")
             self.coverage_data = {

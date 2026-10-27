@@ -377,6 +377,7 @@ nav:
       - Organization State Spaces: rnd/organization_state_spaces.md
       - Handwired Construction Patterns: rnd/handwired.md
       - End-to-End Inference Methodology: rnd/end_to_end_inference.md
+      - Differentiable Programming: rnd/differentiable_programming.md
   - Evaluation:
       - Overview: evaluation/README.md
       - "R&D Status": "evaluation/R&D_LOG.md"

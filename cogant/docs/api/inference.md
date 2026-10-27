@@ -54,6 +54,31 @@ work is steps times actions times (states squared plus states times observations
 `InferenceOptions.max_work_units` and CLI `--max-work-units` admit a bounded run.
 Parser allocation limits apply before execution.
 
+## Fixed-policy preference sensitivity
+
+To inspect how the existing policy objective changes with C, load the same
+GNN matrices through the parsed-model interface:
+
+```python
+from cogant.reverse.callable import MatrixFunctions
+
+functions = MatrixFunctions.from_gnn_text(text)
+gradient = functions.score_preference_gradient(functions.prior(), [0])
+```
+
+The returned vector follows the C observation axis. For normalized outcomes
+and a fixed H-action sequence, it is `H * softmax(C) - sum_t predicted_outcomes_t`.
+The implementation retains the actual outcome mass admitted within stochastic
+column tolerance. It holds A, B, beliefs, and every supplied action fixed,
+changes no parameters, and rejects empty policies or invalid axes.
+
+`CategoricalModel` and generated standalone `matrices.py` modules expose the
+same `score_preference_gradient` method/helper. It differentiates the model
+objective with respect to log preferences; it does not differentiate selected
+actions, the extraction pipeline, or original program execution. See the
+[DiffProg review](../rnd/differentiable_programming.md) for the derivation,
+primary sources, verification design, and research proposals.
+
 ## Stored traces and figures
 
 `write_inference_trace_artifact(run_dir, steps=8)` reads the run's

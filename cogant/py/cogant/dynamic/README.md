@@ -8,6 +8,10 @@ TraceIngester parses runtime trace files and extracts execution sequences. It su
 
 CoverageIngester parses code coverage data and maps it to source code spans. It supports coverage.py (.coverage SQLite database) and Cobertura (coverage.xml) formats. For coverage.py, it decodes numbits blobs (compressed line number bitmaps) to extract executed lines. For coverage.xml, it parses packages and files with line and branch coverage rates. Returns coverage_data dict with per-file coverage metrics.
 
+`coverage_sqlite.py` owns SQLite connection and cursor lifetimes. Both resources
+close on success, unsupported schemas, and read errors; `CoverageIngester`
+retains its existing error reporting and empty-result contract.
+
 enrich_graph is the integration function. It takes a ProgramGraph and paths to coverage and/or trace files, ingests them, and annotates matching graph nodes with coverage_hits (number of covered lines within node) and branch_coverage rates. It also extracts dynamic CALLS edges from trace call graphs and merges them into the graph. Returns the number of nodes enriched.
 
 ## API Reference

@@ -63,7 +63,7 @@ zip plus a small metadata envelope.
 {
   "package_zip_b64": "UEsDBBQAAAAIAA...",
   "file_count": 6,
-  "cogant_version": "0.7.0"
+  "cogant_version": "0.8.0"
 }
 ```
 
@@ -161,7 +161,10 @@ Server behavior is controlled via environment variables:
 
 ## Authentication & Security
 
-v0.7.0 **does not** ship token-based authentication. Treat the packaged server as a local demo or an internal service that sits behind infrastructure you control. The application implements:
+The packaged server binds to loopback by default. Configuring a non-loopback
+bind requires an authentication token. When a token is configured, non-public
+routes require an `Authorization: Bearer ...` header. This is a local analysis
+service, not a sandbox for arbitrary code. The application also implements:
 
 - **Rate limiting** (configurable via `COGANT_RATE_LIMIT` env var): 100 requests/minute per IP by default.
 - **CORS middleware** (default: all origins allowed; tighten via `COGANT_CORS_ORIGINS`).

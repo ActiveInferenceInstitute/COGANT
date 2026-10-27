@@ -1,6 +1,6 @@
 # COGANT Scope and Readiness Report
 
-**Current package version:** v0.7.0
+**Current package version:** v0.8.0
 **Primary numeric source:** `cogant/evaluation/METRICS.yaml`
 **Roundtrip ledger:** `cogant/evaluation/dataset/roundtrip_results.jsonl`
 

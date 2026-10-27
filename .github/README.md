@@ -76,7 +76,7 @@ If you use COGANT, please cite the archived release (metadata in [`CITATION.cff`
 - **Concept DOI (all versions, resolves to the latest archive):** [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)
 - **Version DOI (v0.6.0):** [10.5281/zenodo.20705351](https://doi.org/10.5281/zenodo.20705351)
 
-> Friedman, Daniel Ari (2026). *COGANT: Deterministic Codebase-to-GNN Translation* (v0.7.0).
+> Friedman, Daniel Ari (2026). *COGANT: Deterministic Codebase-to-GNN Translation* (v0.8.0).
 > Active Inference Institute. https://doi.org/10.5281/zenodo.20705350
 
 ## License

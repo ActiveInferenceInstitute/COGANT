@@ -40,7 +40,7 @@ The GNN module is the boundary between symbolic analysis and Active Inference si
 The Active Inference Institute **generalized-notation-notation** package is an
 **optional** dependency, installed only through the ``upstream`` extra
 (``uv sync --extra upstream``; not part of ``all``). The extra pins a full GNN
-4.1.0 release-line commit in ``pyproject.toml`` (mirrored in ``uv.lock``).
+5.0.1 released commit in ``pyproject.toml`` (mirrored in ``uv.lock``).
 GNN >= 4.0 ships the top-level Python package ``gnn``; the bridge
 (``cogant.gnn.upstream_bridge``, re-exported from ``cogant.gnn``) refuses an
 installed upstream older than 4.0 or a ``gnn`` package owned by another

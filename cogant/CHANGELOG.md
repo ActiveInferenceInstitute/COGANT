@@ -5,7 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-27
+
 ### Added
+- Analytic fixed-policy log-preference sensitivity in the shared categorical
+  kernel, parsed GNN matrix interface, and generated standalone Python, checked
+  against central differences and independent numerical controls.
+- A primary-source DiffProg review separating operation graphs, discrete control,
+  and model-objective derivatives, with bounded further research proposals.
 - Source-bound `cogant infer` execution, immutable traces, canonical replay
   admission, batch inference, and native posterior/prediction/policy/VFE figures.
 - Explicit finite generative-model declarations, immutable A/B/C/D compilation,
@@ -17,7 +24,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A source-pinned Handwired review and manuscript discussion distinguishing
   explicit construction, executor agreement, and application-level evidence.
 
+### Changed
+- Refresh the locked certifi trust bundle to a patched release for
+  GHSA-6q48-6c7w-9gw2; retain before/after dependency-scan evidence.
+- The optional GNN integration now pins the exact published v5.0.1 source commit
+  (`e54813b4197df36f7ae0054d5e79f3ad2d5db0ff`) instead of a 4.1.0 development
+  commit. A fresh compatibility receipt retains standard/strict validation,
+  selected-step outcomes, and the unscanned supply-chain lane separately.
+- Installed-upstream tests compare source identity and metadata to the lock,
+  rather than assuming a fixed supported major release.
+
 ### Corrected
+- SQLite coverage ingestion closes connections and cursors on successful reads,
+  schema refusals, and database errors, preserving its empty-result contract.
 - Shared categorical filtering and risk-plus-ambiguity policy scoring across
   runtime, simulation, package runner, and generated standalone matrix modules.
   Filtering VFE uses the incoming prior; complete matrix fences preserve exported

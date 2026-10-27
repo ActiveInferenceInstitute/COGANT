@@ -23,7 +23,7 @@ directory. The most important files are:
 | [Scaling analysis](SCALING_ANALYSIS.md) | Current scaling constraints and regression targets |
 | [Cross-language roundtrip](CROSS_LANG_ROUNDTRIP.md) | Language-pair evidence outside the Python native ledger |
 | [GNN validation report](GNN_VALIDATION_REPORT.md) | Structural validation of emitted GNN packages |
-| [GNN upstream audit surface](GNN_UPSTREAM_AUDIT_SURFACE.md) | Version, bridge, upstream-step, and supply-chain claim boundary, with recorded results against the pinned GNN 4.1.0 release line |
+| [GNN upstream audit surface](GNN_UPSTREAM_AUDIT_SURFACE.md) | Versioned GNN v5.0.1 integration scope and separately dated historical evidence |
 | [Mutation report](MUTATION_REPORT.md) | Mutation-testing results |
 | [Literature](LITERATURE.md) | Research sources |
 | [Related work](RELATED_WORK.md) | Tool and method comparison |

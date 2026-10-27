@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cogant"
-version = "0.7.0"
+version = "0.8.0"
 description = "Codebase-to-GNN Translation Engine: translate software repositories into Generalized Notation Notation (Active Inference Institute) state-space and process-model representations"
 authors = [
     {name = "COGANT Contributors", email = "contributors@cogant.dev"}
@@ -74,7 +74,8 @@ server = [
     "uvicorn[standard]>=0.54",
 ]
 upstream = [
-    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@46459949944e3217f8a6a804d4ff8c52829ef275",
+    # Exact commit peeled from the published v5.0.1 annotated release tag.
+    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@e54813b4197df36f7ae0054d5e79f3ad2d5db0ff",
 ]
 all = [
     "pytest>=9.1",

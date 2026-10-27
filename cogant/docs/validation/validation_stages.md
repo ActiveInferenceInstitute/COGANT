@@ -100,7 +100,7 @@ Verifies that the same input produces the same output.
 ```json
 {
   "reproducibility": {
-    "cogant_version": "0.7.0",
+    "cogant_version": "0.8.0",
     "input_hash": "sha256:abc123...",
     "config_hash": "sha256:def456...",
     "output_hash": "sha256:xyz789...",

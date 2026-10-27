@@ -29,6 +29,18 @@ uv run pytest tests/unit/test_foo.py --no-cov
 
 Full-suite runs should omit `--no-cov` so CI and local defaults stay aligned.
 
+If the temporary directory sits below an unrelated Git repository (for example,
+a GitVault volume-root repository), bound Git discovery at that temporary root:
+
+```bash
+GIT_CEILING_DIRECTORIES="${TMPDIR%/}" uv run pytest tests/ -q
+```
+
+This requires `TMPDIR` to name the external temporary directory. It prevents
+empty sandbox folders from inheriting the enclosing repository; fixtures that
+create their own Git repository below that directory still discover it normally.
+The same setting applies when running the project-root compatibility tests.
+
 ## Naming Policy
 
 Test files are named by subsystem and behavior, not by implementation campaign.

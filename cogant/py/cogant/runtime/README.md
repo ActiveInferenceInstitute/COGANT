@@ -36,6 +36,38 @@ The log-normalization is stable under common offsets of C. A one-step agent
 evaluates every action and chooses the minimum score, breaking ties by declared
 index. `preference_score` is a separate expected-log-preference diagnostic.
 
+## Fixed-policy preference sensitivity
+
+`CategoricalModel.score_preference_gradient(beliefs, policy)` returns the
+derivative of `score` with respect to each entry of C, in observation-axis
+order. A, B, incoming beliefs, and the action sequence are held fixed.
+For normalized predicted outcomes `p_t` and horizon H:
+
+```text
+d score / d C[j] = H * softmax(C)[j] - sum_t p_t[j]
+```
+
+The implementation accounts for the actual outcome mass at each step so the
+derivative also matches `score` for stochastic columns within admission
+tolerance. Common offsets of C leave the gradient unchanged. It uses stable
+normalization and does not change matrices or apply a learning update.
+
+```python
+from cogant.reverse.callable import MatrixFunctions
+
+functions = MatrixFunctions.from_gnn_text(gnn_text)
+gradient = functions.score_preference_gradient(functions.prior(), [0, 1])
+```
+
+Generated `matrices.py` modules expose the same `score_preference_gradient`
+helper with standard-library Python alone. The policy must be nonempty and
+every action must exist. Malformed beliefs fail as they do for `score`.
+
+This derivative describes a fixed model objective. It does not differentiate
+through the selected action, modal observation, parser, translation rules, or
+the original source program. The [DiffProg review](../../../docs/rnd/differentiable_programming.md)
+records the derivation, source connections, and potential next steps.
+
 ## Episode API
 
 ```python

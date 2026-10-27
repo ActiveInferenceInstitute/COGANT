@@ -2,16 +2,16 @@
 
 This page records the verifier boundary for COGANT's optional integration with
 the Active Inference Institute `generalized-notation-notation` package, and the
-results recorded against the currently pinned upstream release.
+current compatibility scope. Dated earlier results are retained separately.
 
 ## Pinned Upstream Release
 
 | Field | Value |
 | --- | --- |
 | Distribution | `generalized-notation-notation` (optional `cogant[upstream]` extra; not part of `all`) |
-| Pin (`cogant/pyproject.toml`, mirrored in `cogant/uv.lock`) | `46459949944e3217f8a6a804d4ff8c52829ef275` (upstream `main` on 2026-10-15) |
-| Distribution version / `gnn.__version__` | `4.1.0` / `4.1.0` |
-| Release tag | `v4.1.0` at `9255e19f951d4c9c1461514464d420bd3fc8b912`; the pin is 13 commits past the tag |
+| Pin (`cogant/pyproject.toml`, mirrored in `cogant/uv.lock`) | `e54813b4197df36f7ae0054d5e79f3ad2d5db0ff` |
+| Distribution version / `gnn.__version__` | `5.0.1` / `5.0.1` |
+| Release tag | [v5.0.1](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.1), published 2026-10-25; annotated tag `35e71d1a6f109f6e0d08fda2acd5a94376482cf4`, peeled to the exact pinned commit |
 | Import package | top-level `gnn` (GNN >= 4.0; the GNN 2.x `src.gnn` surface no longer exists) |
 | License | CC-BY-NC-SA-4.0 (see [`LICENSES.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/LICENSES.md)) |
 
@@ -19,6 +19,52 @@ The `GNN v2.0.0` value under `## GNNVersionAndFlags` in every COGANT
 `model.gnn.md` is COGANT's own schema identifier
 (`cogant.schema.versions.CURRENT_GNN_VERSION`). It is independent of the
 upstream package release above.
+
+## Current Compatibility (2026-10-26)
+
+The latest published, non-prerelease GNN release at review time was v5.0.1.
+The installed source's PEP 610 record, lockfile, and peeled release tag all
+resolved to the exact commit above; distribution and engine versions were
+both `5.0.1`. Upstream's default branch had moved beyond that release and is
+not used as the dependency target.
+
+On CPython 3.13.17 with the locked `all` and `upstream` extras, a freshly
+translated calculator package passed COGANT package validation and upstream
+single-file validation at `standard` and `strict`. The audit helper's
+`--strict-version --strict-upstream` collection passed all 20 selected steps
+with `SUCCESS_WITH_WARNINGS` overall. The selection excluded setup, upstream
+tests, render, execute, and LLM steps (`1, 2, 11, 12, 13`). Warnings retained
+missing render/execute prerequisites and optional capabilities. No supply-chain
+scan was run in this review; the older scan results below do not apply to this
+environment.
+
+The retained [machine-readable compatibility receipt](gnn_v5_0_1_compatibility.json)
+records exact source identities, selected steps, validator results, and the
+unscanned supply-chain lane. Raw run paths in that receipt locate this local
+collection; the JSON is a dated compatibility record, not a portable runtime.
+
+The installed-release regression compares distribution/import versions and
+PEP 610 source identity to `uv.lock`. Its retired-namespace negative control
+runs `import src.gnn` under `python -I` from an empty temporary directory.
+Existing real pipeline tests also exercised parsing, typing, and validation
+on a package emitted by the current formatter.
+
+The release adds numerical witnesses, an offline inspector, and bounded file
+workers. Updating the parser/pipeline dependency does not establish admission
+of every COGANT-derived model to a witness or validate source-program behavior.
+See the [DiffProg review](../rnd/differentiable_programming.md) for scoped
+connections and further admission requirements.
+
+## Dependency Scan for COGANT 0.8.0 (2026-10-27)
+
+The [separate dependency-scan receipt](dependency_audit_0_8_0.json) records the
+locked `all` + `upstream` environment after upgrading certifi from 2026.7.22 to
+2026.10.23 for [GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2).
+No known vulnerabilities were returned for the registry packages audited.
+COGANT and GNN themselves were excluded because their installed versions have
+no PyPI advisory records. Their source identity and compatibility are checked
+separately; the scan does not establish advisory coverage for those packages.
+The 2026-10-26 receipt's unscanned lane remains unchanged.
 
 ## Claims Kept Separate
 
@@ -102,7 +148,7 @@ prerequisite); grey marks a step that did not run. This is a visual claim
 ledger, not a decorative figure: if the all-step lane is red, the docs must not
 say that COGANT's package fully executes through every selected upstream step.
 
-## Current Result (2026-10-15)
+## Historical Result (2026-10-15)
 
 The pinned commit `46459949944e3217f8a6a804d4ff8c52829ef275` was verified on
 CPython 3.12 with the locked `all` and `upstream` extras. Strict version,
@@ -187,9 +233,9 @@ Selection notes:
   2.6.3) came from an environment built from the pre-refresh lock; the
   refreshed lock resolves newer releases of every one of them.
 
-## Current Boundary
+## Historical Boundary (4.1.0)
 
-Against the pinned 4.1.0 release line, COGANT's validation, type-check,
+Against the former 4.1.0 release-line pin, COGANT's validation, type-check,
 export, visualization, roundtrip, and runner paths pass, the generated
 calculator model passes upstream validation at `standard` and `strict`, and
 every selected upstream step succeeds. Render and execute (`11`/`12`) are off

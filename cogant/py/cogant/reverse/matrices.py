@@ -166,6 +166,11 @@ def expected_free_energy(state_dist: list[float], action: int) -> float:
     return CategoricalModel(A, B, C, D).score(state_dist, [action])
 
 
+def score_preference_gradient(state_dist: list[float], policy: list[int]) -> list[float]:
+    '''Return fixed-policy score sensitivity along the C observation axis.'''
+    return CategoricalModel(A, B, C, D).score_preference_gradient(state_dist, policy)
+
+
 def best_action(state_dist: list[float]) -> int:
     scores = CategoricalModel(A, B, C, D).action_scores(state_dist)
     return min(range(N_ACTIONS), key=scores.__getitem__)

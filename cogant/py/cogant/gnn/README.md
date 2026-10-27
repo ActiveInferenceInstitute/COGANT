@@ -150,4 +150,4 @@ for trace in execution["traces"]:
 - schemas/ — ProgramGraph, StateSpaceModel, ProcessModel, SemanticMapping
 - gnn_export (internal) — 19 canonical section schemas
 - runtime/ — shared categorical Bayesian filtering and one-step EFE
-- Optional: the Active Inference Institute `generalized-notation-notation` package (`cogant[upstream]` extra, GNN 4.1.0 release line, import package `gnn`), reached only through [`upstream_bridge/`](upstream_bridge/README.md). Core GNN building, validation, and execution do not require it.
+- Optional: the Active Inference Institute `generalized-notation-notation` package (`cogant[upstream]` extra, GNN v5.0.1 release, import package `gnn`), reached only through [`upstream_bridge/`](upstream_bridge/README.md). Core GNN building, validation, and execution do not require it.

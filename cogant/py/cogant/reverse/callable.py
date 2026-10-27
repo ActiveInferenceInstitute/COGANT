@@ -54,6 +54,10 @@ class MatrixFunctions:
         """Evaluate one-step outcome risk plus expected likelihood ambiguity."""
         return self._categorical().score(state_dist, [action])
 
+    def score_preference_gradient(self, state_dist: list[float], policy: list[int]) -> list[float]:
+        """Return fixed-policy score sensitivity along the C observation axis."""
+        return self._categorical().score_preference_gradient(state_dist, policy)
+
     def best_action(self, state_dist: list[float]) -> int:
         """Return argmin EFE over the declared action axis."""
         if self._n_actions == 0:

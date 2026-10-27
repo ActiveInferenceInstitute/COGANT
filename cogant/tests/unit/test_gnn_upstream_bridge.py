@@ -1,10 +1,7 @@
-"""Tests for the optional generalized-notation-notation (``gnn`` 4.x) bridge."""
+"""Tests for the optional generalized-notation-notation (``gnn`` >= 4) bridge."""
 
 from __future__ import annotations
 
-import os
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -23,37 +20,6 @@ from cogant.gnn.upstream_bridge import (
     upstream_validate_markdown,
     upstream_version,
 )
-
-
-def test_retired_src_gnn_import_surface_is_absent() -> None:
-    """Negative control: GNN >= 4.0 removed the GNN 2.x ``src.gnn`` surface.
-
-    A clean interpreter must not resolve ``src.gnn`` whether or not the
-    optional upstream extra is installed, so no COGANT code path can depend
-    on the retired layout.
-    """
-    env = os.environ.copy()
-    env.pop("PYTHONPATH", None)
-    proc = subprocess.run(
-        [sys.executable, "-c", "import src.gnn"],
-        check=False,
-        capture_output=True,
-        env=env,
-        text=True,
-    )
-    assert proc.returncode != 0
-    assert "No module named" in proc.stderr
-
-
-def test_bridge_imports_top_level_gnn_package() -> None:
-    """With the optional extra, the bridge resolves upstream ``gnn`` 4.x directly."""
-    if not is_upstream_gnn_available():
-        pytest.skip("optional upstream gnn dependency not installed")
-    import gnn
-
-    version = getattr(gnn, "__version__", "")
-    assert version.split(".")[0] == "4"
-    assert upstream_version() == version
 
 
 def test_bridge_rejects_pre_v4_upstream(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -34,7 +34,7 @@
     "error_count": 0
   },
   "reproducibility": {
-    "cogant_version": "0.7.0",
+    "cogant_version": "0.8.0",
     "input_hash": "sha256:abc123...",
     "config_hash": "sha256:def456..."
   }

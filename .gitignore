@@ -47,10 +47,13 @@ cogant/docs/*
 !cogant/docs/evaluation/
 cogant/docs/evaluation/*
 !cogant/docs/evaluation/GNN_UPSTREAM_AUDIT_SURFACE.md
+!cogant/docs/evaluation/gnn_v5_0_1_compatibility.json
+!cogant/docs/evaluation/dependency_audit_0_8_0.json
 !cogant/docs/rnd/
 cogant/docs/rnd/*
 !cogant/docs/rnd/organization_state_spaces.md
 !cogant/docs/rnd/end_to_end_inference.md
+!cogant/docs/rnd/differentiable_programming.md
 !cogant/docs/api/
 cogant/docs/api/*
 !cogant/docs/api/inference.md

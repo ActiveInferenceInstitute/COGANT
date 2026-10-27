@@ -6,7 +6,7 @@ This page records the current evaluation posture for release-facing readers.
 
 | Metric | Value |
 | --- | ---: |
-| Version | 0.7.0 |
+| Version | 0.8.0 |
 | Tests | 10,019 passing / 0 failing / 49 skipped |
 | Coverage | 94.59% |
 | mypy strict errors | 0 |

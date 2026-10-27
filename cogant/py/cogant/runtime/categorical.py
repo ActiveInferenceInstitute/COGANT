@@ -176,6 +176,30 @@ class CategoricalModel:
         """Evaluate each one-step policy in declared action order."""
         return [self.score(beliefs, [action]) for action in range(self.n_actions)]
 
+    def score_preference_gradient(self, beliefs: Vector, policy: Sequence[int]) -> list[float]:
+        """Differentiate the fixed-policy score with respect to log preferences C.
+
+        A, B, incoming beliefs and every action are held fixed. This is an
+        analytic derivative of the model objective, not of discrete policy
+        selection or source-program execution. No matrices are mutated.
+        """
+        self._beliefs(beliefs)
+        if not policy:
+            raise ValueError("policy must contain at least one action")
+        offset = max(self.C)
+        weights = [math.exp(c - offset) for c in self.C]
+        normalizer = math.fsum(weights)
+        preferred = [weight / normalizer for weight in weights]
+        gradient = [0.0] * len(self.A)
+        current = list(beliefs)
+        for action in policy:
+            current = self.predict(current, action)
+            outcomes = self.observe(current)
+            mass = math.fsum(outcomes)
+            for outcome, probability in enumerate(outcomes):
+                gradient[outcome] += mass * preferred[outcome] - probability
+        return gradient
+
     def step(self, prior: Vector, observation: int | None = None) -> CategoricalStep:
         """Filter, score all one-step policies, then predict the selected action."""
         if observation is None:

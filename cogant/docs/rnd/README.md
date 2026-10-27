@@ -11,6 +11,7 @@
 | [Organization State Spaces](organization_state_spaces.md) | Provisional bridge from org charts and process traces to typed state-space models, with a negative-control audit helper | Advanced |
 | [Handwired](handwired.md) | Pinned source review of explicit construction and independent behavioral checks | Advanced |
 | [End-to-End Inference](end_to_end_inference.md) | Source-bound execution, corrected objectives, and limits of model verification | Advanced |
+| [Differentiable Programming](differentiable_programming.md) | DiffProg source review, fixed-policy preference sensitivity, and boundaries for future derivative APIs | Advanced |
 
 ## Recommended Reading Order
 

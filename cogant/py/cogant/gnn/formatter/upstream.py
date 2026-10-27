@@ -2,7 +2,7 @@
 
 This mixin emits the GNN-language sections expected by the Active Inference
 Institute ``generalized-notation-notation`` reference implementation
-(validated against the GNN 4.1.0 release line: ``gnn.validate_gnn_syntax``
+(validated against the GNN v5.0.1 release: ``gnn.validate_gnn_syntax``
 at the ``standard`` level, the ``5_type_checker`` and ``6_validation``
 pipeline steps). The ``GNN v2.0.0`` header value is COGANT's own schema
 identifier (:data:`cogant.schema.versions.CURRENT_GNN_VERSION`).
