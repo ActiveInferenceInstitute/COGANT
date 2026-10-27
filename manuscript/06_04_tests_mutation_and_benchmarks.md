@@ -2,7 +2,7 @@
 
 ## Test matrix and coverage
 
-The v{{VERSION}} Python implementation ships a test suite that, on the canonical `uv run pytest tests/ --cov=py/cogant` run (the gate in [`../cogant/pyproject.toml`](../cogant/pyproject.toml) measures the `py/cogant/` source tree for the import package `cogant`), reports **{{TEST_COUNT_PASSING}} passing**, **{{TEST_COUNT_FAILING}} failing**, and **{{TEST_COUNT_SKIPPED}} skipped** tests, plus **{{TEST_COUNT_XFAILED}} expected `xfail`** and **{{TEST_COUNT_XPASSED}} `xpass`** case. Any non-zero failing count is a release-blocking evidence gap, not a hidden denominator; the pass/skip/coverage figures below must be read together with that failure count. End-to-end runtime is on the order of several minutes on a 2024-class Apple-silicon workstation (**{{SUITE_RUNTIME_S}}** s in the canonical run); the overall line coverage of the instrumented package is **{{COVERAGE_PCT}}%** on that run, measured over the instrumented statements in **{{PYTHON_SOURCE_FILES}}** source files. The package contains **{{PYTHON_LOC}}** total source lines, including comments and blanks (see `METRICS.yaml`, generated **{{METRICS_GENERATED_AT}}**). `mypy --strict` on `py/cogant/` reports **{{MYPY_STRICT_ERRORS}}** remaining
+The v{{VERSION}} Python implementation ships a test suite that, on the canonical `uv run pytest tests/ --cov=py/cogant` run (the gate in [`../cogant/pyproject.toml`](../cogant/pyproject.toml) measures the `py/cogant/` source tree for the import package `cogant`), reports **{{TEST_COUNT_PASSING}} passing**, **{{TEST_COUNT_FAILING}} failing**, and **{{TEST_COUNT_SKIPPED}} skipped** tests, plus **{{TEST_COUNT_XFAILED}} expected `xfail`** and **{{TEST_COUNT_XPASSED}} `xpass`** case. Any non-zero failing count is a release-blocking evidence gap, not a hidden denominator; the pass/skip/coverage figures below must be read together with that failure count. The recorded suite wall time is **{{SUITE_RUNTIME_S}}** s and depends on the machine and workload; it is not a portable performance benchmark. The overall line coverage of the instrumented package is **{{COVERAGE_PCT}}%** on that run, measured over the instrumented statements in **{{PYTHON_SOURCE_FILES}}** source files. The package contains **{{PYTHON_LOC}}** total source lines, including comments and blanks (see `METRICS.yaml`, generated **{{METRICS_GENERATED_AT}}**). `mypy --strict` on `py/cogant/` reports **{{MYPY_STRICT_ERRORS}}** remaining
 errors. The pydantic v2 mypy plugin is enabled in
 `cogant/pyproject.toml:[tool.mypy].plugins = ["pydantic.mypy"]`, and PyYAML
 is in the `ignore_missing_imports` overrides. The figure is *errors among reported
@@ -26,36 +26,36 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 
 | Module | Stmts | Cover |
 |---|---:|---:|
-| `cogant.translate.engine` | 246 | 96% |
+| `cogant.translate.engine` | 242 | 96% |
 | `cogant.translate.rules.structural` | 190 | 99% |
 | `cogant.translate.rules.semantic` | 255 | 93% |
 | `cogant.translate.rules.behavioral` | 108 | 100% |
 | `cogant.translate.rules.control` | 79 | 100% |
 | `cogant.translate.rules.resilience` | 164 | 93% |
 | `cogant.translate.confidence` | 98 | 100% |
-| `cogant.statespace.compiler` | 471 | 100% |
-| `cogant.statespace.variables` | 263 | 99% |
-| `cogant.statespace.temporal` | 217 | 100% |
+| `cogant.statespace.compiler` | 442 | 100% |
+| `cogant.statespace.variables` | 252 | 99% |
+| `cogant.statespace.temporal` | 203 | 100% |
 | `cogant.markov.blanket` | 166 | 100% |
-| `cogant.gnn.matrices` | 379 | 99% |
-| `cogant.static.calls` | 129 | 88% |
-| `cogant.static.dataflow` | 294 | 95% |
-| `cogant.static.parser` | 236 | 89% |
+| `cogant.gnn.matrices` | 381 | 99% |
+| `cogant.static.calls` | 124 | 88% |
+| `cogant.static.dataflow` | 288 | 95% |
+| `cogant.static.parser` | 225 | 89% |
 | `cogant.simulate.free_energy` | 64 | 95% |
 | `cogant.simulate.runner` | 118 | 98% |
 | `cogant.simulate.distributions` | 120 | 98% |
-| `cogant.scoring.drift` | 212 | 100% |
-| `cogant.scoring.metrics` | 153 | 97% |
+| `cogant.scoring.drift` | 208 | 100% |
+| `cogant.scoring.metrics` | 142 | 96% |
 | `cogant.validate.integrity` | 140 | 96% |
 | `cogant.validate.schema_check` | 103 | 96% |
-| `cogant.validate.provenance_check` | 73 | 100% |
+| `cogant.validate.provenance_check` | 69 | 100% |
 | `cogant.viz.png.mermaid` | 505 | 88% |
 | `cogant.viz.png.program_graph` | 284 | 89% |
 | `cogant.viz.png.state_space` | 452 | 92% |
 | `cogant.viz.matrix_view` | 324 | 92% |
 | `cogant.viz.network_view` | 229 | 91% |
 | `cogant.viz.flow` | 251 | 99% |
-| `cogant.runtime.categorical` | 132 | 95% |
+| `cogant.runtime.categorical` | 149 | 97% |
 | `cogant.runtime.inference` | 62 | 97% |
 | `cogant.runtime.inference_records` | 85 | 93% |
 | `cogant.gnn.execution` | 47 | 100% |
