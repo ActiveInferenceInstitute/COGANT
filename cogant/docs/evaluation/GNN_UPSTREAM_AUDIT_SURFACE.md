@@ -9,9 +9,9 @@ current compatibility scope. Dated earlier results are retained separately.
 | Field | Value |
 | --- | --- |
 | Distribution | `generalized-notation-notation` (optional `cogant[upstream]` extra; not part of `all`) |
-| Pin (`cogant/pyproject.toml`, mirrored in `cogant/uv.lock`) | `e54813b4197df36f7ae0054d5e79f3ad2d5db0ff` |
-| Distribution version / `gnn.__version__` | `5.0.1` / `5.0.1` |
-| Release tag | [v5.0.1](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.1), published 2026-10-25; annotated tag `35e71d1a6f109f6e0d08fda2acd5a94376482cf4`, peeled to the exact pinned commit |
+| Pin (`cogant/pyproject.toml`, mirrored in `cogant/uv.lock`) | `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1` |
+| Distribution version / `gnn.__version__` | `5.0.3` / `5.0.3` |
+| Release tag | [v5.0.3](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3), published 2026-10-31; annotated tag `2d830c75de2be2cad9b96b0879937d96ecda059d`, peeled to the exact pinned commit |
 | Import package | top-level `gnn` (GNN >= 4.0; the GNN 2.x `src.gnn` surface no longer exists) |
 | License | CC-BY-NC-SA-4.0 (see [`LICENSES.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/LICENSES.md)) |
 
@@ -20,11 +20,38 @@ The `GNN v2.0.0` value under `## GNNVersionAndFlags` in every COGANT
 (`cogant.schema.versions.CURRENT_GNN_VERSION`). It is independent of the
 upstream package release above.
 
-## Current Compatibility (2026-10-26)
+## Current Compatibility (2026-11-01)
+
+The current pin is the published v5.0.3 release; it is the latest published,
+non-prerelease release. The installed source's PEP 610 record, the lockfile, the
+distribution version, `gnn.__version__` and the bridge version all name `5.0.3`
+and that commit, and `tools/audit_release_integrity.py` cross-checks the
+`pyproject.toml` pin against `uv.lock`, failing when the two disagree.
+
+The validator surface was re-established on the new pin: a freshly translated
+calculator package scored 100/100 under COGANT's `GNNValidator` and reported 0
+errors under upstream `validate_gnn_syntax` at both `standard` and `strict`,
+against the installed 5.0.3 environment. The upstream unit suite that exercises
+the bridge, its contract, the installed-release identity, the validator flags
+and pipeline resolution passes with the extra installed. Upstream `HEAD` was the
+pinned commit at collection time; the dependency target stays the release tag's
+commit, not a branch.
+
+The selected 25-step pipeline lane was re-collected on this pin with
+`tools/gnn_upstream_audit_surface.py --collect --strict-version --strict-upstream`:
+all 20 selected steps succeeded and upstream reported `SUCCESS_WITH_WARNINGS`.
+The bridge selection skipped steps 1, 2, 11, 12 and 13, and upstream ran no step
+outside that selection. The dated
+[`gnn_v5_0_3_compatibility.json`](gnn_v5_0_3_compatibility.json) receipt records
+the identity fields, the validator result and every step's status and duration.
+No supply-chain scan was run for this pin, so that lane stays unscanned here and
+the older scan results do not apply.
+
+## Historical Result (2026-10-26, v5.0.1)
 
 The latest published, non-prerelease GNN release at review time was v5.0.1.
 The installed source's PEP 610 record, lockfile, and peeled release tag all
-resolved to the exact commit above; distribution and engine versions were
+resolved to the then-pinned commit; distribution and engine versions were
 both `5.0.1`. Upstream's default branch had moved beyond that release and is
 not used as the dependency target.
 

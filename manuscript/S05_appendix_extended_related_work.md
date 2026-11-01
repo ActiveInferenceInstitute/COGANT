@@ -105,7 +105,7 @@ approximation used in continuous-state extensions of COGANT.
 Notation: A Text-Based Format for Active Inference Generative Models.**
 Active Inference Institute technical report. The maintained reference
 implementation is the `generalized-notation-notation` package; COGANT's
-`cogant.gnn` formatter is checked against its pinned 4.1.0 release line,
+`cogant.gnn` formatter is checked against its pinned 5.0.3 release line,
 while the GNN version value COGANT writes under `GNNVersionAndFlags` remains
 COGANT's own schema identifier.
 

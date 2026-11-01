@@ -1,6 +1,6 @@
 # GNN format reference
 
-> **Status.** COGANT targets the [Active Inference Institute GNN](https://github.com/ActiveInferenceInstitute/) reference format. Its header block is checked against the optional, commit-pinned `generalized-notation-notation` package (GNN 4.1.0 release line, import package `gnn`); the `GNN v2.0.0` header value is COGANT's own schema identifier. This page is a working reference for the upstream-required header plus COGANT's extended provenance, evidence, and visualization sections emitted by `cogant translate --layout-output`. For the short version see [`gnn_format.md`](gnn_format.md). The canonical upstream spec lives in the AII GNN repo.
+> **Status.** COGANT targets the [Active Inference Institute GNN](https://github.com/ActiveInferenceInstitute/) reference format. Its header block is checked against the optional, commit-pinned `generalized-notation-notation` package (GNN v5.0.3 release, import package `gnn`); the `GNN v2.0.0` header value is COGANT's own schema identifier. This page is a working reference for the upstream-required header plus COGANT's extended provenance, evidence, and visualization sections emitted by `cogant translate --layout-output`. For the short version see [`gnn_format.md`](gnn_format.md). The canonical upstream spec lives in the AII GNN repo.
 
 ## File layout
 

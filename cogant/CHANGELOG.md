@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- The optional GNN integration now pins the exact published v5.0.3 source commit
+  (`8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`) instead of the v5.0.1 commit, and
+  `uv.lock` mirrors the new revision. Installed-source identity, the bridge
+  version, and the upstream single-file validators were re-established against
+  the new pin; `docs/evaluation/gnn_v5_0_3_compatibility.json` records the
+  collected identity, validator and per-step results for it, and the earlier
+  v5.0.1 receipt and the 4.1.0 results remain dated history.
+
 ## [0.8.0] - 2026-10-27
 
 ### Added
