@@ -94,6 +94,22 @@ def _count_files(directory: Path, pattern: str) -> int:
     return len(list(directory.rglob(pattern)))
 
 
+def _ensure_trailing_newline(path: Path) -> None:
+    """Normalize a generated text artifact to end with a newline.
+
+    ``pytest-cov`` writes ``coverage.json`` without a trailing newline, which
+    the repository's ``end-of-file-fixer`` pre-commit hook rejects — committing
+    the raw report is what turns CI red right after a regeneration. Keep the
+    probe's own output hook-clean instead of relying on a manual fix-up.
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return
+    if text and not text.endswith("\n"):
+        path.write_text(text + "\n", encoding="utf-8")
+
+
 # ---------------------------------------------------------------------------
 # 1. Package version
 # ---------------------------------------------------------------------------
@@ -317,6 +333,7 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float, int]:
 
     if test_result["passing"] <= 0 or suite_runtime_s <= 0:
         raise MetricsProbeError(f"Could not parse successful pytest summary:\n{out}")
+    _ensure_trailing_newline(coverage_json)
     try:
         data = json.loads(coverage_json.read_text())
         coverage_pct = round(float(data["totals"]["percent_covered"]), 2)
