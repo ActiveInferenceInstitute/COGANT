@@ -41,7 +41,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install COGANT
-        run: pip install cogant
+        # COGANT is not on PyPI yet; install it from its repository.
+        # Once published this becomes: pip install cogant
+        run: pip install "cogant[all] @ git+https://github.com/ActiveInferenceInstitute/COGANT.git#subdirectory=cogant"
 
       - name: Check environment
         run: cogant doctor

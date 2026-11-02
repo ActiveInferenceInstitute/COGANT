@@ -58,13 +58,15 @@ content should go into a new numbered recipe rather than extending these.
 
 ## Prerequisites
 
-All recipes assume COGANT is installed:
+All recipes assume COGANT is installed. COGANT is not on PyPI yet, so install
+from a checkout:
 
 ```bash
-pip install cogant
-# or with visualization extras
-pip install "cogant[viz]"
+uv sync --extra all
 ```
+
+Once the release is published, `pip install cogant` (or
+`pip install "cogant[viz]"` for the visualization extras) will work.
 
 Verify your environment:
 

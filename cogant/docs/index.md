@@ -25,6 +25,9 @@ COGANT parses a repository, builds a typed program graph, assigns semantic mappi
 
 ## Install
 
+> **Not yet published.** COGANT is not on PyPI yet — use the source install
+> below for now; the PyPI commands apply once the release is published.
+
 ```bash
 pip install cogant
 # or, with all extras (viz + multilang + dev):

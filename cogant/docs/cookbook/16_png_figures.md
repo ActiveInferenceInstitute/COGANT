@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-- COGANT installed with viz extras: `pip install "cogant[viz]"`
+- COGANT installed with viz extras: `uv sync --extra viz` from a checkout (`pip install "cogant[viz]"` once published)
 - Graphviz installed for `.dot` rendering
 
 ## Steps
