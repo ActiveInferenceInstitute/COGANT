@@ -67,7 +67,7 @@ mkdir -p /tmp/cogant_heldout && cd /tmp/cogant_heldout
 git clone --depth 1 --branch v4.66.5     https://github.com/tqdm/tqdm.git tqdm
 git clone --depth 1 --branch 2.9.0.post0 https://github.com/dateutil/dateutil.git dateutil
 git clone --depth 1 --branch 6.0.2       https://github.com/yaml/pyyaml.git yaml
-cd ~/Documents/GitHub/projects/working/cogant
+cd <cogant checkout>
 uv run --directory cogant cogant roundtrip /tmp/cogant_heldout/tqdm/tqdm --json
 uv run --directory cogant cogant roundtrip /tmp/cogant_heldout/dateutil/src/dateutil --json
 uv run --directory cogant cogant roundtrip /tmp/cogant_heldout/yaml/lib/yaml --json
