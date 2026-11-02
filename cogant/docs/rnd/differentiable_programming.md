@@ -71,11 +71,11 @@ existing frequency-based A/D learning retains its documented meaning.
    mutation ordering, operation types, shapes, and unsupported primitives.
    Reject unresolved operations rather than assigning a derivative based on a
    function's name or a structural role.
-4. **Source-bound witness interoperability:** GNN v5.0.1 adds finite-filtering
-   and passive linear-Gaussian witnesses. COGANT's code-derived aggregate
-   matrices need a separately checked axis/timing/parameter contract before
-   claiming admission to those witnesses. See the
-   [published release](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.1).
+4. **Source-bound witness interoperability:** the pinned GNN release provides
+   finite-filtering and passive linear-Gaussian witnesses. COGANT's code-derived
+   aggregate matrices need a separately checked axis/timing/parameter contract
+   before claiming admission to those witnesses. See the
+   [upstream releases](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases).
 
 These proposals do not establish differentiability of arbitrary repositories,
 preservation of source behavior, posterior parameter inference, or task success.

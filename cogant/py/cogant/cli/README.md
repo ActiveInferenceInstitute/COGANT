@@ -26,7 +26,7 @@ cogant render: Generate interactive HTML site from bundle.json, creating index.h
 
 cogant viz: Walk a run/output directory and rasterize Mermaid, SVG, dot, and related artifacts to PNG (see `cogant.viz.png`).
 
-cogant validate: Run validation checks on bundle.json, or on a directory containing `gnn_package/` (full GNN package validation when applicable). For a `gnn_package` directory, the optional Active Inference Institute upstream check (`gnn.validate_gnn_syntax` from the `upstream` extra, GNN 4.1.0 release line) on `model.gnn.md` runs only when `COGANT_ENABLE_UPSTREAM_GNN` is truthy; `--no-upstream-gnn` forces it off while keeping COGANT structural validation. Add `--upstream-gnn-pipeline` to drive the upstream 25-step pass (default skip `1,2,11,12`).
+cogant validate: Run validation checks on bundle.json, or on a directory containing `gnn_package/` (full GNN package validation when applicable). For a `gnn_package` directory, the optional Active Inference Institute upstream check (`gnn.validate_gnn_syntax` from the `upstream` extra, GNN v5.0.3 release) on `model.gnn.md` runs only when `COGANT_ENABLE_UPSTREAM_GNN` is truthy; `--no-upstream-gnn` forces it off while keeping COGANT structural validation. Add `--upstream-gnn-pipeline` to drive the upstream 25-step pass (default skip `1,2,11,12`).
 
 cogant diff: Compare two bundle.json files (errors and stages) or two run directories (structural, semantic, and state-space drift plus metrics). Supports baseline vs current analysis.
 
