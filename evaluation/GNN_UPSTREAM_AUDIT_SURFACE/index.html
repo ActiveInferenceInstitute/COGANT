@@ -11124,10 +11124,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-compatibility-2026-10-26" class="md-nav__link">
+  <a href="#current-compatibility-2026-11-01" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Compatibility (2026-10-26)
+        Current Compatibility (2026-11-01)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historical-result-2026-10-26-v501" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Result (2026-10-26, v5.0.1)
       
     </span>
   </a>
@@ -12671,10 +12682,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-compatibility-2026-10-26" class="md-nav__link">
+  <a href="#current-compatibility-2026-11-01" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Compatibility (2026-10-26)
+        Current Compatibility (2026-11-01)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historical-result-2026-10-26-v501" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical Result (2026-10-26, v5.0.1)
       
     </span>
   </a>
@@ -12797,15 +12819,15 @@ current compatibility scope. Dated earlier results are retained separately.</p>
 </tr>
 <tr>
 <td>Pin (<code>cogant/pyproject.toml</code>, mirrored in <code>cogant/uv.lock</code>)</td>
-<td><code>e54813b4197df36f7ae0054d5e79f3ad2d5db0ff</code></td>
+<td><code>8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1</code></td>
 </tr>
 <tr>
 <td>Distribution version / <code>gnn.__version__</code></td>
-<td><code>5.0.1</code> / <code>5.0.1</code></td>
+<td><code>5.0.3</code> / <code>5.0.3</code></td>
 </tr>
 <tr>
 <td>Release tag</td>
-<td><a href="https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.1">v5.0.1</a>, published 2026-10-25; annotated tag <code>35e71d1a6f109f6e0d08fda2acd5a94376482cf4</code>, peeled to the exact pinned commit</td>
+<td><a href="https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3">v5.0.3</a>, published 2026-10-31; annotated tag <code>2d830c75de2be2cad9b96b0879937d96ecda059d</code>, peeled to the exact pinned commit</td>
 </tr>
 <tr>
 <td>Import package</td>
@@ -12821,10 +12843,33 @@ current compatibility scope. Dated earlier results are retained separately.</p>
 <code>model.gnn.md</code> is COGANT's own schema identifier
 (<code>cogant.schema.versions.CURRENT_GNN_VERSION</code>). It is independent of the
 upstream package release above.</p>
-<h2 id="current-compatibility-2026-10-26">Current Compatibility (2026-10-26)</h2>
+<h2 id="current-compatibility-2026-11-01">Current Compatibility (2026-11-01)</h2>
+<p>The current pin is the published v5.0.3 release; it is the latest published,
+non-prerelease release. The installed source's PEP 610 record, the lockfile, the
+distribution version, <code>gnn.__version__</code> and the bridge version all name <code>5.0.3</code>
+and that commit, and <code>tools/audit_release_integrity.py</code> cross-checks the
+<code>pyproject.toml</code> pin against <code>uv.lock</code>, failing when the two disagree.</p>
+<p>The validator surface was re-established on the new pin: a freshly translated
+calculator package scored 100/100 under COGANT's <code>GNNValidator</code> and reported 0
+errors under upstream <code>validate_gnn_syntax</code> at both <code>standard</code> and <code>strict</code>,
+against the installed 5.0.3 environment. The upstream unit suite that exercises
+the bridge, its contract, the installed-release identity, the validator flags
+and pipeline resolution passes with the extra installed. Upstream <code>HEAD</code> was the
+pinned commit at collection time; the dependency target stays the release tag's
+commit, not a branch.</p>
+<p>The selected 25-step pipeline lane was re-collected on this pin with
+<code>tools/gnn_upstream_audit_surface.py --collect --strict-version --strict-upstream</code>:
+all 20 selected steps succeeded and upstream reported <code>SUCCESS_WITH_WARNINGS</code>.
+The bridge selection skipped steps 1, 2, 11, 12 and 13, and upstream ran no step
+outside that selection. The dated
+<a href="../gnn_v5_0_3_compatibility.json"><code>gnn_v5_0_3_compatibility.json</code></a> receipt records
+the identity fields, the validator result and every step's status and duration.
+No supply-chain scan was run for this pin, so that lane stays unscanned here and
+the older scan results do not apply.</p>
+<h2 id="historical-result-2026-10-26-v501">Historical Result (2026-10-26, v5.0.1)</h2>
 <p>The latest published, non-prerelease GNN release at review time was v5.0.1.
 The installed source's PEP 610 record, lockfile, and peeled release tag all
-resolved to the exact commit above; distribution and engine versions were
+resolved to the then-pinned commit; distribution and engine versions were
 both <code>5.0.1</code>. Upstream's default branch had moved beyond that release and is
 not used as the dependency target.</p>
 <p>On CPython 3.13.17 with the locked <code>all</code> and <code>upstream</code> extras, a freshly

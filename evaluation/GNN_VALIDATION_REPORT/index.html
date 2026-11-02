@@ -12835,10 +12835,10 @@
 
 
 <h1 id="gnn-spec-validation-report">GNN Spec Validation Report</h1>
-<p>Date: 2026-06-12; current upstream compatibility refreshed 2026-10-26. Historical grammar fixes below retain their original release context.</p>
+<p>Date: 2026-06-12; current upstream compatibility refreshed 2026-11-01 for the pinned v5.0.3 release. Historical grammar fixes below retain their original release context.</p>
 <h2 id="upstream-validator">Upstream Validator</h2>
-<p><strong>Installed as an optional git-pinned extra.</strong> COGANT can validate against the Active Inference Institute's <code>generalized-notation-notation</code> package through the optional <code>upstream</code> extra (<code>uv sync --extra upstream</code>; not part of <code>all</code>). The extra pins the exact published v5.0.1 commit <code>e54813b4197df36f7ae0054d5e79f3ad2d5db0ff</code> in <code>cogant/pyproject.toml</code>, mirrored in <code>uv.lock</code>. Distribution and installed engine versions both report <code>5.0.1</code>. The <a href="../gnn_v5_0_1_compatibility.json">current compatibility receipt</a> binds this source to the peeled release tag and the installed PEP 610 record. The <code>GNN v2.0.0</code> value COGANT writes under <code>## GNNVersionAndFlags</code> is COGANT's own schema identifier (<code>cogant.schema.versions.CURRENT_GNN_VERSION</code>), not the upstream package release.</p>
-<p><strong>Bridge boundary:</strong> COGANT callers must use <code>cogant.gnn.upstream_bridge</code>, not a raw <code>import gnn</code>. GNN &gt;= 4.0 installs the top-level <code>gnn</code> package; the GNN 2.x <code>src.gnn</code> import surface no longer exists. The bridge requires distribution version &gt;= 4.0 and a <code>gnn</code> package owned by <code>generalized-notation-notation</code>, imports it lazily, and maps COGANT's facades onto the 4.x API: <code>validate_gnn_syntax</code> (level <code>standard</code>), <code>validate_gnn_source</code>, and <code>check_gnn_file_structure</code>. The 25-step pipeline runs as one <code>python -m gnn.main --only-steps …</code> invocation.</p>
+<p><strong>Installed as an optional git-pinned extra.</strong> COGANT can validate against the Active Inference Institute's <code>generalized-notation-notation</code> package through the optional <code>upstream</code> extra (<code>uv sync --extra upstream</code>; not part of <code>all</code>). The extra pins the exact published v5.0.3 commit <code>8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1</code> in <code>cogant/pyproject.toml</code>, mirrored in <code>uv.lock</code>; the release-integrity audit fails when the two disagree. Distribution version, <code>gnn.__version__</code>, the bridge and the installed PEP 610 record all name <code>5.0.3</code> and that same commit. The <a href="../GNN_UPSTREAM_AUDIT_SURFACE/">upstream audit surface</a> states the current compatibility scope; the <a href="../gnn_v5_0_3_compatibility.json">v5.0.3 receipt</a> records the current run, and the <a href="../gnn_v5_0_1_compatibility.json">v5.0.1 receipt</a> remains a dated record. The <code>GNN v2.0.0</code> value COGANT writes under <code>## GNNVersionAndFlags</code> is COGANT's own schema identifier (<code>cogant.schema.versions.CURRENT_GNN_VERSION</code>), not the upstream package release.</p>
+<p><strong>Bridge boundary:</strong> COGANT callers must use <code>cogant.gnn.upstream_bridge</code>, not a raw <code>import gnn</code>. GNN &gt;= 4.0 installs the top-level <code>gnn</code> package; the GNN 2.x <code>src.gnn</code> import surface no longer exists. The bridge requires distribution version &gt;= 4.0 and a <code>gnn</code> package owned by <code>generalized-notation-notation</code>, imports it lazily, and maps COGANT's facades onto the upstream GNN &gt;= 4 API: <code>validate_gnn_syntax</code> (level <code>standard</code>), <code>validate_gnn_source</code>, and <code>check_gnn_file_structure</code>. The 25-step pipeline runs as one <code>python -m gnn.main --only-steps …</code> invocation.</p>
 <p><strong>Reference implementation used:</strong> COGANT's own <code>GNNValidator</code> in <code>py/cogant/gnn/validator.py</code>, cross-referenced against the pinned upstream release:
 - Upstream validator: <code>gnn.validate_gnn_syntax</code> at the <code>standard</code> and <code>strict</code> levels (<code>src/gnn/schema_validator/</code> in the upstream repository)
 - Upstream pipeline acceptance steps: <code>3_gnn</code>, <code>5_type_checker</code> (<code>src/gnn/type_checker/</code>), and <code>6_validation</code>
@@ -12846,11 +12846,11 @@
 <h2 id="spec-source">Spec Source</h2>
 <p>All links below are pinned to the current released source.</p>
 <ul>
-<li>File structure: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/e54813b4197df36f7ae0054d5e79f3ad2d5db0ff/src/gnn/documentation/file_structure.md</li>
-<li>Punctuation and connection grammar: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/e54813b4197df36f7ae0054d5e79f3ad2d5db0ff/src/gnn/documentation/punctuation.md</li>
-<li>Schema validator: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/tree/e54813b4197df36f7ae0054d5e79f3ad2d5db0ff/src/gnn/schema_validator</li>
-<li>Type-checker: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/tree/e54813b4197df36f7ae0054d5e79f3ad2d5db0ff/src/gnn/type_checker</li>
-<li>Examples: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/tree/e54813b4197df36f7ae0054d5e79f3ad2d5db0ff/input/gnn_files/discrete</li>
+<li>File structure: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1/src/gnn/documentation/file_structure.md</li>
+<li>Punctuation and connection grammar: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1/src/gnn/documentation/punctuation.md</li>
+<li>Schema validator: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/tree/8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1/src/gnn/schema_validator</li>
+<li>Type-checker: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/tree/8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1/src/gnn/type_checker</li>
+<li>Examples: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/tree/8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1/input/gnn_files/discrete</li>
 </ul>
 <h2 id="compliance-check">Compliance Check</h2>
 <table>
@@ -12865,12 +12865,12 @@
 <tr>
 <td>Required upstream sections present (<code>GNNSection</code>, <code>GNNVersionAndFlags</code>, <code>ModelName</code>, <code>StateSpaceBlock</code>, <code>Connections</code>, <code>InitialParameterization</code>, <code>Equations</code>, <code>Time</code>, <code>ActInfOntologyAnnotation</code>, <code>ModelParameters</code>, <code>Footer</code>, <code>Signature</code>)</td>
 <td>PASS</td>
-<td>Current generated calculator model passes; incomplete-input controls are rejected by upstream v5.0.1</td>
+<td>Current generated calculator model passes; incomplete-input controls are rejected by the upstream validator</td>
 </tr>
 <tr>
-<td>Upstream v5.0.1 <code>validate_gnn_syntax</code> on the generated control-positive model</td>
+<td>Upstream v5.0.3 <code>validate_gnn_syntax</code> on the generated control-positive model</td>
 <td>PASS</td>
-<td><code>standard</code> and <code>strict</code> levels report 0 errors (see <a href="../GNN_UPSTREAM_AUDIT_SURFACE/">GNN upstream audit surface</a>)</td>
+<td>A freshly translated calculator package reported 0 errors at <code>standard</code> and <code>strict</code> on 2026-11-01 against the pinned v5.0.3 release (see <a href="../GNN_UPSTREAM_AUDIT_SURFACE/">GNN upstream audit surface</a>)</td>
 </tr>
 <tr>
 <td>StateSpaceBlock variable syntax: <code>NAME[dim,dim,...,type=T]</code></td>
@@ -13042,15 +13042,15 @@ That mode deliberately fails on selected upstream-step failures even though
 normal COGANT product paths keep those failures advisory and preserve the
 validated package. The companion page
 <a href="../GNN_UPSTREAM_AUDIT_SURFACE/">GNN upstream audit surface</a> records the
-current v5.0.1 results separately from historical 4.1.0 results and explains how
-to read the SVG.</p>
+current results for the pinned release separately from the dated v5.0.1 and
+4.1.0 results and explains how to read the SVG.</p>
 <h2 id="remaining-open-issues">Remaining Open Issues</h2>
 <ol>
 <li>
 <p><strong>Raw upstream import bypasses the bridge contract.</strong> A direct <code>import gnn</code> skips the version (&gt;= 4.0) and ownership gates and eagerly pulls in upstream's heavy dependencies. This is intentional containment: COGANT code must call the <code>upstream_*</code> facade functions rather than importing upstream modules directly.</p>
 </li>
 <li>
-<p><strong>Selected upstream execution is narrower than all-step or backend qualification.</strong> The fresh v5.0.1 calculator run passed all 20 selected steps with warnings. Setup, upstream tests, render, execute, and LLM steps were excluded (<code>1, 2, 11, 12, 13</code>); the explicit skip list prevents prerequisites from re-enabling them. Historical render/execute observations belong to their dated receipts. Optional upstream dependencies still determine what several steps can exercise. Neither a green structural validator nor this selected run qualifies every backend or model.</p>
+<p><strong>Selected upstream execution is narrower than all-step or backend qualification.</strong> The retained v5.0.1 calculator run passed all 20 selected steps with warnings; that lane has not been re-run on the current v5.0.3 pin. Setup, upstream tests, render, execute, and LLM steps were excluded (<code>1, 2, 11, 12, 13</code>); the explicit skip list prevents prerequisites from re-enabling them. Historical render/execute observations belong to their dated receipts. Optional upstream dependencies still determine what several steps can exercise. Neither a green structural validator nor this selected run qualifies every backend or model.</p>
 </li>
 <li>
 <p><strong>Variable naming diverges from canonical upstream examples.</strong> Upstream simple models use flat names (<code>s</code>, <code>o</code>, <code>A</code>, <code>B</code>). COGANT uses factor-indexed names (<code>s_f0</code>, <code>o_m0</code>, <code>A_m0</code>, <code>B_f0</code>). This is valid per the spec (alphanumeric + underscore allowed) and is intentional for multi-factor support. No change needed, but it may cause semantic mismatch warnings if the upstream type-checker expects single-letter names in <code>ActInfOntologyAnnotation</code>.</p>
