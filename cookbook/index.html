@@ -12873,11 +12873,12 @@ content should go into a new numbered recipe rather than extending these.</p>
 <li>Pick targeted recipes from the rest of the table as use cases arise.</li>
 </ol>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>All recipes assume COGANT is installed:</p>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>cogant
-<span class="c1"># or with visualization extras</span>
-pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"cogant[viz]"</span>
+<p>All recipes assume COGANT is installed. COGANT is not on PyPI yet, so install
+from a checkout:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>all
 </code></pre></div>
+<p>Once the release is published, <code>pip install cogant</code> (or
+<code>pip install "cogant[viz]"</code> for the visualization extras) will work.</p>
 <p>Verify your environment:</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>doctor
 </code></pre></div>

@@ -12777,7 +12777,10 @@
 <li><a href="08_constraint_authoring/">08 Constraint Authoring</a>, <a href="11_inference_learning/">11 Inference Learning</a>, <a href="12_cross_language/">12 Cross Language</a> — advanced topics.</li>
 </ol>
 <h2 id="running-the-notebooks">Running the notebooks</h2>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"cogant[notebooks]"</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># COGANT is not on PyPI yet, and pyproject.toml defines no `notebooks` extra;</span>
+<span class="c1"># install from a checkout and add Jupyter:</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>all
+uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>jupyterlab
 jupyter<span class="w"> </span>lab<span class="w"> </span>docs/notebooks/
 </code></pre></div>
 <h2 id="ipynb-md-pairing"><code>.ipynb</code> / <code>.md</code> pairing</h2>

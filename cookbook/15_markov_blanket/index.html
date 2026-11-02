@@ -12795,7 +12795,7 @@
 <strong>Time:</strong> ~5 minutes.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>COGANT installed with viz extras: <code>pip install "cogant[viz]"</code></li>
+<li>COGANT installed with viz extras: <code>uv sync --extra viz</code> from a checkout (<code>pip install "cogant[viz]"</code> once published)</li>
 <li>Graphviz installed (<code>brew install graphviz</code> or <code>apt install graphviz</code>)</li>
 </ul>
 <h2 id="steps">Steps</h2>
@@ -12875,7 +12875,7 @@ without writing files.</p>
 <tbody>
 <tr>
 <td><code>cogant viz</code> not found</td>
-<td>Ensure you installed <code>cogant[viz]</code>; run <code>pip install "cogant[viz]"</code></td>
+<td>Ensure the viz extra is installed: <code>uv sync --extra viz</code> from a checkout (<code>pip install "cogant[viz]"</code> once published)</td>
 </tr>
 <tr>
 <td>No PNGs generated</td>
