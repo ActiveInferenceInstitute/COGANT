@@ -9,7 +9,7 @@
 
 ## Prerequisites
 
-- COGANT installed (`uv sync --extra all` from a checkout; `pip install cogant` once published).
+- COGANT installed (`uv sync --extra all` from a checkout; the `pip install cogant` form is not yet available).
 - The repo's bundled fixture at `examples/real_world/flask_app/`. It contains
   six Python modules totalling 853 lines: `__init__.py`, `app.py`, `config.py`,
   `models.py`, `services.py`, `utils.py`.

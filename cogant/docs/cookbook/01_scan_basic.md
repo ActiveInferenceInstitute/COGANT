@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-- COGANT installed from a checkout (`uv sync --extra all`; `pip install cogant` once published)
+- COGANT installed from a checkout (`uv sync --extra all`; the `pip install cogant` form is not yet available)
 - A Python project directory on disk
 
 ## Steps
