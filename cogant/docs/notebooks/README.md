@@ -32,7 +32,10 @@
 ## Running the notebooks
 
 ```bash
-pip install "cogant[notebooks]"
+# COGANT is not on PyPI yet, and pyproject.toml defines no `notebooks` extra;
+# install from a checkout and add Jupyter:
+uv sync --extra all
+uv pip install jupyterlab
 jupyter lab docs/notebooks/
 ```
 

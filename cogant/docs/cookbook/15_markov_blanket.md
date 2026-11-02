@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-- COGANT installed with viz extras: `pip install "cogant[viz]"`
+- COGANT installed with viz extras: `uv sync --extra viz` from a checkout (`pip install "cogant[viz]"` once published)
 - Graphviz installed (`brew install graphviz` or `apt install graphviz`)
 
 ## Steps
@@ -75,7 +75,7 @@ Rasterizing visualizations in /path/to/output
 
 | Problem | Fix |
 |---------|-----|
-| `cogant viz` not found | Ensure you installed `cogant[viz]`; run `pip install "cogant[viz]"` |
+| `cogant viz` not found | Ensure the viz extra is installed: `uv sync --extra viz` from a checkout (`pip install "cogant[viz]"` once published) |
 | No PNGs generated | Check the output directory contains `.mermaid`, `.svg`, or `.dot` files |
 | Graphviz errors | Install graphviz: `brew install graphviz` (macOS) or `apt install graphviz` (Linux) |
 | Blank PNG | The diagram may be empty if the repo has very few modules; check `cogant scan` output |

@@ -10,7 +10,11 @@
 
 COGANT targets Python **3.11+** and ships a Typer-based CLI (`cogant`) plus a stable Python API (`cogant.api`).
 
-## From PyPI
+## From PyPI (when available)
+
+> **Not yet published.** COGANT is not on PyPI yet, so the two commands in this
+> section apply once the release is published. Use one of the source installs
+> below today.
 
 ```bash
 pip install cogant
