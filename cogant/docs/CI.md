@@ -37,9 +37,11 @@ uv run python docs/verify_doc_links.py
 
 On pushes to `main`, after a successful `CI` workflow, or through manual dispatch,
 `.github/workflows/docs.yml` installs the dev dependencies, runs `uv run mkdocs build`,
-and deploys `site/` with `peaceiris/actions-gh-pages@v4` (which resolves to a
+and deploys `site/` with `peaceiris/actions-gh-pages` pinned at v4.1.0 (a
 Node 24 release, so no runtime override is needed). The job uses
-`actions/checkout@v7`, `actions/setup-python@v7`, and `astral-sh/setup-uv@v10.3.0`.
+`actions/checkout` pinned at v7.0.1, `actions/setup-python` pinned at v7.1.0, and
+`astral-sh/setup-uv` pinned at v10.3.3; every action reference in this
+repository's workflows is a full commit SHA.
 The workflow defaults to `contents: read`; only the deploy job grants
 `contents: write`, because the action publishes the generated site to the
 `gh-pages` branch. Deploys are serialized with a job-level

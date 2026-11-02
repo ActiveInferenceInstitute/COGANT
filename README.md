@@ -30,6 +30,8 @@ configurations, stochastic kernels, resource limits, and the agent-runtime hando
 Its construction and reference-checking design draws on a
 [pinned review of Handwired](cogant/docs/rnd/handwired.md).
 
+GNN maintains a [downstream adoption guide](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/main/docs/gnn/integration/downstream_adoption.md) for repositories that consume the notation.
+
 From this project root:
 
 ```bash

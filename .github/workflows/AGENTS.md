@@ -15,20 +15,21 @@ through `uv run` so CI matches local development.
 
 ## Runtime versions
 
-All actions are pinned to current majors that run on **Node 24** (the
-mandatory runtime starting 2026-06-02), with `setup-uv` pinned to a
-specific immutable tag because Astral does not publish floating
-major tags for that action:
+Every action is pinned to a full commit SHA whose trailing comment names the
+resolved release. All of them run on **Node 24** (the mandatory runtime starting
+2026-06-02):
 
-| Action | Version | Notes |
-|--------|---------|-------|
-| `actions/checkout` | `@v7` | Node 24. v7 refuses fork-PR code under `pull_request_target`/`workflow_run` unless `allow-unsafe-pr-checkout: true`; the guard only fires for a custom `repository`/`ref`, and every checkout here is the default self-checkout. Credentials are stored under `$RUNNER_TEMP` since v6; every job sets `persist-credentials: false` because all git calls are local. |
-| `actions/setup-python` | `@v7` | Node 24. v7 is an internal ESM migration; inputs unchanged. |
-| `actions/cache` | `@v6` | Node 24. v6 is an internal ESM migration; inputs unchanged. |
-| `actions/upload-artifact` | `@v7` | Node 24 since v6 (v5 still ran on Node 20). v7 adds an opt-in `archive: false`; the zipped default is unchanged. |
-| `astral-sh/setup-uv` | `@v10.3.0` | Pinned (immutable tag); no `@v10` floating tag exists. v9 changed the `prune-cache` default to `false`, so every cached step sets `prune-cache: true` to keep the old behaviour. v10's `enable-cache: auto` skips the cache on `release`, tag push, `pull_request_target` and `workflow_run` events (so the `docs` job's `workflow_run` runs are uncached); jobs that set `enable-cache: true` are unaffected. |
-| `dtolnay/rust-toolchain` | `@stable` | Branch-pinned by design; replacement for the immutable `actions-rs/toolchain`. |
-| `peaceiris/actions-gh-pages` | `@v4` | Current major. `@v4` resolves to v4.1.0, which runs on Node 24, so the former `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` override was removed. |
+| Action | Pin | Notes |
+|--------|-----|-------|
+| `actions/checkout` | `v7.0.1` (`3d3c42e5aac5ba805825da76410c181273ba90b1`) | Node 24. v7 refuses fork-PR code under `pull_request_target`/`workflow_run` unless `allow-unsafe-pr-checkout: true`; the guard only fires for a custom `repository`/`ref`, and every checkout here is the default self-checkout. Credentials are stored under `$RUNNER_TEMP` since v6; every job sets `persist-credentials: false` because all git calls are local. |
+| `actions/setup-python` | `v7.1.0` (`6d4fd22b20465ccc0f7354476588e8df7c9ca0e0`) | Node 24. v7 is an internal ESM migration; inputs unchanged. |
+| `actions/cache` | `v6.1.0` (`55cc8345863c7cc4c66a329aec7e433d2d1c52a9`) | Node 24. v6 is an internal ESM migration; inputs unchanged. |
+| `actions/upload-artifact` | `v7.0.2` (`cf430e030ddbb5b0abf93d22962f4752f3646cd9`) | Node 24 since v6 (v5 still ran on Node 20). v7 adds an opt-in `archive: false`; the zipped default is unchanged. |
+| `astral-sh/setup-uv` | `v10.3.3` (`68559e99cc807c1eb7e9238fd43a15bba460eec2`) | The SHA is the stable reference form here: Astral publishes no floating major tag for this action. v9 changed the `prune-cache` default to `false`, so every cached step sets `prune-cache: true` to keep the old behaviour. v10's `enable-cache: auto` skips the cache on `release`, tag push, `pull_request_target` and `workflow_run` events (so the `docs` job's `workflow_run` runs are uncached); jobs that set `enable-cache: true` are unaffected. |
+| `dtolnay/rust-toolchain` | `stable` branch tip `b725eda525362e7cf34af9a7243cac1e3f01a7ec` | Replacement for the immutable `actions-rs/toolchain`. The action's `toolchain` input defaults to `stable` in this revision, so pinning the ref does not change which toolchain is installed. |
+| `peaceiris/actions-gh-pages` | `v4.1.0` (`84c30a85c19949d7eee79c4ff27748b70285e453`) | Runs on Node 24, so the former `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` override was removed. |
+| `actions/upload-pages-artifact` | `v5.0.0` (`fc324d3547104276b827a68afc52ff2a11cc49c9`) | Only used by the package-root template workflow [`../../cogant/.github/workflows/docs.yml`](../../cogant/.github/workflows/docs.yml). |
+| `actions/deploy-pages` | `v5.0.1` (`368f82528645a54fb793d4d04e342629a3f51346`) | Only used by the same package-root template workflow. |
 
 The `pre-commit` job intentionally **does not** use
 `pre-commit/action` — its latest release (v3.0.1) still bundles
