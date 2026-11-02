@@ -12665,9 +12665,11 @@ anchor checker separately when editing documentation:</p>
 <h2 id="github-pages-deployment">GitHub Pages deployment</h2>
 <p>On pushes to <code>main</code>, after a successful <code>CI</code> workflow, or through manual dispatch,
 <code>.github/workflows/docs.yml</code> installs the dev dependencies, runs <code>uv run mkdocs build</code>,
-and deploys <code>site/</code> with <code>peaceiris/actions-gh-pages@v4</code> (which resolves to a
+and deploys <code>site/</code> with <code>peaceiris/actions-gh-pages</code> pinned at v4.1.0 (a
 Node 24 release, so no runtime override is needed). The job uses
-<code>actions/checkout@v7</code>, <code>actions/setup-python@v7</code>, and <code>astral-sh/setup-uv@v10.3.0</code>.
+<code>actions/checkout</code> pinned at v7.0.1, <code>actions/setup-python</code> pinned at v7.1.0, and
+<code>astral-sh/setup-uv</code> pinned at v10.3.3; every action reference in this
+repository's workflows is a full commit SHA.
 The workflow defaults to <code>contents: read</code>; only the deploy job grants
 <code>contents: write</code>, because the action publishes the generated site to the
 <code>gh-pages</code> branch. Deploys are serialized with a job-level
