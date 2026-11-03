@@ -11,7 +11,7 @@ current compatibility scope. Dated earlier results are retained separately.
 | Distribution | `generalized-notation-notation` (optional `cogant[upstream]` extra; not part of `all`) |
 | Pin (`cogant/pyproject.toml`, mirrored in `cogant/uv.lock`) | `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1` |
 | Distribution version / `gnn.__version__` | `5.0.3` / `5.0.3` |
-| Pin tag | [v5.0.3](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3), dated 2026-10-31; annotated tag `2d830c75de2be2cad9b96b0879937d96ecda059d`, peeled to the exact pinned commit; tag only, with no GitHub release object |
+| Pin tag | [v5.0.3](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3), dated 2026-10-31; annotated tag `2d830c75de2be2cad9b96b0879937d96ecda059d`, peeled to the exact pinned commit; release record created retroactively on 2026-11-03 |
 | Import package | top-level `gnn` (GNN >= 4.0; the GNN 2.x `src.gnn` surface no longer exists) |
 | License | CC-BY-NC-SA-4.0 (see [`LICENSES.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/LICENSES.md)) |
 
@@ -22,10 +22,10 @@ upstream package release above.
 
 ## Current Compatibility (2026-11-01)
 
-The current pin is the v5.0.3 tag; that tag has no GitHub release object, so
-the pin is citable only as commit `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`,
-and the latest published GNN release remains v5.0.1. The installed source's
-PEP 610 record, the lockfile, the
+The current pin is the v5.0.3 tag; the release record for that tag was created
+retroactively on 2026-11-03, and the tag still resolves to the pinned commit,
+`8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`. The installed source's PEP 610
+record, the lockfile, the
 distribution version, `gnn.__version__` and the bridge version all name `5.0.3`
 and that commit, and `tools/audit_release_integrity.py` cross-checks the
 `pyproject.toml` pin against `uv.lock`, failing when the two disagree.
