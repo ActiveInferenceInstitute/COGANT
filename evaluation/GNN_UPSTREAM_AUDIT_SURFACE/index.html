@@ -12826,8 +12826,8 @@ current compatibility scope. Dated earlier results are retained separately.</p>
 <td><code>5.0.3</code> / <code>5.0.3</code></td>
 </tr>
 <tr>
-<td>Release tag</td>
-<td><a href="https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3">v5.0.3</a>, published 2026-10-31; annotated tag <code>2d830c75de2be2cad9b96b0879937d96ecda059d</code>, peeled to the exact pinned commit</td>
+<td>Pin tag</td>
+<td><a href="https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3">v5.0.3</a>, dated 2026-10-31; annotated tag <code>2d830c75de2be2cad9b96b0879937d96ecda059d</code>, peeled to the exact pinned commit; release record created retroactively on 2026-11-03</td>
 </tr>
 <tr>
 <td>Import package</td>
@@ -12844,8 +12844,10 @@ current compatibility scope. Dated earlier results are retained separately.</p>
 (<code>cogant.schema.versions.CURRENT_GNN_VERSION</code>). It is independent of the
 upstream package release above.</p>
 <h2 id="current-compatibility-2026-11-01">Current Compatibility (2026-11-01)</h2>
-<p>The current pin is the published v5.0.3 release; it is the latest published,
-non-prerelease release. The installed source's PEP 610 record, the lockfile, the
+<p>The current pin is the v5.0.3 tag; the release record for that tag was created
+retroactively on 2026-11-03, and the tag still resolves to the pinned commit,
+<code>8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1</code>. The installed source's PEP 610
+record, the lockfile, the
 distribution version, <code>gnn.__version__</code> and the bridge version all name <code>5.0.3</code>
 and that commit, and <code>tools/audit_release_integrity.py</code> cross-checks the
 <code>pyproject.toml</code> pin against <code>uv.lock</code>, failing when the two disagree.</p>
