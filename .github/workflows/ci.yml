@@ -337,12 +337,15 @@ jobs:
             --require-wheel \
             --check-wheel-reproducibility
 
-  upstream-smoke:
-    name: Optional upstream GNN smoke (manual)
-    # The upstream checkout is intentionally not part of normal CI or the
-    # ``all`` extra. Run it only when a maintainer explicitly requests the
-    # resource-heavy integration lane from the Actions UI.
-    if: github.event_name == 'workflow_dispatch'
+  gnn-conformance:
+    name: gnn conformance (pinned)
+    # The upstream checkout stays out of the ``all`` extra, but this lane is
+    # now the stable conformance check for every pull request and push. It
+    # keeps the same bounded, job-local cache and remains available from the
+    # Actions UI through ``workflow_dispatch``. The full manual pipeline is
+    # still reachable through ``cogant upstream-gnn`` and
+    # ``cogant analyze --upstream-gnn-pipeline``; this job exercises the
+    # selected parse/type-check/validation steps and the bridge tests.
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
