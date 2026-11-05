@@ -185,14 +185,16 @@ Source-of-truth rules:
   - Depends on: cog-p1-02, cog-p5-03.
   - Deliverable: pinned optional dependency, bounded checkout/cache, license and
     provenance record, distinct unavailable versus validation-failed results,
-    and a manually triggered CI smoke lane that never enters core installation.
+    and a PR/push-triggered CI lane that never enters core installation.
   - Acceptance: core install/tests remain independent; upstream failures are
     fail-closed, bounded, and diagnosable.
   - Current state: the optional extra is excluded from `all`, the bridge
     distinguishes unavailable from failed validation, release integrity checks
-    the full commit pin and license metadata, and CI has an explicit manual
-    smoke job. The upstream checkout itself remains intentionally uninstalled
-    in the core developer environment.
+    the full commit pin and license metadata, and CI runs the stable
+    `gnn conformance (pinned)` job on every pull request and push (still
+    available through manual dispatch). The upstream checkout itself remains
+    intentionally uninstalled in the core developer environment, and the full
+    manual pipeline remains available through the CLI lanes.
 
 - [ ] **cog-p4-02 — Streaming and resource bounds.**
   - Priority: P4.
