@@ -38,20 +38,15 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Set up uv
-        # setup-uv v9 flipped the ``prune-cache`` default to false; keep
-        # pruning pre-built wheels before upload (the v8 behaviour, and the
-        # action's own recommendation for GitHub-hosted runners) so the cache
-        # stays small. Applies to every setup-uv step with caching enabled.
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          enable-cache: true
-          prune-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Set up uv and Python
+        # The org standard's composite action installs the pinned uv release
+        # and the CPython interpreter in one step. The ``uv sync`` / ``uv run``
+        # steps below are unchanged, and no job name or check-run name moves.
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.11"
+          working-directory: cogant
+          enable-cache: "true"
 
       - name: Install dev dependencies
         run: uv sync --extra dev
@@ -154,16 +149,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          enable-cache: true
-          prune-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Set up uv and Python
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.11"
+          working-directory: cogant
+          enable-cache: "true"
 
       - name: Install typecheck dependencies
         # The inference renderer imports Pillow through the visualization extra.
@@ -199,16 +190,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Set up uv and Python ${{ matrix.python-version }}
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          enable-cache: true
-          prune-cache: true
+          working-directory: cogant
+          enable-cache: "true"
 
       - name: Install all extras
         run: uv sync --extra all
@@ -283,16 +270,20 @@ jobs:
       # wheel via ``uv build``; without this step the job dies with
       # FileNotFoundError: 'uv' (latent defect: the job is ``needs: lint``
       # and lint never reached green until now).
-      - name: Set up uv
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          enable-cache: true
-          prune-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Set up uv and Python
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.12"
+          working-directory: cogant
+          enable-cache: "true"
+
+      # The composite action installs uv and CPython into uv's managed store;
+      # the seeded environment puts that interpreter on PATH as `python` for
+      # the pip-based wheel steps below.
+      - name: Create the pinned Python environment
+        run: |
+          uv venv --seed --python 3.12 "$RUNNER_TEMP/python"
+          echo "$RUNNER_TEMP/python/bin" >> "$GITHUB_PATH"
 
       - name: Build wheel without dependencies
         run: python -m pip wheel . --no-deps -w /tmp/cogant-wheelhouse
@@ -354,15 +345,22 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          enable-cache: false
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Set up uv and Python
+        # Caching stays off here so this lane cannot evict the core dependency
+        # cache or hide its provenance, as before.
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.12"
+          working-directory: cogant
+          enable-cache: "false"
+
+      # The composite action installs uv and CPython into uv's managed store;
+      # the seeded environment puts that interpreter on PATH as `python` for
+      # the provenance-audit step below.
+      - name: Create the pinned Python environment
+        run: |
+          uv venv --seed --python 3.12 "$RUNNER_TEMP/python"
+          echo "$RUNNER_TEMP/python/bin" >> "$GITHUB_PATH"
 
       - name: Install the pinned optional upstream extra
         # Keep the cache in an ephemeral, bounded job-local location so this
@@ -443,10 +441,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Set up uv and Python
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.11"
+          working-directory: cogant
+          enable-cache: "true"
+
+      # The composite action installs uv and CPython into uv's managed store;
+      # the seeded environment puts that interpreter on PATH as `python` for
+      # the pip install of pre-commit below.
+      - name: Create the pinned Python environment
+        run: |
+          uv venv --seed --python 3.11 "$RUNNER_TEMP/python"
+          echo "$RUNNER_TEMP/python/bin" >> "$GITHUB_PATH"
 
       # Inline ``pip install pre-commit`` rather than using
       # ``pre-commit/action`` because that action still bundles
