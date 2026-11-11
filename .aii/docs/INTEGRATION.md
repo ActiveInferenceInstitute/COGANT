@@ -39,6 +39,7 @@
 | Path | Kind | Description |
 | --- | --- | --- |
 | `README.md` | `doc` | Repository overview. |
+| `docs/README.md` | `doc` | Repository-level documentation index into the package MkDocs site under cogant/docs/. |
 | `cogant` | `code` | Installable COGANT package root (py/cogant, tests, Rust crates, pyproject.toml). |
 | `src` | `code` | Parent-template compatibility shell source. |
 | `pyproject.toml` | `code` | Compatibility-shell Python package config. |

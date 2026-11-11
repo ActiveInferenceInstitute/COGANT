@@ -12,6 +12,47 @@ form a tiny compatibility shell for the parent `docxology/template` project
 discovery contract. The actual installable COGANT package remains the nested
 [`cogant/`](cogant/) tree.
 
+## Contents
+
+- [Documentation](#documentation)
+- [Status](#status)
+- [Location matrix](#location-matrix)
+- [Explicit finite state-space models](#explicit-finite-state-space-models)
+- [Execute exported GNN matrices](#execute-exported-gnn-matrices)
+- [Manuscript variables (madlib)](#manuscript-variables-madlib)
+- [Batch outputs (`run_all`)](#batch-outputs-run_all)
+- [Setup — eval submodules](#setup--eval-submodules)
+- [Tests](#tests)
+- [See also](#see-also)
+- [InstituteOS sidecar](#instituteos-sidecar)
+
+## Documentation
+
+The complete documentation ships with the package. Start at the
+[documentation index](docs/README.md) for a map of every area, or jump straight
+to the [docs site home](cogant/docs/index.md):
+[Installation](cogant/docs/getting-started/installation.md) ·
+[Quickstart](cogant/docs/getting-started/quickstart.md) ·
+[CLI reference](cogant/docs/cli_reference.md) ·
+[FAQ](cogant/docs/faq.md).
+
+## Status
+
+- **Works offline once installed:** the forward pipeline, CLI, export formats,
+  finite-model compilation, and GNN validation are the supported surface today.
+- **Not yet published:** COGANT is not on PyPI — install from source
+  (`cd cogant && uv sync --all-extras`).
+- **Needs network:** the default `run_all` batch shallow-clones two small public
+  repos, and the optional upstream GNN conformance lane fetches a pinned external
+  checkout (only when `COGANT_ENABLE_UPSTREAM_GNN` is set and the `upstream` extra
+  is installed).
+- **Needs extra setup:** the quantitative evaluation pipeline reads 12 vendored
+  git submodules under [`cogant/evaluation/eval_repos/`](cogant/evaluation/eval_repos/)
+  (`git submodule update --init --recursive`); empty checkouts make benchmarks
+  skip rather than fail.
+- **Authoritative completeness check:** [`tools/release_gate.py`](tools/release_gate.py)
+  and the manuscript audits, run from this project root.
+
 ## Location matrix
 
 | Context | COGANT project root | COGANT package root | Notes |

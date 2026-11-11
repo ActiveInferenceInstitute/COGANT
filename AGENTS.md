@@ -5,6 +5,7 @@
 | Path | Role |
 |------|------|
 | [`cogant/`](cogant/) | Nested COGANT package (`py/cogant/`, `tests/`, `pyproject.toml`, Rust crates, docs). **This is the installable package root.** |
+| [`docs/`](docs/README.md) | Repository-level documentation index. The canonical docs are the MkDocs site at [`cogant/docs/`](cogant/docs/index.md); this index points into it and into the root-level documents instead of duplicating them. |
 | [`manuscript/`](manuscript/) | PDF/HTML manuscript templates with `{{PLACEHOLDER}}` substitution syntax. Source of truth for prose; never edit by hand any number that has a `{{...}}` token. |
 | [`tools/`](tools/) | `MANUSCRIPT_VARS` registry, metrics regeneration CLI, inject CLI, audit helpers, manuscript figure copier. |
 | [`scripts/`](scripts/) | Thin orchestrators (`z_generate_manuscript_variables.py`, which also refreshes `output/figures/`). |
