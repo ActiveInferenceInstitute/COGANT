@@ -168,3 +168,11 @@ Empty checkouts make benchmarks skip rather than fail, so this step is only requ
 - [`cogant/README.md`](cogant/README.md) — package overview
 - [`cogant/CONTRIBUTING.md`](cogant/CONTRIBUTING.md) — contribution guidelines and development setup
 - Package tests and coverage policy: `cogant/pyproject.toml` (`pytest` defaults, `[tool.coverage.*]`)
+
+## InstituteOS sidecar
+
+This repository carries a committed [`.aii/`](.aii/README.md) sidecar with curated
+InstituteOS metadata (`aii-sidecar/v1`): category, maturity, ecosystem relations,
+key artifacts, provenance, and portable tasks. It is read by
+[InstituteOS](https://github.com/ActiveInferenceInstitute/InstituteOS) tooling and
+does not affect the project's build or runtime.

@@ -1,0 +1,11 @@
+{
+  "schema": "aii-readiness/v1",
+  "repo": "ActiveInferenceInstitute/COGANT",
+  "tier": "python-library",
+  "standard_version": "1.0.0",
+  "baseline": {
+    "commit": "ce3c6d4c8b8db522a8b522d8a5fa43862ad7080f",
+    "measured_at": "2026-11-10"
+  },
+  "waivers": []
+}
