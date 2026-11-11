@@ -1,15 +1,16 @@
 # AII sidecar — InstituteOS metadata. Schema: aii_platform.aii_sidecar
 meta:
   sidecar_version: 1.2.1
-  updated: '2026-11-10'
+  updated: '2026-11-11'
 repo:
   name: COGANT
   slug: cogant
   full_name: ActiveInferenceInstitute/COGANT
-  description: Codebase-to-GNN translation — package under cogant/, manuscript under
-    manuscript/. This checkout is self-contained at the COGANT project root; when
-    linked into docxology/template, the same tree is expected to appear at projects/working/cogant/
-    and be rendered with the lifecycle-qualified project name working/cogant.…
+  description: Codebase-to-GNN translation engine. The installable package is the nested
+    cogant/ tree (py/cogant, its own tests, pyproject.toml and Rust PyO3 crates) and
+    the manuscript lives under manuscript/; top-level src/, tests/ and pyproject.toml
+    form a small compatibility shell for the parent docxology/template project
+    discovery contract.
 institute:
   category: research-software
   maturity: released
@@ -20,8 +21,10 @@ ecosystem:
     relation: referenced-by
     note: Federated via the InstituteOS .aii manifest.
   - repo: ActiveInferenceInstitute/Active_Inference_Ontology
+    relation: references
     note: Uses Active Inference Ontology terms.
   - repo: ActiveInferenceInstitute/Generalized_Notation_Notation
+    relation: references
     note: Uses Generalized Notation Notation (GNN) for model specifications.
   links:
     github: https://github.com/ActiveInferenceInstitute/COGANT
@@ -30,12 +33,15 @@ artifacts:
 - path: README.md
   kind: doc
   description: Repository overview.
+- path: cogant
+  kind: code
+  description: Installable COGANT package root (py/cogant, tests, Rust crates, pyproject.toml).
 - path: src
   kind: code
-  description: Source tree.
+  description: Parent-template compatibility shell source.
 - path: pyproject.toml
   kind: code
-  description: Python package config.
+  description: Compatibility-shell Python package config.
 - path: LICENSE
   kind: doc
   description: License.
@@ -54,7 +60,7 @@ artifacts:
 provenance:
   license: MIT
   citation:
-    doi: 10.5281/zenodo.20705351.svg
+    doi: 10.5281/zenodo.20705351
     text: Active Inference Institute — COGANT.
 instituteos:
   tags:
@@ -73,8 +79,9 @@ capabilities:
 - manuscript-publication
 tasks:
   test:
-    cmd: python -m pytest
-    description: Run the test suite.
+    cmd: uv run pytest tests/ -q
+    cwd: cogant
+    description: Run the installable COGANT package test suite from the inner package root.
 docs:
 - README.md
 - AGENTS.md

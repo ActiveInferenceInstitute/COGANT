@@ -39,8 +39,9 @@
 | Path | Kind | Description |
 | --- | --- | --- |
 | `README.md` | `doc` | Repository overview. |
-| `src` | `code` | Source tree. |
-| `pyproject.toml` | `code` | Python package config. |
+| `cogant` | `code` | Installable COGANT package root (py/cogant, tests, Rust crates, pyproject.toml). |
+| `src` | `code` | Parent-template compatibility shell source. |
+| `pyproject.toml` | `code` | Compatibility-shell Python package config. |
 | `LICENSE` | `doc` | License. |
 | `AGENTS.md` | `doc` | Agent guidance. |
 | `CITATION.cff` | `citation` | Machine-readable citation metadata. |
@@ -51,7 +52,7 @@
 
 | Task | Command | Working directory | Description |
 | --- | --- | --- | --- |
-| `test` | `python -m pytest` | `.` | Run the test suite. |
+| `test` | `uv run pytest tests/ -q` | `cogant` | Run the installable COGANT package test suite from the inner package root. |
 
 ## Validation
 

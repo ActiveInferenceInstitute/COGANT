@@ -162,6 +162,18 @@ git submodule update --init --recursive cogant/evaluation/eval_repos
 
 Empty checkouts make benchmarks skip rather than fail, so this step is only required when running the evaluation pipeline. See [`cogant/evaluation/eval_repos/AGENTS.md`](cogant/evaluation/eval_repos/AGENTS.md) for per-submodule details.
 
+## Tests
+
+The installable package suite lives in the inner [`cogant/`](cogant/) package root (the tests run there pick up `cogant/py/cogant/`):
+
+```bash
+uv run --directory cogant pytest tests/ -q                                   # full suite
+uv run --directory cogant pytest tests/unit/test_engine.py -v                # one file
+uv run --directory cogant pytest tests/ -q -m "not slow" --no-cov            # fast pass
+```
+
+The top-level compatibility shell under [`tests/`](tests/) has its own small suite (`uv run python -m pytest -q tests`); it exercises the manuscript tooling in `tools/` rather than the package.
+
 ## See also
 
 - [`manuscript/README.md`](manuscript/README.md) — section index and validation commands

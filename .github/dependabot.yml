@@ -21,3 +21,15 @@ updates:
           - "*"
     cooldown:
       default-days: 7
+  # The installable package lives at cogant/ with its own pyproject.toml and
+  # uv.lock; track that dependency surface separately from the compatibility shell.
+  - package-ecosystem: "pip"
+    directory: "/cogant"
+    schedule:
+      interval: "weekly"
+    groups:
+      cogant-pip-dependencies:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7

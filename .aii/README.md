@@ -43,7 +43,7 @@ Institute repositories without touching this project's own content. The schema i
 
 | Task | Command | Working directory | Description |
 | --- | --- | --- | --- |
-| `test` | `python -m pytest` | `.` | Run the test suite. |
+| `test` | `uv run pytest tests/ -q` | `cogant` | Run the installable COGANT package test suite from the inner package root. |
 
 ## Links
 
