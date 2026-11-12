@@ -3,6 +3,10 @@ full_pomdp
 
 ## GNNVersionAndFlags
 GNN v2.0.0
+# COGANT dialect: GNN v2.0.0 is COGANT's own schema identifier
+# (cogant.schema.versions.CURRENT_GNN_VERSION), not an upstream
+# generalized-notation-notation language version. Every variable used in
+# ## Connections is declared in ## StateSpaceBlock below.
 
 ## ModelName
 full_pomdp
@@ -14,16 +18,10 @@ Complete POMDP Active Inference agent with 5 hidden states, 1 observation modali
 s_hidden[5,1,type=float]
 B_transition[5,5,3,type=float]
 D_prior[5,1,type=float]
-
-## ObservationBlock
 o_sensor[5,type=int]
 A_likelihood[5,5,type=float]
-
-## ControlBlock
 u_action[3,type=int]
 E_habits[3,1,type=float]
-
-## PreferenceBlock
 C_preferences[5,1,type=float]
 
 ## ConstraintBlock
@@ -56,3 +54,9 @@ o_sensor=Observation
 u_action=Action
 C_preferences=Preference
 E_habits=HabitVector
+
+## Footer
+COGANT zoo reference specimen `full_pomdp`: five hidden states, one noisy
+observation modality (`o_sensor`), three discrete actions (`u_action`), an
+expected-free-energy policy built from preferences and habits, and the
+forbidden-state safety constraint declared above.

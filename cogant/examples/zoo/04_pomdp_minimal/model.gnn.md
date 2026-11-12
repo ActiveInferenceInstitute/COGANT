@@ -3,6 +3,10 @@ pomdp_minimal
 
 ## GNNVersionAndFlags
 GNN v2.0.0
+# COGANT dialect: GNN v2.0.0 is COGANT's own schema identifier
+# (cogant.schema.versions.CURRENT_GNN_VERSION), not an upstream
+# generalized-notation-notation language version. Every variable used in
+# ## Connections is declared in ## StateSpaceBlock below.
 
 ## ModelName
 pomdp_minimal
@@ -15,11 +19,7 @@ s_beliefs[3,1,type=float]
 B_transition[3,3,1,type=float]
 A_observation[3,3,type=float]
 D_prior[3,1,type=float]
-
-## ObservationBlock
 o_sensor[3,type=int]
-
-## ControlBlock
 u_action[2,type=int]
 
 ## Connections
@@ -43,3 +43,8 @@ B_transition=TransitionMatrix
 A_observation=LikelihoodMatrix
 o_sensor=Observation
 u_action=Action
+
+## Footer
+COGANT zoo reference specimen `pomdp_minimal`: a belief state over three hidden
+states, a transition tensor, a likelihood matrix, and a prior, with one
+observation modality (`o_sensor`) and one action factor (`u_action`).

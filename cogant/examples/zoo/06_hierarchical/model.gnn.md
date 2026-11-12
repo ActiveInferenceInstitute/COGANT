@@ -3,6 +3,10 @@ hierarchical
 
 ## GNNVersionAndFlags
 GNN v2.0.0
+# COGANT dialect: GNN v2.0.0 is COGANT's own schema identifier
+# (cogant.schema.versions.CURRENT_GNN_VERSION), not an upstream
+# generalized-notation-notation language version. Every variable used in
+# ## Connections is declared in ## StateSpaceBlock below.
 
 ## ModelName
 hierarchical
@@ -40,3 +44,9 @@ D_planner_prior=PriorBelief
 D_executor_prior=PriorBelief
 B_planner=TransitionMatrix
 B_executor=TransitionMatrix
+
+## Footer
+COGANT zoo reference specimen `hierarchical`: a planner belief over three goal
+states and an executor belief over four motor states, each with its own prior
+and transition tensor; the planner's MAP estimate conditions the executor's
+transition dynamics.

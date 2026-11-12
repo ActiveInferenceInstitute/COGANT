@@ -187,7 +187,13 @@ succeeded. COGANT package validation and both upstream single-file validation
 levels passed. The clean-interpreter `src.gnn` import failed as expected.
 The machine-generated [audit JSON](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/evaluation/gnn_upstream_audit_surface.json)
 and [audit report](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/evaluation/gnn_upstream_audit_surface.md) preserve the
-per-step statuses and the exact pin/lock/installed commit identity.
+per-step statuses and the exact pin/lock/installed commit identity. Two of those
+fields are snapshot truths for the 4.1.0 lane and are **not** current: its
+`lock_matches_pin: true` replays against the 4.1.0 lock, and replaying it against
+today's lock (5.0.3 at `8f293d9ba`) yields `false`; and the pinned commit
+`46459949` is 13 commits past the `v4.1.0` tag commit `9255e19f`, so the receipt's
+"release tag" row is informational and is not the dependency target. The live pin
+and lock are recorded in [Pinned Upstream Release](#pinned-upstream-release) above.
 
 ## Historical Result (2026-10-14)
 

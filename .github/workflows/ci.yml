@@ -422,6 +422,35 @@ jobs:
               raise SystemExit("upstream parse/type-check/validation steps failed")
           PY
 
+      - name: Validate committed zoo reference models against the pinned upstream
+        # The zoo ``model.gnn.md`` files are hand-authored reference specimens
+        # that no other CI lane reads. They are COGANT-dialect documents
+        # (``GNN v2.0.0`` is COGANT's schema identifier), so the pinned
+        # upstream must still accept each one's standard section contract:
+        # every ``## Connections`` endpoint is declared in ``## StateSpaceBlock``
+        # and every spec carries a ``## Footer``.
+        run: |
+          uv run python - <<'PY'
+          from pathlib import Path
+
+          from cogant.gnn.upstream_bridge import run_upstream_validate_gnn
+
+          targets = ("04_pomdp_minimal", "06_hierarchical", "12_full_pomdp")
+          failures: list[str] = []
+          for name in targets:
+              markdown = (Path("examples/zoo") / name / "model.gnn.md").read_text(
+                  encoding="utf-8"
+              )
+              result = run_upstream_validate_gnn(markdown, validation_level="standard")
+              if not result.available:
+                  failures.append(f"{name}: pinned upstream unavailable")
+              elif not result.ok:
+                  failures.append(f"{name}: {result.errors}")
+          if failures:
+              raise SystemExit("upstream rejected zoo models: " + "; ".join(failures))
+          print(f"pinned upstream accepted {len(targets)} zoo models")
+          PY
+
       - name: Bridge and upstream integration tests
         run: >-
           uv run pytest -q --no-cov -o addopts= -rs
