@@ -51,7 +51,7 @@ not run separately in CI because `test-full` collects the property tree.
 
 | Workflow job (key / display) | Gate invocation |
 | --- | --- |
-| `static` / Static gates (lint, types, content, docs) | `python ../run_gate.py --prepare lint types content docs` |
+| `static` / Static gates (lint, content, docs) | `python ../run_gate.py --prepare lint content docs` |
 | `typecheck` / Typecheck (mypy) | `python ../run_gate.py --prepare types` |
 | `test` / `test (3.11)` | `python ../run_gate.py --prepare test-full` |
 | `test` / `test (3.12)`, `test (3.13)`, `test (3.14)` | `python ../run_gate.py --prepare test-fast` |
@@ -117,8 +117,8 @@ where the command lives and how many times a job runs it.
 | `types` | 5.15 s | 0.40 s | before cold `.mypy_cache`, after warm; a cold after-run is ~5 s |
 | `content` | 7.19 s | 7.7 s | before also ran `check_metrics_fresh`, now owned by `metrics-fresh.yml` |
 | `docs` | 17.9 s | 22.6 s | after adds `--strict` and the relative-link check |
-| `test-fast` | same command | see below | |
-| `test-full` | same command | see below | |
+| `test-fast` | same command | not run (bounded) | stopped after 25 min at ~2 % under host contention |
+| `test-full` | same command | not run (bounded) | not started; same suite plus property and coverage |
 | `gnn` | same three commands | 96.9 s | plus one `uv sync` (~110 s) on a fresh environment; probe moved from an inline workflow heredoc to `cogant/scripts/gnn_conformance_probe.py` |
 | `rust` | same four commands | 24.8 s | warm `rust/target` |
 | `wheel` | CI only (pip wheel + target install) | 13.6 s | now `tools/wheel_smoke.py` + the wheel-reproducibility audit |
@@ -133,12 +133,26 @@ Job-level deduplication (the part that saves the most runner time):
 - ruff previously ran twice per pull request (the lint job and the
   `pre-commit` job); it now runs once.
 
-### Test arms under contention
+### Test arms: bounded, not completed
 
-`test-fast` and `test-full` were started on the same overloaded host. The
-observed progress (`test-fast`: ~2 % of 10 018 selected tests in 25 minutes,
-with the pytest process at 0 % CPU while six other repositories' suites ran) is
-a property of the host load, not of the gate: the same command's
-`tests/integration/test_full_pipeline.py` takes 50 s when it gets a core.
-Re-run the two arms on an idle host and replace this paragraph with the
-measured wall time; the gate command does not change.
+`test-fast` and `test-full` were **not** run to completion. The host was running
+six other repositories' suites (load average 34 on 18 cores); `test-fast`
+reached ~2 % of 10,018 selected tests after 25 minutes with the pytest process
+at 0 % CPU, so it was stopped under the estate's 10-minute-per-arm bound.
+`test-full` was not started.
+
+Bounded commands that were run:
+
+```bash
+cd cogant && uv run pytest tests/ --collect-only -q --no-cov
+# 10,091 tests collected in 15.8 s
+
+cd cogant && uv run pytest tests/integration/test_full_pipeline.py -q --no-cov -o addopts=
+# 69 passed in 50.4 s (one file, not the arm)
+```
+
+Neither arm's command changed in this pass, so their correctness does not rest
+on the refactor; what is unverified on this host is their wall time. Run
+`python run_gate.py --prepare test-fast` and
+`python run_gate.py --prepare test-full` on an idle host and replace this
+section with the measured numbers.

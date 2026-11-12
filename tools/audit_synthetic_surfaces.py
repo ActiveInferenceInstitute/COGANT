@@ -136,7 +136,7 @@ ALLOW_RULES: tuple[AllowRule, ...] = (
         justification="dataset generator explicitly rejects synthetic rows and placeholder zeros",
     ),
     AllowRule(
-        path=r"(^AGENTS\.md$|^PROMOTION\.md$|^scripts/AGENTS\.md$|^scripts/z_generate_manuscript_variables\.py$|^tools/(AGENTS\.md|README\.md|manuscript_vars\.py|inject_manuscript_vars\.py|claim_ledger\.py|audit_folder_docs\.py|regenerate_metrics\.py)$|^manuscript/(AGENTS\.md|README\.md|S06_appendix_source_references\.md|.*\.md)$)",
+        path=r"(^AGENTS\.md$|^PROMOTION\.md$|^scripts/AGENTS\.md$|^scripts/z_generate_manuscript_variables\.py$|^scripts/render_manuscript\.py$|^tools/(AGENTS\.md|README\.md|manuscript_vars\.py|inject_manuscript_vars\.py|claim_ledger\.py|audit_folder_docs\.py|regenerate_metrics\.py)$|^manuscript/(AGENTS\.md|README\.md|S06_appendix_source_references\.md|.*\.md)$)",
         terms=("placeholder",),
         category="template_variable",
         justification="registered manuscript template variables are resolved before publication",

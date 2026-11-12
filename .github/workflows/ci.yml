@@ -26,7 +26,7 @@ jobs:
   # the entry point a developer uses locally. The commands exist in the gate,
   # never in this file.
   static:
-    name: Static gates (lint, types, content, docs)
+    name: Static gates (lint, content, docs)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -51,12 +51,12 @@ jobs:
           working-directory: cogant
           enable-cache: "true"
 
-      - name: Lint, types, content, and docs gates
+      - name: Lint, content, and docs gates
         # ``--prepare`` performs the single ``uv sync`` for the union of these
-        # arms' extras (dev + viz, because strict mypy checks the viz
-        # interfaces). Previously each check family had its own job and its own
-        # install.
-        run: python ../run_gate.py --prepare lint types content docs
+        # arms' extras (dev). Previously each check family had its own job and
+        # its own install; mypy keeps its own job below so its check-run name
+        # stays stable.
+        run: python ../run_gate.py --prepare lint content docs
 
   typecheck:
     name: Typecheck (mypy)
