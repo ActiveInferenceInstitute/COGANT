@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import os
 import re
 import shutil
@@ -49,6 +50,7 @@ FIGURE_CHECK = ROOT / "tools" / "manuscript_figures.py"
 COMBINED_NAME = "_render_combined.md"
 PREAMBLE_TEX_NAME = "_render_preamble.tex"
 DEFAULT_PDF = INJECTED_DIR / "COGANT.pdf"
+RECEIPT = ROOT / "docs" / "manuscript-render.json"
 
 # Mirrors infrastructure/rendering/manuscript_discovery.py EXCLUDE_NAMES.
 EXCLUDE_NAMES = {
@@ -310,6 +312,9 @@ def main(argv: list[str] | None = None) -> int:
         crossref=crossref,
     )
     print("render_manuscript: " + " ".join(command))
+    source_commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
     completed = subprocess.run(command, cwd=INJECTED_DIR, check=False)
     if completed.returncode != 0:
         return _fail(
@@ -321,7 +326,19 @@ def main(argv: list[str] | None = None) -> int:
             Path(preamble_tex).unlink(missing_ok=True)
     if not args.pdf.is_file() or args.pdf.stat().st_size < 10_000:
         return _fail(f"PDF was not produced (or is implausibly small): {args.pdf}")
-    print(f"render_manuscript: wrote {args.pdf} ({args.pdf.stat().st_size} bytes)")
+    pdf_bytes = args.pdf.stat().st_size
+    RECEIPT.write_text(
+        json.dumps(
+            {
+                "source_commit": source_commit,
+                "pdf_artifact": os.path.relpath(args.pdf.resolve(), ROOT),
+                "pdf_bytes": pdf_bytes,
+            },
+            indent=2,
+        ) + "\n",
+        encoding="utf-8",
+    )
+    print(f"render_manuscript: wrote {args.pdf} ({pdf_bytes} bytes); receipt: {RECEIPT}")
     return 0
 
 

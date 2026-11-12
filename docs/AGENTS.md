@@ -21,6 +21,9 @@ measured wall time of every arm on the estate workstation.
 
 - The repository-level index ([`README.md`](README.md)).
 - The gate/CI run guide ([`RUN_GUIDE.md`](RUN_GUIDE.md)).
+- The flat canonical-page index ([`documentation-index.md`](documentation-index.md)).
+- The latest successful local render receipt (`manuscript-render.json`), written
+  by `scripts/render_manuscript.py`; the PDF itself remains an ignored artifact.
 - Relative links into `cogant/docs/`, the repository root, [`../manuscript/`](../manuscript/README.md),
   and [`../.aii/`](../.aii/README.md).
 

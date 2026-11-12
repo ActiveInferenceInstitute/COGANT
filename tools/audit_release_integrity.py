@@ -167,6 +167,40 @@ def _build_sbom(
     if upstream_spec and upstream_pin and (not lock_pin or lock_pin.group(1) != upstream_pin.group(1)):
         issues.append("optional upstream lock source does not match the pyproject commit pin")
 
+    # v5.0.3 predates gnn.importers: retain the local reader and enforce the
+    # workflow-group pin/pointer contract here until the upstream pin advances.
+    pin_path = ROOT / ".github" / "gnn-pin.json"
+    try:
+        pin = json.loads(pin_path.read_text(encoding="utf-8"))
+        if not isinstance(pin, dict):
+            raise ValueError("expected an object")
+    except (OSError, ValueError) as exc:
+        issues.append(f"GNN pin unavailable: {exc}")
+    else:
+        repository = "ActiveInferenceInstitute/Generalized_Notation_Notation"
+        if pin.get("schema") != "gnn-importer-pin/v1":
+            issues.append("GNN pin schema must be gnn-importer-pin/v1")
+        if pin.get("repository") != repository:
+            issues.append("GNN pin repository does not name the canonical upstream")
+        commit = pin.get("commit")
+        if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):
+            issues.append("GNN pin must name a full commit")
+        elif not upstream_pin or commit != upstream_pin.group(1):
+            issues.append("GNN pin commit does not match the upstream extra")
+        expected_url = f"git+https://github.com/{repository}.git@"
+        if expected_url not in (upstream_spec or ""):
+            issues.append("upstream extra does not use the canonical GNN repository")
+        if not upstream_lock or pin.get("tag") != f"v{upstream_lock.get('version')}":
+            issues.append("GNN pin tag does not match the locked upstream version")
+        try:
+            pointer = (ROOT / ".github" / "GNN.md").read_text(encoding="utf-8")
+        except OSError as exc:
+            issues.append(f"GNN pointer unavailable: {exc}")
+        else:
+            for token in (".github/gnn-pin.json", commit, ".github/workflows/ci.yml", "gnn-conformance"):
+                if not isinstance(token, str) or token not in pointer:
+                    issues.append(f"GNN pointer does not name {token!r}")
+
     sbom = {
         "bomFormat": "CycloneDX",
         "specVersion": "1.5",
