@@ -134,9 +134,31 @@ For API and CLI details, use package docs as the authoritative reference:
 - [`../cogant/docs/evaluation/README.md`](../cogant/docs/evaluation/README.md) — R&D log and empirical reports
 - [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md)
 
-## Render PDF (after promotion)
+## Render PDF
 
-After linking the project under `projects/working/cogant/` and wiring the manuscript path as for other template projects:
+The repository-local render entry point works from a standalone checkout; it
+does not require the parent template:
+
+```bash
+# From the COGANT project root.
+uv run --directory cogant python ../scripts/render_manuscript.py
+```
+
+The script injects `{{PLACEHOLDER}}` variables from
+`cogant/evaluation/METRICS.yaml` (via `scripts/z_generate_manuscript_variables.py`),
+validates the figure registry against `output/figures/`, and renders one PDF to
+`output/manuscript/COGANT.pdf` with pandoc, pandoc-crossref and xelatex. It
+refuses to render while a placeholder survives or a registered figure is
+missing. Requires `pandoc`, `pandoc-crossref` and a LaTeX engine on `PATH`.
+
+Figure sources come from real runs; generate them first when they are absent:
+
+```bash
+cd cogant && uv run python ../run_all.py --targets calculator,flask_app
+```
+
+When this tree is linked under the parent template as
+`projects/working/cogant/`, the template renderer remains available:
 
 ```bash
 uv run python scripts/03_render_pdf.py --project working/cogant

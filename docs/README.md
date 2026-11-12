@@ -22,6 +22,26 @@ single entry point to all of them.
 | Look up a command or flag | [`cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) · [`cogant/docs/cli/README.md`](../cogant/docs/cli/README.md) |
 | Answer a common question | [`cogant/docs/faq.md`](../cogant/docs/faq.md) |
 | Contribute code or docs | [`cogant/CONTRIBUTING.md`](../cogant/CONTRIBUTING.md) · [`cogant/docs/AGENTS.md`](../cogant/docs/AGENTS.md) |
+| Run the checks / understand CI | [`docs/RUN_GUIDE.md`](RUN_GUIDE.md) · [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
+
+## Gates and CI
+
+Every check has one entry point, [`run_gate.py`](../run_gate.py), with separately
+runnable arms (`lint`, `types`, `content`, `docs`, `test-fast`, `test-full`,
+`gnn`, `wheel`, `rust`, `manuscript`). GitHub Actions jobs invoke those arms
+instead of repeating their commands; [`docs/RUN_GUIDE.md`](RUN_GUIDE.md) maps
+each job to its arm and records the measured wall time per arm.
+
+- **GNN pin:** [`.github/gnn-pin.json`](../.github/gnn-pin.json) — schema
+  `gnn-importer-pin/v1`, `ActiveInferenceInstitute/Generalized_Notation_Notation`
+  at `v5.0.3` (`8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`).
+- **What the conformance job parses:** [`.github/GNN.md`](../.github/GNN.md).
+- **Conformance job:** key `gnn-conformance`, display name
+  `gnn conformance (pinned)`, in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
+- **Python setup:** every job uses the org composite action
+  `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448`.
+- **Manuscript render:** `uv run --directory cogant python ../scripts/render_manuscript.py`
+  from this project root; see [`manuscript/README.md`](../manuscript/README.md).
 
 ## Documentation modules
 
@@ -73,6 +93,7 @@ each area below is the table of contents for that module.
 | [`ISA.md`](../ISA.md) | Information-system architecture note. |
 | [`PROMOTION.md`](../PROMOTION.md) | Checklist for rendering under the parent template. |
 | [`TODO.md`](../TODO.md) | Owner-facing execution backlog. |
+| [`docs/RUN_GUIDE.md`](RUN_GUIDE.md) | Gate arms, CI job mapping, conformance pin, measured wall time. |
 | [`CITATION.cff`](../CITATION.cff) | Machine-readable citation metadata. |
 | [`manuscript/README.md`](../manuscript/README.md) | Manuscript section index and validation commands. |
 | [`cogant/README.md`](../cogant/README.md) | Package overview. |

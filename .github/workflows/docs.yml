@@ -68,11 +68,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: uv sync --extra dev
-
       - name: Build docs
-        run: uv run mkdocs build
+        # Same arm as CI and local runs; ``--prepare`` performs the one
+        # ``uv sync`` this job needs, then the arm builds strictly and verifies
+        # relative links.
+        run: python ../run_gate.py --prepare docs
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0

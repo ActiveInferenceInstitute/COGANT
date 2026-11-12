@@ -139,7 +139,19 @@ uv run python tools/check_metrics_fresh.py --fail-on-dirty
 
 **Coverage table (`{#tbl:coverage-stmt-modules}`).** Per-module `Stmts` / `Cover` rows in [`manuscript/06_04_tests_mutation_and_benchmarks.md`](manuscript/06_04_tests_mutation_and_benchmarks.md) are hand-copied from `coverage report`. After `uv run pytest tests/ --cov=py/cogant` in [`cogant/`](cogant/) (inner package root), run `uv run python tools/check_coverage_table.py` from this project root to compare the table to the report; use `--strict` to fail on drift. See [`manuscript/AGENTS.md`](manuscript/AGENTS.md) and [`PROMOTION.md`](PROMOTION.md).
 
-Rendering uses `output/manuscript/` when present in the parent template renderer (see `infrastructure/rendering/pipeline.py`). Full template PDF rendering requires the linked `projects/working/cogant/` location and `scripts/03_render_pdf.py --project working/cogant`.
+Rendering uses `output/manuscript/` when present. The repository-local render
+entry point is `scripts/render_manuscript.py`; it injects the variables,
+validates the figure registry against the generated files, and runs one
+pandoc command:
+
+```bash
+uv run --directory cogant python ../scripts/render_manuscript.py
+```
+
+Missing figure sources fail before rendering; generate them with
+`cd cogant && uv run python ../run_all.py --targets calculator,flask_app`. Parent
+template rendering (`scripts/03_render_pdf.py --project working/cogant`) still
+applies when this tree is linked under `projects/working/cogant/`.
 
 The same generator refreshes manuscript figures under `output/figures/` by
 copying curated real run PNGs from `cogant/output/` (program graph,
@@ -204,6 +216,18 @@ git submodule update --init --recursive cogant/evaluation/eval_repos
 Empty checkouts make benchmarks skip rather than fail, so this step is only required when running the evaluation pipeline. See [`cogant/evaluation/eval_repos/AGENTS.md`](cogant/evaluation/eval_repos/AGENTS.md) for per-submodule details.
 
 ## Tests
+
+Every check runs through one entry point at the project root; CI invokes the
+same arms, so a command exists in exactly one place
+([`docs/RUN_GUIDE.md`](docs/RUN_GUIDE.md) maps jobs to arms and records their
+measured wall time):
+
+```bash
+python run_gate.py --list                    # arms and required extras
+python run_gate.py lint types                # fast arms
+python run_gate.py --prepare test-fast       # one uv sync, then the default test arm
+python run_gate.py all                       # everything
+```
 
 The installable package suite lives in the inner [`cogant/`](cogant/) package root (the tests run there pick up `cogant/py/cogant/`):
 

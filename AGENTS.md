@@ -8,7 +8,8 @@
 | [`docs/`](docs/README.md) | Repository-level documentation index. The canonical docs are the MkDocs site at [`cogant/docs/`](cogant/docs/index.md); this index points into it and into the root-level documents instead of duplicating them. |
 | [`manuscript/`](manuscript/) | PDF/HTML manuscript templates with `{{PLACEHOLDER}}` substitution syntax. Source of truth for prose; never edit by hand any number that has a `{{...}}` token. |
 | [`tools/`](tools/) | `MANUSCRIPT_VARS` registry, metrics regeneration CLI, inject CLI, audit helpers, manuscript figure copier. |
-| [`scripts/`](scripts/) | Thin orchestrators (`z_generate_manuscript_variables.py`, which also refreshes `output/figures/`). |
+|[`scripts/`](scripts/)|Thin orchestrators (`z_generate_manuscript_variables.py`, which also refreshes `output/figures/`; `render_manuscript.py`, the repository-local PDF render).|
+|[`run_gate.py`](run_gate.py)|Single gate/CI entry point with separately runnable arms (`lint`, `types`, `content`, `docs`, `test-fast`, `test-full`, `gnn`, `wheel`, `rust`, `manuscript`). CI jobs invoke these arms; see [`docs/RUN_GUIDE.md`](docs/RUN_GUIDE.md).|
 | [`src/`](src/), [`tests/`](tests/), [`pyproject.toml`](pyproject.toml) | Tiny parent-template compatibility shell so `docxology/template` project discovery sees top-level source/tests when linked under `projects/working/cogant/`. The real package remains nested under `cogant/`. |
 | [`run_all.py`](run_all.py), [`run_all.sh`](run_all.sh), [`run_all.example.json`](run_all.example.json) | Configurable batch run: `translate` + GNN exports + `render` + `viz` + `validate` per target. Targets are either `path` (under inner `cogant/`) or `git_url` (shallow clone to `<output_root>/<target_id>/_git_source/`). If `run_all.json` is absent, built-in defaults cover the three `examples/control_positive/*` fixtures plus two small Pallets repos; the shipped `run_all.json` is the larger corpus config. The shipped and built-in configs set `output_root: "cogant/output"`; `run_all.example.json` uses `output`. Each target writes under `<output_root>/<target_id>/` (with `data/`, `figures/`, `site/`, `reports/`, `gnn_package/`, `analysis/`, `exports/`, `roundtrip/`). Stderr + optional `--log`: per-target banner, per-step wall time / exit status, batch `summary` in `<output_root>/run_manifest.json`, cross-target `summary.md`/`summary.json`, and `<output_root>/dashboard/` when `steps.batch_dashboard` is enabled. |
 | `output/` | Generated manuscript outputs — `data/manuscript_variables.json`, `output/manuscript/` injected copy, and copied figures (all disposable and regeneratable). Batch runs write per-target directories under the configured `<output_root>/<target_id>/`; the shipped `run_all.json` uses `cogant/output`, while `run_all.example.json` uses project-root `output`. |
@@ -93,6 +94,14 @@ uv run python tools/audit_robustness_table.py
 uv run python tools/audit_synthetic_surfaces.py --strict
 uv run --directory cogant python ../tools/audit_figure_renderers.py
 uv run python tools/audit_publication_readiness.py --strict
+```
+
+Render the PDF from the injected tree with the repository-local entry point
+(the same command as `python run_gate.py manuscript`); it validates the figure
+registry against `output/figures/` before pandoc runs:
+
+```bash
+uv run --directory cogant python ../scripts/render_manuscript.py
 ```
 
 The aggregate release command is the final go/no-go wrapper. Run it from the
