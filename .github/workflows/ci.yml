@@ -21,10 +21,14 @@ defaults:
     working-directory: cogant
 
 jobs:
-  lint:
-    name: Lint (ruff)
+  # One job, one environment install: every repository fact gate that only
+  # needs the dev environment runs through ``../run_gate.py``, which is also
+  # the entry point a developer uses locally. The commands exist in the gate,
+  # never in this file.
+  static:
+    name: Static gates (lint, types, content, docs)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout
         # Full history: check_metrics_fresh.py verifies that METRICS.yaml's
@@ -40,109 +44,27 @@ jobs:
 
       - name: Set up uv and Python
         # The org standard's composite action installs the pinned uv release
-        # and the CPython interpreter in one step. The ``uv sync`` / ``uv run``
-        # steps below are unchanged, and no job name or check-run name moves.
+        # and the CPython interpreter in one step.
         uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.11"
           working-directory: cogant
           enable-cache: "true"
 
-      - name: Install dev dependencies
-        run: uv sync --extra dev
-
-      - name: Ruff check (no-fix; ratchet)
-        run: uv run ruff check --no-fix --output-format=github py/cogant/ tests/
-
-      - name: Ruff format --check
-        run: uv run ruff format --check py/cogant/ tests/
-
-      - name: Docs/constants drift gate
-        # Active README/AGENTS/MkDocs/manuscript status language should not
-        # regress to out-of-sync version, wave, or hard-coded section-number claims.
-        run: cd .. && uv run --directory cogant python ../tools/audit_docs_constants.py
-
-      - name: Folder documentation coverage gate
-        # Every COGANT-owned documentable folder needs local README/AGENTS
-        # signposting unless the tool documents an explicit exception.
-        run: cd .. && uv run --directory cogant python ../tools/audit_folder_docs.py
-
-      - name: Stage-list drift gate
-        # TODO #4 durable fix — every documented full-pipeline stage sequence
-        # must match cogant.pipeline.RUNNER_STAGES verbatim. The script lives
-        # at the staging root (one level above this CI's default working dir).
-        run: cd .. && uv run --directory cogant python ../tools/audit_stage_list.py
-
-      - name: Test/example naming gate
-        # Reject generated-era campaign labels (wave, *_cov.py, *_coverage.py)
-        # in active test and example names so tests stay behavior-organized.
-        run: cd .. && uv run --directory cogant python ../tools/audit_test_names.py
-
-      - name: Metrics-freshness gate (with laundering check)
-        # RedTeam F19 durable fix — re-classifies every row of
-        # roundtrip_results.jsonl via the same _status() logic as
-        # regenerate_metrics.py and asserts the count distribution matches
-        # METRICS.yaml. Catches the keystone laundering pattern.
-        run: cd .. && uv run --directory cogant python ../tools/check_metrics_fresh.py --fail-on-dirty
-
-      - name: Manuscript module-reference gate
-        # RedTeam durable fix — every backticked ``cogant.*`` module/attribute
-        # cited in the manuscript must still resolve in the installed package.
-        # Catches references to deleted modules (e.g. the former
-        # ``cogant.viz.png_export``). Run from the inner env so deps import.
-        run: cd .. && uv run --directory cogant python ../tools/audit_manuscript_module_refs.py
-
-      - name: Manuscript math-adjacency gate
-        # RedTeam durable fix — Pandoc does not parse a closing ``$`` that is
-        # immediately followed by a digit as math, so ``$-${{COUNT}}`` leaks as
-        # literal ``$-$10`` in HTML and PDF. Resolves variables first, then
-        # flags any inline-math span that closes before a digit. Use a Unicode
-        # minus ``−`` (or plain ``-``) before numbers, never ``$-$``.
-        run: cd .. && uv run --directory cogant python ../tools/audit_manuscript_math_adjacency.py
-
-      - name: Manuscript markdown-link gate
-        # Rendered manuscript body sections must use intra-manuscript references,
-        # figures, tables, equations, formalisms, or bibliography citations rather
-        # than reader-facing links to source Markdown files.
-        run: cd .. && uv run --directory cogant python ../tools/audit_manuscript_markdown_links.py
-
-      - name: Robustness-table claim gate
-        # RedTeam science-gap durable fix (2026-06-09) — the manuscript
-        # robustness table ({#tbl:robustness-transforms}) hand-wrote per-transform
-        # similarity/verdict cells bound to nothing, violating the claim policy
-        # (no manuscript metric unless injected from a generator or audited). This
-        # gate binds every row to cogant/evaluation/robustness/robustness_results.json
-        # (the harness artifact) and fails on any drift.
-        run: cd .. && uv run --directory cogant python ../tools/audit_robustness_table.py
-
-      - name: Coverage-table drift gate
-        # RedTeam F10 durable fix — strict comparison of every per-module
-        # row in @tbl:coverage-stmt-modules against either .coverage SQLite
-        # (when present) or the intentionally committed cogant/coverage.json
-        # fallback. Catches hand-edit drift the prior gate could not enforce
-        # on a clean checkout.
-        run: cd .. && uv run --directory cogant python ../tools/check_coverage_table.py --strict
-
-      - name: Synthetic-surface classification gate
-        # Every retained fallback/mock/placeholder/stub occurrence in tracked
-        # project-owned files must be classified as degraded output, template
-        # variable, type stub, negative control, or UI empty state. --strict
-        # additionally validates generated public artifacts (output/manuscript,
-        # figure sidecars), which only exist after a pipeline run — that lane
-        # belongs to tools/release_gate.py on a rendered worktree, not a clean
-        # CI checkout, so CI enforces the classification layer only.
-        run: cd .. && uv run --directory cogant python ../tools/audit_synthetic_surfaces.py
-
-      - name: Manuscript figure-renderer provenance gate
-        # Registered manuscript figures must point to importable renderers and
-        # locked caption/provenance fields must stay present in source.
-        run: cd .. && uv run --directory cogant python ../tools/audit_figure_renderers.py
+      - name: Lint, types, content, and docs gates
+        # ``--prepare`` performs the single ``uv sync`` for the union of these
+        # arms' extras (dev + viz, because strict mypy checks the viz
+        # interfaces). Previously each check family had its own job and its own
+        # install.
+        run: python ../run_gate.py --prepare lint types content docs
 
   typecheck:
     name: Typecheck (mypy)
+    # Kept as its own job so the mypy check-run name stays stable for branch
+    # protection, but the command itself lives only in ``run_gate.py types``.
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: lint
+    needs: static
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -156,30 +78,22 @@ jobs:
           working-directory: cogant
           enable-cache: "true"
 
-      - name: Install typecheck dependencies
-        # The inference renderer imports Pillow through the visualization extra.
-        # Install those interfaces so strict mypy checks their actual types.
-        run: uv sync --extra dev --extra viz
-
       - name: Run mypy (strict)
-        # ``--no-warn-unused-configs`` because the defensive overrides in
-        # ``pyproject.toml`` (tests.*, cogant._rust, src.gnn.*) only fire
-        # under ``mypy .`` or minimal installs; reporting them as "unused"
-        # against ``py/cogant/`` is noise.
-        run: MYPYPATH=py uv run mypy --package cogant --strict --no-warn-unused-configs
+        run: python ../run_gate.py --prepare types
 
   test:
     # No explicit ``name:``: matrix context in ``jobs.<job_id>.name`` only
     # expands for jobs that actually RUN — while the job is skipped (e.g.
-    # ``needs: lint`` failing) GitHub renders the raw ``${{ matrix.* }}``
+    # ``needs: static`` failing) GitHub renders the raw ``${{ matrix.* }}``
     # expression literally in the UI. Dropping the name lets GitHub apply
     # its default matrix naming (``test (3.11)`` …), which renders the
     # expanded python version in both skipped and executed states.
     runs-on: ubuntu-latest
-    # The 3.11 leg runs the suite twice (fast pass + coverage gate) and takes
-    # ~45 min on a hosted runner; 3.12/3.13 take ~20 min. Leave ~2x headroom.
+    # The 3.11 leg runs the full suite with the coverage gate; 3.12–3.14 run
+    # the fast arm. Each leg installs once and invokes pytest once: the
+    # previous 3.11 leg ran the suite three times (fast, property, coverage).
     timeout-minutes: 90
-    needs: lint
+    needs: static
     strategy:
       fail-fast: false
       matrix:
@@ -197,24 +111,18 @@ jobs:
           working-directory: cogant
           enable-cache: "true"
 
-      - name: Install all extras
-        run: uv sync --extra all
+      - name: Fast tests
+        if: matrix.python-version != '3.11'
+        run: python ../run_gate.py --prepare test-fast
 
-      - name: Fast tests (no coverage, skip property and slow)
-        run: uv run pytest tests/ --no-cov -q --ignore=tests/property/ -m "not slow"
-
-      - name: Property / hypothesis tests
-        run: uv run pytest tests/property/ -q --override-ini="addopts=" -p no:warnings
-
-      - name: Full tests with coverage gate (3.11 only)
+      - name: Full tests with coverage gate
         if: matrix.python-version == '3.11'
         # Coverage gate raised from 75% to 89% to align with ``pyproject.toml``
         # ``[tool.pytest.ini_options].addopts.--cov-fail-under=89``. The
-        # manuscript-reported headline number (~94.98%) is the *measured*
-        # value on the canonical run; the gate floor (89%) preserves a small
-        # margin so coverage fluctuations from one wave to the next don't
-        # turn CI red on a real refactor.
-        run: uv run pytest tests/ -q -m "not slow" --cov=cogant --cov-fail-under=89
+        # manuscript-reported headline number is the *measured* value on the
+        # canonical run; the gate floor (89%) preserves a small margin so
+        # coverage fluctuations don't turn CI red on a real refactor.
+        run: python ../run_gate.py --prepare test-full
 
   rust-build:
     name: Rust backend checks
@@ -243,33 +151,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Cargo fmt
-        run: cargo fmt --manifest-path rust/Cargo.toml --all --check
-
-      - name: Cargo check
-        run: cargo check --manifest-path rust/Cargo.toml --workspace
-
-      - name: Cargo test
-        run: cargo test --manifest-path rust/Cargo.toml --workspace
-
-      - name: Cargo clippy
-        run: cargo clippy --manifest-path rust/Cargo.toml --workspace -- -D warnings
+      - name: Rust fmt, check, test, clippy
+        run: python3 ../run_gate.py rust
 
   clean-wheel:
     name: Clean wheel install smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: lint
+    needs: static
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # audit_release_integrity --check-wheel-reproducibility rebuilds the
-      # wheel via ``uv build``; without this step the job dies with
-      # FileNotFoundError: 'uv' (latent defect: the job is ``needs: lint``
-      # and lint never reached green until now).
       - name: Set up uv and Python
         uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
@@ -277,68 +172,30 @@ jobs:
           working-directory: cogant
           enable-cache: "true"
 
-      # The composite action installs uv and CPython into uv's managed store;
-      # the seeded environment puts that interpreter on PATH as `python` for
-      # the pip-based wheel steps below.
-      - name: Create the pinned Python environment
-        run: |
-          uv venv --seed --python 3.12 "$RUNNER_TEMP/python"
-          echo "$RUNNER_TEMP/python/bin" >> "$GITHUB_PATH"
-
-      - name: Build wheel without dependencies
-        run: python -m pip wheel . --no-deps -w /tmp/cogant-wheelhouse
-
-      - name: Install wheel into clean target
-        run: |
-          mkdir -p /tmp/cogant-wheel-install
-          python -m pip install --target /tmp/cogant-wheel-install \
-            pydantic typer rich networkx pyarrow fastapi numpy \
-            /tmp/cogant-wheelhouse/cogant-*.whl
-
-      - name: Import public packages and instantiate parsers
-        run: |
-          cd /tmp
-          PYTHONPATH=/tmp/cogant-wheel-install python - <<'PY'
-          import importlib
-          public = [
-              "cogant",
-              "cogant.api",
-              "cogant.cli",
-              "cogant.config",
-              "cogant.gnn",
-              "cogant.parsers",
-              "cogant.reverse",
-              "cogant.server",
-          ]
-          for name in public:
-              importlib.import_module(name)
-          from cogant.parsers import get_parser, parser_capabilities
-          for language in sorted(parser_capabilities()):
-              get_parser(language)
-          PY
-
-      - name: Release integrity and wheel reproducibility
-        # PYTHONPATH points at the clean target install so the OpenAPI
-        # contract check imports cogant from the wheel under test; without
-        # it the audit failed with "No module named 'cogant'" (latent
-        # defect: this job is needs: lint and lint never reached green).
-        run: |
-          PYTHONPATH=/tmp/cogant-wheel-install python ../tools/audit_release_integrity.py \
-            --wheel /tmp/cogant-wheelhouse/cogant-*.whl \
-            --require-wheel \
-            --check-wheel-reproducibility
+      - name: Wheel smoke and release integrity
+        # ``tools/wheel_smoke.py`` is the repository's existing clean-wheel
+        # helper (also ``make wheel-smoke``): it builds a wheel with ``uv
+        # build``, installs it into a fresh venv, imports the public modules
+        # and instantiates every parser. The audit then rebuilds the wheel
+        # twice and compares bytes.
+        run: python ../run_gate.py --prepare wheel
 
   gnn-conformance:
     name: gnn conformance (pinned)
     # The upstream checkout stays out of the ``all`` extra, but this lane is
-    # now the stable conformance check for every pull request and push. It
-    # keeps the same bounded, job-local cache and remains available from the
-    # Actions UI through ``workflow_dispatch``. The full manual pipeline is
-    # still reachable through ``cogant upstream-gnn`` and
+    # the stable conformance check for every pull request and push. It keeps
+    # the same bounded, job-local cache and remains available from the Actions
+    # UI through ``workflow_dispatch``. The full manual pipeline is still
+    # reachable through ``cogant upstream-gnn`` and
     # ``cogant analyze --upstream-gnn-pipeline``; this job exercises the
     # selected parse/type-check/validation steps and the bridge tests.
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      # The gate also sets this for its ``uv sync``; pinning it at job level
+      # keeps the probe and bridge tests on the same job-local cache and
+      # cannot evict the core dependency cache.
+      UV_CACHE_DIR: /tmp/cogant-upstream-uv-cache
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -346,90 +203,18 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv and Python
-        # Caching stays off here so this lane cannot evict the core dependency
-        # cache or hide its provenance, as before.
+        # Caching stays off here so this lane cannot hide its provenance.
         uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.12"
           working-directory: cogant
           enable-cache: "false"
 
-      # The composite action installs uv and CPython into uv's managed store;
-      # the seeded environment puts that interpreter on PATH as `python` for
-      # the provenance-audit step below.
-      - name: Create the pinned Python environment
-        run: |
-          uv venv --seed --python 3.12 "$RUNNER_TEMP/python"
-          echo "$RUNNER_TEMP/python/bin" >> "$GITHUB_PATH"
-
-      - name: Install the pinned optional upstream extra
-        # Keep the cache in an ephemeral, bounded job-local location so this
-        # lane cannot evict the core dependency cache or hide its provenance.
-        # The dev extra supplies pytest for the bridge test lane below.
-        env:
-          UV_CACHE_DIR: /tmp/cogant-upstream-uv-cache
-        run: uv sync --extra upstream --extra dev
-
-      - name: Verify upstream availability on a COGANT-emitted package
-        # GNN 4.x validates the full required-section contract, so the probe
-        # is a real package emitted by the current formatter (a bare
-        # ``## GNNSection`` stub is correctly rejected upstream).
-        run: |
-          uv run python - <<'PY'
-          import json
-          import tempfile
-          from pathlib import Path
-
-          from cogant.api.pipeline import PipelineConfig, PipelineRunner
-          from cogant.gnn.upstream_bridge import (
-              is_upstream_gnn_available,
-              run_upstream_validate_gnn,
-              upstream_version,
-          )
-          from cogant.gnn.upstream_bridge.pipeline import (
-              UpstreamPipelineConfig,
-              run_upstream_pipeline,
-          )
-
-          if not is_upstream_gnn_available():
-              raise SystemExit("optional upstream was requested but is unavailable")
-          out = Path(tempfile.mkdtemp(prefix="cogant-upstream-smoke-"))
-          PipelineRunner().run(
-              "examples/control_positive/calculator", PipelineConfig(output_dir=str(out))
-          )
-          package = out / "gnn_package"
-          markdown = (package / "model.gnn.md").read_text(encoding="utf-8")
-          validation = {
-              level: run_upstream_validate_gnn(markdown, validation_level=level).to_dict()
-              for level in ("standard", "strict")
-          }
-          steps = run_upstream_pipeline(
-              UpstreamPipelineConfig(
-                  target_dir=package, output_dir=out / "upstream", only_steps=[3, 5, 6]
-              )
-          )
-          payload = {
-              "version": upstream_version(),
-              "validation": validation,
-              "steps": steps.to_dict(),
-          }
-          print(json.dumps(payload, indent=2, sort_keys=True))
-          if not all(result["ok"] for result in validation.values()):
-              raise SystemExit("upstream validation rejected the COGANT package")
-          if steps.error or steps.failure_count:
-              raise SystemExit("upstream parse/type-check/validation steps failed")
-          PY
-
-      - name: Bridge and upstream integration tests
-        run: >-
-          uv run pytest -q --no-cov -o addopts= -rs
-          tests/unit/test_gnn_upstream_bridge.py
-          tests/unit/test_gnn_upstream_bridge_contract.py
-          tests/unit/test_upstream_pipeline_resolution.py
-          tests/integration/test_upstream_gnn_pipeline.py
-
-      - name: Audit pinned upstream provenance
-        run: python ../tools/audit_release_integrity.py --no-openapi
+      - name: Pinned upstream conformance
+        # Probe (``cogant/scripts/gnn_conformance_probe.py``) + bridge tests +
+        # provenance audit; the same arm runs locally as
+        # ``python run_gate.py gnn``.
+        run: python ../run_gate.py --prepare gnn
 
   pre-commit:
     name: Pre-commit hooks
@@ -472,7 +257,9 @@ jobs:
             pre-commit-${{ runner.os }}-py3.11-
 
       - name: Run pre-commit
-        # metrics-freshness needs uv and is enforced by the lint job.
+        # Ruff hooks were removed from the config: ``run_gate.py lint`` is the
+        # single ruff invocation for both CI and local runs. metrics-freshness
+        # needs uv and is enforced by the content arm.
         env:
           SKIP: metrics-freshness
         run: pre-commit run --config cogant/.pre-commit-config.yaml --all-files --show-diff-on-failure

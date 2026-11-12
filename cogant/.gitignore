@@ -99,6 +99,9 @@ celerybeat.pid
 # Environments
 .env
 .venv
+# Separate uv environment used for the pinned-upstream gate arm when the
+# default interpreter has no prebuilt h5py wheel (see docs/RUN_GUIDE.md).
+.venv-gnn/
 env/
 venv/
 ENV/
