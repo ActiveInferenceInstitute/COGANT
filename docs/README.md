@@ -5,6 +5,9 @@
 > this index points into that tree and into the repository-level documents so nothing
 > is duplicated.
 
+The [flat documentation index](documentation-index.md) links canonical pages
+without copying their content.
+
 COGANT keeps its documentation **with the installable package** at
 [`cogant/docs/`](../cogant/docs/index.md), published as an MkDocs site. The
 repository also carries project-level documents at the root (`README.md`,
@@ -27,8 +30,8 @@ single entry point to all of them.
 ## Gates and CI
 
 Every check has one entry point, [`run_gate.py`](../run_gate.py), with separately
-runnable arms (`lint`, `types`, `content`, `docs`, `test-fast`, `test-full`,
-`gnn`, `wheel`, `rust`, `manuscript`). GitHub Actions jobs invoke those arms
+runnable arms (`lint`, `types`, `content`, `docs`, `test-fast`, `test-property`,
+`test-full`, `gnn`, `wheel`, `rust`, `manuscript`). GitHub Actions jobs invoke those arms
 instead of repeating their commands; [`docs/RUN_GUIDE.md`](RUN_GUIDE.md) maps
 each job to its arm and records the measured wall time per arm.
 
@@ -42,6 +45,8 @@ each job to its arm and records the measured wall time per arm.
   `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448`.
 - **Manuscript render:** `uv run --directory cogant python ../scripts/render_manuscript.py`
   from this project root; see [`manuscript/README.md`](../manuscript/README.md).
+- **Successful render receipt:** [`manuscript-render.json`](manuscript-render.json)
+  records the source commit, local PDF artifact path and exact byte count.
 
 ## Documentation modules
 

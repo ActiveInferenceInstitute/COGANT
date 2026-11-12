@@ -79,9 +79,12 @@ has exactly one ruff invocation, `run_gate.py lint`.
   it at the `standard` and `strict` levels, and runs upstream steps 3, 5 and 6.
   What the job parses is recorded in [`.github/GNN.md`](../.github/GNN.md).
 - The job installs the pin through the `upstream` extra in
-  [`cogant/pyproject.toml`](../cogant/pyproject.toml); it does not read
-  `gnn-pin.json`. `tools/audit_release_integrity.py --no-openapi` checks the
-  installed pin against `cogant/uv.lock`.
+  [`cogant/pyproject.toml`](../cogant/pyproject.toml).
+  `tools/audit_release_integrity.py --no-openapi` reads `gnn-pin.json` and
+  rejects schema, repository, commit and tag drift against that extra and
+  `cogant/uv.lock`; it also checks the pin/revision/workflow/job pointer.
+  The local reader is retained because `v5.0.3` predates `gnn.importers`;
+  shared-reader adoption must accompany a future upstream pin advance.
 
 The Python setup in every job uses the org composite action
 `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448`.
@@ -96,6 +99,10 @@ The Python setup in every job uses the org composite action
   library on macOS/Python versions without a prebuilt wheel. CI uses Python
   3.12, where the wheel is available; on this host the arm can run under 3.12
   with `UV_PYTHON=3.12 UV_PROJECT_ENVIRONMENT=.venv-gnn`.
+- A successful `manuscript` render writes
+  [`manuscript-render.json`](manuscript-render.json): source commit,
+  repository-relative PDF artifact location, and exact byte count. Commit this
+  small receipt after a successful run; the PDF remains under ignored `output/`.
 - `wheel`: network access for `uv build` dependencies and the isolated install.
 
 ## Measured wall time on the estate workstation
