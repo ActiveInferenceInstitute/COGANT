@@ -191,6 +191,15 @@ ARMS: dict[str, Arm] = {
         "pinned upstream GNN conformance: probe, bridge tests, provenance",
         ("upstream", "dev"),
         (
+            Step(
+                "GNN-FEP importer contract",
+                (
+                    "uv", "run", "python", "-m", "gnn.importers", "check",
+                    "--repo", str(ROOT), "--require-pointer",
+                    "--workflow", ".github/workflows/ci.yml", "--job", "gnn-conformance",
+                ),
+                timeout=300,
+            ),
             Step("conformance probe", ("uv", "run", "python", "scripts/gnn_conformance_probe.py"), timeout=900),
             Step(
                 "bridge tests",

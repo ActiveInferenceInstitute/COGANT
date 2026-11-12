@@ -3,10 +3,10 @@
 
 This is a manuscript and technical-documentation helper, not a runtime API.
 It works against whatever upstream ``generalized-notation-notation`` release
-the repository pins: the expected commit comes from the optional ``upstream``
-extra in ``cogant/pyproject.toml`` and the expected version from the matching
-``generalized-notation-notation`` entry in ``cogant/uv.lock``. Nothing about a
-specific upstream release is hard-coded here.
+the repository pins: ``gnn.importers.read_pin`` reads the expected commit and
+release tag from ``.github/gnn-pin.json``. The matching
+``generalized-notation-notation`` entry in ``cogant/uv.lock`` supplies observed
+dependency metadata, not a second expected revision.
 
 Two modes:
 
@@ -69,7 +69,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 INNER = ROOT / "cogant"
-PYPROJECT_PATH = INNER / "pyproject.toml"
+PIN_PATH = ROOT / ".github" / "gnn-pin.json"
 LOCK_PATH = INNER / "uv.lock"
 DEFAULT_EXAMPLE = INNER / "examples" / "control_positive" / "calculator"
 DEFAULT_AUDIT_DIR = ROOT / "output" / "gnn_upstream_audit"
@@ -89,7 +89,6 @@ SUMMARY_DIRNAMES: tuple[str, ...] = ("upstream_full", "upstream_full_after_A_pat
 
 VALIDATION_LEVELS: tuple[str, ...] = ("standard", "strict")
 
-_PIN_RE = re.compile(r"@\s*git\+(?P<url>[^@\s]+)@(?P<rev>[0-9a-f]{40})\b")
 _COMMIT_RE = re.compile(r"\b[0-9a-f]{40}\b")
 
 
@@ -102,7 +101,7 @@ _COMMIT_RE = re.compile(r"\b[0-9a-f]{40}\b")
 class UpstreamExpectation:
     """Upstream release the repository pins (derived, never hard-coded)."""
 
-    requirement: str | None
+    release_tag: str | None
     repository_url: str | None
     pinned_commit: str | None
     locked_version: str | None
@@ -111,11 +110,6 @@ class UpstreamExpectation:
     @property
     def lock_matches_pin(self) -> bool:
         return bool(self.pinned_commit) and self.pinned_commit == self.locked_commit
-
-    @property
-    def release_tag(self) -> str | None:
-        """Conventional upstream release tag for the locked version (``v<version>``)."""
-        return f"v{self.locked_version}" if self.locked_version else None
 
 
 @dataclass(frozen=True)
@@ -289,27 +283,20 @@ def _lock_commit(source: Any) -> str | None:
 
 
 def load_upstream_expectation(
-    pyproject_path: Path | None = None,
+    pin_path: Path | None = None,
     lock_path: Path | None = None,
 ) -> UpstreamExpectation:
-    """Derive the expected upstream commit and version from pyproject + uv.lock.
+    """Read the canonical pin and compare it with resolved dependency metadata.
 
-    The commit is the 40-hex git revision pinned by the ``upstream`` optional
-    extra. The version is taken from the ``uv.lock`` package entry whose git
-    source resolves to that commit; when no entry matches, the first entry for
-    the distribution is reported and :attr:`UpstreamExpectation.lock_matches_pin`
-    is ``False``.
+    Pin normalization belongs to upstream. The lock's version and commit remain
+    observations: a mismatching lock must fail the version claim rather than
+    redefine the expected revision.
     """
-    pyproject = _load_toml(pyproject_path or PYPROJECT_PATH)
-    optional = pyproject.get("project", {}).get("optional-dependencies", {})
-    specs = optional.get("upstream", []) if isinstance(optional, dict) else []
-    requirement = next(
-        (str(spec) for spec in specs if UPSTREAM_DISTRIBUTION in str(spec).lower()),
-        None,
-    )
-    pin = _PIN_RE.search(requirement or "")
-    pinned_commit = pin.group("rev") if pin else None
-    repository_url = pin.group("url") if pin else None
+    from gnn.importers import read_pin
+
+    pin = read_pin(pin_path or PIN_PATH)
+    pinned_commit = pin.commit
+    repository_url = f"https://github.com/{pin.repository}.git" if pin.repository else None
 
     lock = _load_toml(lock_path or LOCK_PATH)
     entries = [
@@ -328,7 +315,7 @@ def load_upstream_expectation(
     )
     chosen = matching or (entries[0] if entries else None)
     return UpstreamExpectation(
-        requirement=requirement,
+        release_tag=pin.tag,
         repository_url=repository_url,
         pinned_commit=pinned_commit,
         locked_version=str(chosen["version"]) if chosen and chosen.get("version") else None,
@@ -1368,7 +1355,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Skip the network probe of upstream HEAD and the release tag in --collect.",
     )
     parser.add_argument(
-        "--pyproject", type=Path, help="Pin source (default: cogant/pyproject.toml)."
+        "--pin", type=Path, help="Pin source (default: .github/gnn-pin.json)."
     )
     parser.add_argument("--lock", type=Path, help="Lock source (default: cogant/uv.lock).")
     parser.add_argument(
@@ -1387,7 +1374,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Exit non-zero when pip-audit findings are present.",
     )
     args = parser.parse_args(argv)
-    expectation = load_upstream_expectation(args.pyproject, args.lock)
+    expectation = load_upstream_expectation(args.pin, args.lock)
     if args.collect:
         collect_audit_dir(
             args.audit_dir,

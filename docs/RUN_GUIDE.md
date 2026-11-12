@@ -39,7 +39,7 @@ CI invokes it from `cogant/` as `python ../run_gate.py ...`.
 | `test-fast` | default test arm: `--no-cov`, `--ignore=tests/property/`, `-m "not slow"` | `all` |
 | `test-property` | Hypothesis law tests (also collected by `test-full`) | `all` |
 | `test-full` | full suite with the coverage gate (`--cov=cogant --cov-fail-under=89`) | `all` |
-| `gnn` | pinned upstream conformance probe, four bridge/integration test files, release-integrity provenance audit | `upstream`, `dev` |
+| `gnn` | shared GNN-FEP pin/pointer/spec checker, pinned upstream conformance probe, four bridge/integration test files, release-integrity provenance audit | `upstream`, `dev` |
 | `wheel` | `tools/wheel_smoke.py` clean-wheel build + isolated import smoke, then `audit_release_integrity.py --require-wheel --check-wheel-reproducibility` | `dev` |
 | `rust` | `cargo fmt --check`, `check`, `test`, `clippy -D warnings` for `cogant/rust` | — |
 | `manuscript` | inject variables, validate the figure registry, render the PDF, verify manuscript links | `dev` |
@@ -78,10 +78,15 @@ has exactly one ruff invocation, `run_gate.py lint`.
   emits a package from `cogant/examples/control_positive/calculator`, validates
   it at the `standard` and `strict` levels, and runs upstream steps 3, 5 and 6.
   What the job parses is recorded in [`.github/GNN.md`](../.github/GNN.md).
-- The job installs the pin through the `upstream` extra in
-  [`cogant/pyproject.toml`](../cogant/pyproject.toml); it does not read
-  `gnn-pin.json`. `tools/audit_release_integrity.py --no-openapi` checks the
-  installed pin against `cogant/uv.lock`.
+- The job prepares the upstream environment through the `upstream` extra in
+  [`cogant/pyproject.toml`](../cogant/pyproject.toml), then calls
+  `python -m gnn.importers check` on the project root with `--require-pointer`,
+  `--workflow .github/workflows/ci.yml` and `--job gnn-conformance`.
+  The shared reader owns the pin, pointer and discovered specification checks.
+  The audit surface uses `gnn.importers.read_pin` for the expected revision;
+  `cogant/uv.lock` supplies dependency observations, not another expected pin.
+  The current release lacks this reader, so the migration is blocked as
+  recorded in [`.github/GNN.md`](../.github/GNN.md).
 
 The Python setup in every job uses the org composite action
 `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448`.

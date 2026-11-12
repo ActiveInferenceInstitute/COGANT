@@ -9,7 +9,7 @@ current compatibility scope. Dated earlier results are retained separately.
 | Field | Value |
 | --- | --- |
 | Distribution | `generalized-notation-notation` (optional `cogant[upstream]` extra; not part of `all`) |
-| Pin (`cogant/pyproject.toml`, mirrored in `cogant/uv.lock`) | `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1` |
+| Pin (`.github/gnn-pin.json`; dependency installation recorded in `cogant/pyproject.toml` and `cogant/uv.lock`) | `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1` |
 | Distribution version / `gnn.__version__` | `5.0.3` / `5.0.3` |
 | Pin tag | [v5.0.3](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3), dated 2026-10-31; annotated tag `2d830c75de2be2cad9b96b0879937d96ecda059d`, peeled to the exact pinned commit; release record created retroactively on 2026-11-03 |
 | Import package | top-level `gnn` (GNN >= 4.0; the GNN 2.x `src.gnn` surface no longer exists) |
@@ -99,11 +99,11 @@ The 2026-10-26 receipt's unscanned lane remains unchanged.
 ## Claims Kept Separate
 
 1. **Version currentness.** The installed upstream commit (PEP 610
-   `direct_url.json`) equals the commit pinned by the `upstream` extra, the
-   `uv.lock` entry for that commit records the same commit, and both the
-   distribution version and `gnn.__version__` equal the locked version. The
-   expected commit and version are read from `cogant/pyproject.toml` and
-   `cogant/uv.lock`; the helper hard-codes no release.
+   `direct_url.json`) equals the commit read by `gnn.importers.read_pin` from
+   `.github/gnn-pin.json`. The `uv.lock` entry must match that commit, and both
+   the distribution version and `gnn.__version__` must equal the locked version.
+   The pin supplies the expected commit and tag; the lock supplies observed
+   dependency metadata. The helper hard-codes no release.
 2. **Bridge usability.** `cogant.gnn.upstream_bridge` imports upstream and
    reports the same version (it refuses GNN < 4.0 and a `gnn` package owned by
    another distribution). The negative control requires a clean
@@ -164,9 +164,10 @@ Strict flags are independent: `--strict-version` fails when the version/bridge
 claim fails, `--strict-upstream` fails on any selected upstream step failure,
 and `--strict-supply-chain` fails on pip-audit findings or an absent/incomplete scan.
 Collection requires a new or empty audit directory and preserves previous runs.
-`--pyproject` and
-`--lock` point the expectation at other pin sources, and `--no-ls-remote`
-skips the network probe.
+`--pin` selects another canonical pin, `--lock` selects dependency observations,
+and `--no-ls-remote` skips the network probe. The helper requires upstream's
+`gnn.importers`; the current pinned release lacks it, so the GNN-FEP migration
+remains blocked rather than retaining a local reader.
 
 ## Reading The SVG
 
