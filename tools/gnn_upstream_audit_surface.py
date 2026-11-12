@@ -226,7 +226,12 @@ class AuditSurface:
 
     @property
     def upstream_all_steps_pass(self) -> bool:
-        """True only when every selected upstream step succeeds."""
+        """True when no selected upstream step failed.
+
+        ``upstream_steps_total`` counts only the steps recorded in the bridge
+        summary. Steps the bridge skipped (``upstream_steps_skipped``) sit outside
+        that total, so a pass does not mean all 25 upstream steps ran.
+        """
         return self.upstream_steps_total > 0 and self.upstream_steps_failed == 0
 
     @property

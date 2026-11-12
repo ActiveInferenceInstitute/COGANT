@@ -226,6 +226,13 @@ uv run --directory cogant --frozen --extra upstream --extra dev \
 | Selected upstream steps | **20/20 succeeded**; upstream overall status `SUCCESS_WITH_WARNINGS`; one bridge invocation of about 78 s wall time. |
 | Supply-chain scan | **PASS**: `pip-audit` over the environment's 137 installed distributions reported no known vulnerabilities. |
 
+> **Snapshot, not current state.** `lock_matches_pin: true` and the
+> release-tag row (`v4.1.0` resolving to `9255e19f…`) were true of the 4.1.0
+> lane this result was collected on (pin `b4a583a5…`). Today's
+> `cogant/uv.lock` locks GNN at `v5.1.0`, commit
+> `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`; re-collect before quoting any
+> identity from this section as current.
+
 Per-step outcomes for the bridge selection (steps 0, 3–10, 14–24; step 13 is
 excluded by `skip_llm=True`):
 
