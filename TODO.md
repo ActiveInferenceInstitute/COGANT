@@ -2,10 +2,15 @@
 
 - Status: Active (P0–P5 roadmap below).
 - Owner: DAF.
-- Last reviewed: 2026-09-08 (review-and-improvement pass: property-law tests
-  re-pinned to the fail-closed renderer contract, runner fail-fast evidence
-  persistence, gate honesty fixes, METRICS regenerated against commit-bound
-  HEAD; see "Completed/Closed — 2026-09-08 review pass").
+- Last reviewed: 2026-11-12 (GNN-FEP cutover pass: the pin advanced to
+  `v5.1.0` and the interim local readers were deleted, `inferactively-pymdp`
+  resolved at 1.0.5 through that pin, the composable gate replaced the inline
+  CI commands, and the metrics-freshness blocker was restated against the
+  commit that last regenerated `METRICS.yaml`; see "Completed/Closed —
+  2026-11-12 GNN-FEP cutover pass"). Prior review: 2026-09-08
+  (property-law tests re-pinned to the fail-closed renderer contract, runner
+  fail-fast evidence persistence, gate honesty fixes, METRICS regenerated
+  against commit-bound HEAD).
 
 This is the future-only execution backlog. Completed work belongs in Git
 history, generated evidence, audit reports, or the taskboard; it must not be
@@ -51,6 +56,12 @@ Source-of-truth rules:
   - Verification: run the complete `pytest tests/` lane and aggregate release
     gate against the current commit. Focused contract tests do not replace
     full-suite qualification; current results belong in generated evidence.
+  - Current state (2026-11-12, `7ef2c7e1`): the `lint`, `types`, `content` and
+    `docs` arms are green through `run_gate.py`. The last recorded full-suite
+    green run is the 2026-09-08 pass (9612 passed / 0 failed / 47 skipped),
+    which predates the GNN cutover and the lock change, so the `test-full` arm
+    still has to be re-run at the current tip before this item can close.
+    Owner: repository owner (DAF); no external blocker.
 
 - [~] **cog-p0-03 — Close the documentation and packaging boundary.**
   - Priority: P0.
@@ -71,10 +82,18 @@ Source-of-truth rules:
   - Acceptance: metrics freshness, manuscript crossrefs, citations,
     formalisms, numbers, links, claim scope, synthetic-surface, renderer,
     robustness, visual-QA, and publication-readiness gates pass.
-  - Blocker: `check_metrics_fresh.py --fail-on-dirty` remains intentionally
-    red until these source edits are committed and metrics are regenerated
-    against that commit; the current worktree has been regenerated from the
-    live sources but cannot claim commit-bound freshness while uncommitted.
+  - Blocker (restated 2026-11-12): `check_metrics_fresh.py --fail-on-dirty` is
+    red at `7ef2c7e1` for a different reason than the 2026-09-08 note
+    recorded. Nothing is uncommitted — the worktree is clean. `METRICS.yaml`
+    still records `generator_git_sha: a81d3865c278`, and metric-affecting
+    source changed after it: `cogant/pyproject.toml`, the package code and
+    package-data markdown under `cogant/py/cogant/gnn/`, and the
+    `cogant/examples/zoo/{04_pomdp_minimal,06_hierarchical,12_full_pomdp}/model.gnn.md`
+    fixtures, all from the GNN pin cutover. Remediation is one command —
+    `cd cogant && uv run python ../tools/regenerate_metrics.py` — followed by
+    committing `cogant/evaluation/METRICS.yaml` and the manuscript artifacts it
+    moves. Owner: repository owner (DAF); nothing outside the repository
+    blocks it.
 
 ## P1 — Canonical public contracts and reliability
 
@@ -188,13 +207,25 @@ Source-of-truth rules:
     and a PR/push-triggered CI lane that never enters core installation.
   - Acceptance: core install/tests remain independent; upstream failures are
     fail-closed, bounded, and diagnosable.
-  - Current state: the optional extra is excluded from `all`, the bridge
-    distinguishes unavailable from failed validation, release integrity checks
-    the full commit pin and license metadata, and CI runs the stable
-    `gnn conformance (pinned)` job on every pull request and push (still
-    available through manual dispatch). The upstream checkout itself remains
-    intentionally uninstalled in the core developer environment, and the full
-    manual pipeline remains available through the CLI lanes.
+  - Current state (2026-11-12): the optional extra is excluded from `all`; the
+    bridge distinguishes unavailable from failed validation; the pin is
+    `v5.1.0` at `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`, recorded in
+    `.github/gnn-pin.json` and installed by the `upstream` extra; the shared
+    reader owns pin, pointer and specification validation
+    (`python -m gnn.importers check --repo . --require-pointer`), and this
+    repository's interim local readers are deleted (see the 2026-11-12 pass
+    below). CI declares the stable `gnn conformance (pinned)` job on every pull
+    request and push, still reachable through manual dispatch.
+    `cogant/uv.lock` resolves `inferactively-pymdp` 1.0.5 transitively from the
+    pinned extra rather than as a direct requirement. The upstream checkout
+    remains intentionally uninstalled in the core developer environment, and
+    the full manual pipeline remains available through the CLI lanes.
+  - Blocker: the `gnn` arm has not been observed green since the cutover.
+    Hosted GitHub Actions is billing-locked org-wide, so the CI lane cannot be
+    cited as evidence, and the arm needs the upstream git install
+    (`uv sync --extra upstream`) that the core developer environment omits by
+    design. Owner: whoever can run `python run_gate.py --prepare gnn` on a
+    networked machine, or the org owner who can restore Actions billing.
 
 - [ ] **cog-p4-02 — Streaming and resource bounds.**
   - Priority: P4.
@@ -239,9 +270,13 @@ Source-of-truth rules:
     visual QA, security, provenance, and reproducibility.
   - Acceptance: the gate fails closed on any required lane and produces a
     reviewable machine-readable summary with exact remediation paths.
-  - Blocker: the gate remains red until the historical full-suite failures are
-    reconciled and the dirty-worktree metrics freshness check is rerun after
-    commit-bound regeneration.
+  - Blocker (restated 2026-11-12): the "historical full-suite failures" this
+    item used to cite were reconciled in the 2026-09-08 pass (9612 passed /
+    0 failed), so that clause is withdrawn. The gate is red for one measured
+    reason — the metrics-freshness step, cause and remediation in cog-p0-04 —
+    and it cannot be called complete until the entry-point split in cog-p5-05
+    is resolved, because the deliverable names `tools/release_gate.py` while
+    CI and the README's gate section invoke `run_gate.py`.
 
 - [~] **cog-p5-02 — Documentation truth pass.**
   - Priority: P5.
@@ -259,11 +294,15 @@ Source-of-truth rules:
     and CI wiring for clean-wheel attribution.
   - Acceptance: release artifacts can be rebuilt and independently attributed
     without network-dependent hidden inputs.
-  - Current state: `audit_release_integrity.py` emits the release report and
-    CycloneDX-shaped SBOM, verifies wheel `RECORD` hashes and byte-identical
-    clean builds, checks OpenAPI request/response coverage, and verifies the
-    optional upstream commit pin. Independent CI execution and final human
-    license review remain open.
+  - Current state (2026-11-12): `audit_release_integrity.py` emits the release
+    report and CycloneDX-shaped SBOM, verifies wheel `RECORD` hashes and
+    byte-identical clean builds, checks OpenAPI request/response coverage, and
+    cross-checks the `upstream` extra against `cogant/uv.lock`. Pin-shape and
+    pointer-token validation moved to the shared `gnn.importers` reader in the
+    2026-11-12 pass, so the audit no longer keeps a second copy of it.
+    Independent CI execution and final human license review remain open:
+    hosted Actions is billing-locked org-wide, and the license review is an
+    owner action on `cogant/LICENSES.md` that no command can substitute for.
 
 - [ ] **cog-p5-04 — Deprecation and maintenance policy.**
   - Priority: P5.
@@ -272,6 +311,65 @@ Source-of-truth rules:
     generated output remains disposable and reproducible.
   - Acceptance: canonical input, rejection controls, and regeneration docs
     remain green after interface retirement.
+
+- [ ] **cog-p5-05 — One gate entry point.**
+  - Priority: P5.
+  - Depends on: cog-p0-04.
+  - Deliverable: a single documented entry point for the go/no-go gate, or an
+    explicit split where `run_gate.py` owns the arms and
+    `tools/release_gate.py` composes them, with every doc naming the same one.
+  - Why it is open: `run_gate.py` documents itself as the place "a command
+    exists in exactly one place", and every gate-bearing CI job in
+    `.github/workflows/ci.yml` invokes one of its arms (the `pre-commit` job
+    runs the hook runner directly), while
+    [`README.md`](README.md) still calls `tools/release_gate.py` the
+    "authoritative completeness check", [`AGENTS.md`](AGENTS.md) and
+    [`tools/README.md`](tools/README.md) document it as the aggregate gate,
+    and [`cogant/Makefile`](cogant/Makefile) still calls it. The two run
+    different step sets: `release_gate.py` alone owns `roadmap-truth`,
+    `publication-readiness`, the manuscript crossref/citation/formalism/
+    number/claim-scope audits, and `check_metrics_fresh.py --fail-on-dirty`;
+    no `run_gate.py` arm covers those. `tests/test_release_gate.py` checks
+    `release_gate.py`'s own step mechanics and that its referenced test files
+    exist, but nothing compares its step set with the `run_gate.py` arms, so
+    the split is invisible to CI.
+  - Acceptance: one command produces the go/no-go report, every step in it is
+    reachable from exactly one place, and the docs name that command.
+  - Owner: repository owner (DAF); nothing external blocks it.
+
+- [ ] **cog-p5-06 — Make the committed render receipt verifiable.**
+  - Priority: P5.
+  - Depends on: cog-p5-02.
+  - Deliverable: a receipt whose recorded source commit and byte count can be
+    checked from a fresh clone of `main`, or a receipt that records only what
+    the repository can observe.
+  - Why it is open: [`docs/manuscript-render.json`](docs/manuscript-render.json)
+    records `source_commit: c90c6edc694ec699d852d5f5e306303b513b51be`, which
+    is not in `main`'s history — `git branch -a --contains c90c6edc` lists only
+    `estate/audit-fixes`, because PR #17 landed as the squashed `12b1e205`.
+    The recorded `pdf_bytes: 3124754` also no longer matches the artifact at
+    the documented path (`output/manuscript/COGANT.pdf`, 3124549 bytes), and
+    `git ls-files output/manuscript/COGANT.pdf` is empty, so the PDF is ignored
+    as documented. Neither field can be verified without the original branch.
+  - Acceptance: a fresh clone can confirm the receipt against a commit that
+    exists on `main` and against an artifact the repository can observe (for
+    example a recorded digest, or a receipt written after the merge commit).
+  - Owner: repository owner (DAF).
+
+- [ ] **cog-p5-07 — One Python/uv setup in every workflow.**
+  - Priority: P5.
+  - Depends on: none.
+  - Deliverable: `docs.yml` and `metrics-fresh.yml` install Python and uv
+    through the same composite action `ci.yml` uses.
+  - Why it is open: PR #12 standardised `ci.yml` on
+    `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67`,
+    but [`.github/workflows/docs.yml`](.github/workflows/docs.yml) still pins
+    `astral-sh/setup-uv@68559e99` plus `actions/setup-python@6d4fd22b`, and
+    [`.github/workflows/metrics-fresh.yml`](.github/workflows/metrics-fresh.yml)
+    pins the same two actions. Three workflows, two setup paths.
+  - Acceptance: one setup action across every workflow, with each workflow's
+    documented Python version still selected explicitly.
+  - Owner: repository owner (DAF).
 
 ## Execution order
 
@@ -546,3 +644,56 @@ package suite is green — 9612 passed / 0 failed / 47 skipped, coverage
   already fixed (see the ticked 2026-08-02 item above); METRICS.yaml
   regenerated against commit-bound HEAD this pass; the 12 notebook stubs
   remain deliberately open.
+
+## Completed/Closed — 2026-11-12 GNN-FEP cutover pass
+
+Work merged since the 2026-09-08 pass, recorded here because the active items
+above depend on it. Gate evidence measured at `7ef2c7e1` for this pass:
+`run_gate.py lint` pass (ruff check clean, 1042 files already formatted),
+`run_gate.py types` pass (strict mypy, 261 source files), `run_gate.py content`
+pass, `run_gate.py docs` pass (`mkdocs build --strict`; `verify_doc_links`
+scanned 386 files and 1599 links with 0 broken), and
+`tools/audit_roadmap_truth.py` 0 findings. `check_metrics_fresh.py
+--fail-on-dirty` is red for the reason recorded in cog-p0-04.
+
+- [x] **GNN-FEP pin cutover to `v5.1.0`** (`687264a5`, PR #16). The pin is
+  `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`, recorded in
+  [`.github/gnn-pin.json`](.github/gnn-pin.json) and installed by the
+  `upstream` extra in [`cogant/pyproject.toml`](cogant/pyproject.toml). The
+  `gnn` arm now calls `python -m gnn.importers check --repo .
+  --require-pointer --workflow .github/workflows/ci.yml --job gnn-conformance`;
+  `tools/gnn_upstream_audit_surface.py` reads the expected revision through
+  `gnn.importers.read_pin`; `tools/audit_release_integrity.py` and
+  `tests/test_release_integrity_pin.py` lost their second copy of pin-shape and
+  pointer validation; and `cogant/scripts/gnn_conformance_probe.py` refuses a
+  run whose PEP 610 commit differs from the pin, so `standard`/`strict` results
+  describe the pinned parser.
+- [x] **`inferactively-pymdp` resolved at 1.0.5** (`7ef2c7e1`, PR #18). The
+  dependency is transitive through the pinned GNN extra, not a direct
+  requirement; `cd cogant && uv lock --upgrade-package inferactively-pymdp`
+  moved [`cogant/uv.lock`](cogant/uv.lock) from split 1.0.3/1.0.4 resolutions
+  to one 1.0.5 entry, 158 packages resolved, no other package moved.
+- [x] **Composable gate, and CI reduced to arm invocations** (`0f4f1f43`,
+  PR #15). [`run_gate.py`](run_gate.py) owns the arms (`lint`, `types`,
+  `content`, `docs`, `test-fast`, `test-property`, `test-full`, `gnn`,
+  `wheel`, `rust`, `manuscript`), `--prepare` performs one `uv sync` per job,
+  and `.github/workflows/ci.yml` no longer carries inline commands. The
+  remaining split against `tools/release_gate.py` is tracked as cog-p5-05.
+- [x] **Org-standard Python/uv setup in the CI job set** (`4255568b`, PR #12):
+  every job in `.github/workflows/ci.yml` uses the
+  `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67`
+  composite action instead of separate uv and Python steps. `docs.yml` and
+  `metrics-fresh.yml` still carry the older two-step setup; that remainder is
+  cog-p5-07.
+- [x] **Manuscript render command and receipt** (`0f4f1f43` PR #15,
+  `12b1e205` PR #17). [`scripts/render_manuscript.py`](scripts/render_manuscript.py)
+  injects the sections, renders the PDF and writes
+  [`docs/manuscript-render.json`](docs/manuscript-render.json) only after a
+  successful, non-trivial render; `tests/test_render_manuscript_receipt.py`
+  pins that contract; the `manuscript` arm runs the render plus
+  `docs/verify_manuscript_links.py`. The receipt's own verifiability is
+  cog-p5-06.
+- [x] **Staged GNN pin checks and docs** (`8aa7fcde` PR #13, `4ca6b811` PR #14,
+  `12b1e205` PR #17): `.github/GNN.md` states where the pin, the conformance
+  job and the pointer live, and the staged checks landed before the cutover
+  rather than with it.
