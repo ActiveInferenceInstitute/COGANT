@@ -15,11 +15,7 @@ s_beliefs[3,1,type=float]
 B_transition[3,3,1,type=float]
 A_observation[3,3,type=float]
 D_prior[3,1,type=float]
-
-## ObservationBlock
 o_sensor[3,type=int]
-
-## ControlBlock
 u_action[2,type=int]
 
 ## Connections
@@ -43,3 +39,6 @@ B_transition=TransitionMatrix
 A_observation=LikelihoodMatrix
 o_sensor=Observation
 u_action=Action
+
+## Footer
+GNN specification for the `pomdp_minimal` zoo example. Emitted by COGANT.

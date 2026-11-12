@@ -40,3 +40,6 @@ D_planner_prior=PriorBelief
 D_executor_prior=PriorBelief
 B_planner=TransitionMatrix
 B_executor=TransitionMatrix
+
+## Footer
+GNN specification for the `hierarchical` zoo example. Emitted by COGANT.
