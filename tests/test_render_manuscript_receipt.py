@@ -21,6 +21,7 @@ def test_render_receipt(tmp_path, monkeypatch, returncode, size, success):
     injected.mkdir(parents=True)
     section = injected / "00_abstract.md"
     section.write_text("# Example\n")
+    (injected / "config.yaml").write_text("paper: {}\n")
     receipt = tmp_path / "docs/manuscript-render.json"
     receipt.parent.mkdir()
     receipt.write_text("previous successful render\n")
