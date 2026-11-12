@@ -35,21 +35,16 @@ def _write_pin_sources(
     lock_commit: str = PIN,
     version: str = "4.1.0",
 ) -> tuple[Path, Path]:
-    pyproject = tmp_path / "pyproject.toml"
-    pyproject.write_text(
-        "\n".join(
-            [
-                "[project]",
-                'name = "cogant"',
-                'version = "0.0.0"',
-                "[project.optional-dependencies]",
-                "upstream = [",
-                f'    "generalized-notation-notation @ git+{REPO_URL}@{pin}",',
-                "]",
-                'all = ["pytest>=7.4.0"]',
-            ]
-        )
-        + "\n",
+    pin_path = tmp_path / "gnn-pin.json"
+    pin_path.write_text(
+        json.dumps(
+            {
+                "schema": "gnn-importer-pin/v1",
+                "repository": "ActiveInferenceInstitute/Generalized_Notation_Notation",
+                "commit": pin,
+                "tag": f"v{version}",
+            }
+        ),
         encoding="utf-8",
     )
     lock = tmp_path / "uv.lock"
@@ -72,7 +67,7 @@ def _write_pin_sources(
         + "\n",
         encoding="utf-8",
     )
-    return pyproject, lock
+    return pin_path, lock
 
 
 def _write_fixture_audit_dir(tmp_path: Path, *, installed_commit: str = PIN) -> Path:
@@ -197,50 +192,21 @@ def _write_fixture_audit_dir(tmp_path: Path, *, installed_commit: str = PIN) -> 
 
 @pytest.fixture()
 def module(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    """Module whose default pin/lock sources are tmp copies (never the live repo)."""
+    """Module with isolated canonical pin and dependency observations."""
     loaded = _load_module()
-    pyproject, lock = _write_pin_sources(tmp_path)
-    monkeypatch.setattr(loaded, "PYPROJECT_PATH", pyproject)
+    pin_path, lock = _write_pin_sources(tmp_path)
+    monkeypatch.setattr(loaded, "PIN_PATH", pin_path)
     monkeypatch.setattr(loaded, "LOCK_PATH", lock)
     return loaded
-
-
-def test_expectation_is_derived_from_pyproject_pin_and_uv_lock(module, tmp_path: Path) -> None:
-    expectation = module.load_upstream_expectation()
-
-    assert expectation.pinned_commit == PIN
-    assert expectation.locked_commit == PIN
-    assert expectation.locked_version == "4.1.0"
-    assert expectation.lock_matches_pin is True
-    assert expectation.release_tag == "v4.1.0"
-    assert expectation.repository_url == REPO_URL
-
-    other = tmp_path / "other"
-    other.mkdir()
-    pyproject, lock = _write_pin_sources(other, pin=OTHER, lock_commit=OTHER, version="5.0.1")
-    moved = module.load_upstream_expectation(pyproject, lock)
-    assert (moved.pinned_commit, moved.locked_version, moved.release_tag) == (
-        OTHER,
-        "5.0.1",
-        "v5.0.1",
-    )
-
-
-def test_live_repository_pin_matches_its_lock() -> None:
-    expectation = _load_module().load_upstream_expectation()
-
-    assert expectation.pinned_commit is not None
-    assert expectation.lock_matches_pin is True
-    assert expectation.locked_version
 
 
 def test_lock_entry_for_a_different_commit_fails_the_version_claim(module, tmp_path: Path) -> None:
     audit = _write_fixture_audit_dir(tmp_path)
     drifted = tmp_path / "drifted"
     drifted.mkdir()
-    pyproject, lock = _write_pin_sources(drifted, pin=PIN, lock_commit=OTHER)
+    pin_path, lock = _write_pin_sources(drifted, pin=PIN, lock_commit=OTHER)
 
-    expectation = module.load_upstream_expectation(pyproject, lock)
+    expectation = module.load_upstream_expectation(pin_path, lock)
     surface = module.build_surface(audit, expectation)
 
     assert expectation.lock_matches_pin is False
@@ -502,7 +468,7 @@ def test_strict_version_fails_when_pin_moves_without_reinstall(module, tmp_path:
     audit = _write_fixture_audit_dir(tmp_path)
     moved = tmp_path / "moved"
     moved.mkdir()
-    pyproject, lock = _write_pin_sources(moved, pin=OTHER, lock_commit=OTHER, version="4.2.0")
+    pin_path, lock = _write_pin_sources(moved, pin=OTHER, lock_commit=OTHER, version="4.2.0")
 
     exit_code = module.main(
         [
@@ -510,8 +476,8 @@ def test_strict_version_fails_when_pin_moves_without_reinstall(module, tmp_path:
             str(audit),
             "--output-dir",
             str(tmp_path / "surface"),
-            "--pyproject",
-            str(pyproject),
+            "--pin",
+            str(pin_path),
             "--lock",
             str(lock),
             "--strict-version",

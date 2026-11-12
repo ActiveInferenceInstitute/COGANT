@@ -74,8 +74,8 @@ server = [
     "uvicorn[standard]>=0.54",
 ]
 upstream = [
-    # Exact commit peeled from the published v5.0.3 annotated release tag.
-    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1",
+    # Exact commit peeled from the published v5.1.0 annotated release tag.
+    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf",
 ]
 all = [
     "pytest>=9.1",

@@ -39,7 +39,7 @@ CI invokes it from `cogant/` as `python ../run_gate.py ...`.
 | `test-fast` | default test arm: `--no-cov`, `--ignore=tests/property/`, `-m "not slow"` | `all` |
 | `test-property` | Hypothesis law tests (also collected by `test-full`) | `all` |
 | `test-full` | full suite with the coverage gate (`--cov=cogant --cov-fail-under=89`) | `all` |
-| `gnn` | pinned upstream conformance probe, four bridge/integration test files, release-integrity provenance audit | `upstream`, `dev` |
+| `gnn` | shared GNN-FEP pin/pointer/spec checker, pinned upstream conformance probe, four bridge/integration test files, the audit-surface tests, release-integrity provenance audit | `upstream`, `dev` |
 | `wheel` | `tools/wheel_smoke.py` clean-wheel build + isolated import smoke, then `audit_release_integrity.py --require-wheel --check-wheel-reproducibility` | `dev` |
 | `rust` | `cargo fmt --check`, `check`, `test`, `clippy -D warnings` for `cogant/rust` | — |
 | `manuscript` | inject variables, validate the figure registry, render the PDF, verify manuscript links | `dev` |
@@ -69,8 +69,8 @@ has exactly one ruff invocation, `run_gate.py lint`.
 
 - Pin file: [`.github/gnn-pin.json`](../.github/gnn-pin.json), schema
   `gnn-importer-pin/v1`, repository
-  `ActiveInferenceInstitute/Generalized_Notation_Notation`, tag `v5.0.3`,
-  commit `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`.
+  `ActiveInferenceInstitute/Generalized_Notation_Notation`, tag `v5.1.0`,
+  commit `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`.
 - Workflow job: key `gnn-conformance`, display name
   `gnn conformance (pinned)`, in
   [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
@@ -78,13 +78,16 @@ has exactly one ruff invocation, `run_gate.py lint`.
   emits a package from `cogant/examples/control_positive/calculator`, validates
   it at the `standard` and `strict` levels, and runs upstream steps 3, 5 and 6.
   What the job parses is recorded in [`.github/GNN.md`](../.github/GNN.md).
-- The job installs the pin through the `upstream` extra in
-  [`cogant/pyproject.toml`](../cogant/pyproject.toml).
-  `tools/audit_release_integrity.py --no-openapi` reads `gnn-pin.json` and
-  rejects schema, repository, commit and tag drift against that extra and
-  `cogant/uv.lock`; it also checks the pin/revision/workflow/job pointer.
-  The local reader is retained because `v5.0.3` predates `gnn.importers`;
-  shared-reader adoption must accompany a future upstream pin advance.
+- The job prepares the upstream environment through the `upstream` extra in
+  [`cogant/pyproject.toml`](../cogant/pyproject.toml), then calls
+  `python -m gnn.importers check` on the project root with `--require-pointer`,
+  `--workflow .github/workflows/ci.yml` and `--job gnn-conformance`.
+  The shared reader owns the pin, pointer and discovered specification checks.
+  The audit surface uses `gnn.importers.read_pin` for the expected revision;
+  `cogant/uv.lock` supplies dependency observations, not another expected pin.
+  Shared-reader adoption arrived with the pin advance from `v5.0.3`
+  (`8f293d9b`) to `v5.1.0` (`75c834bd`); the interim local readers are gone,
+  as [`.github/GNN.md`](../.github/GNN.md) records.
 
 The Python setup in every job uses the org composite action
 `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448`.

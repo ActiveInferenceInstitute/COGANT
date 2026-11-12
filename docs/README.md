@@ -37,7 +37,7 @@ each job to its arm and records the measured wall time per arm.
 
 - **GNN pin:** [`.github/gnn-pin.json`](../.github/gnn-pin.json) — schema
   `gnn-importer-pin/v1`, `ActiveInferenceInstitute/Generalized_Notation_Notation`
-  at `v5.0.3` (`8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`).
+  at `v5.1.0` (`75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`).
 - **What the conformance job parses:** [`.github/GNN.md`](../.github/GNN.md).
 - **Conformance job:** key `gnn-conformance`, display name
   `gnn conformance (pinned)`, in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).

@@ -188,14 +188,39 @@ ARMS: dict[str, Arm] = {
     ),
     "gnn": Arm(
         "gnn",
-        "pinned upstream GNN conformance: probe, bridge tests, pin/pointer drift, provenance",
+        "pinned upstream GNN conformance: shared pin/pointer/spec reader, probe, bridge and audit-surface tests, provenance",
         ("upstream", "dev"),
         (
+            Step(
+                "GNN-FEP importer contract",
+                (
+                    "uv", "run", "python", "-m", "gnn.importers", "check",
+                    "--repo", str(ROOT), "--require-pointer",
+                    "--workflow", ".github/workflows/ci.yml", "--job", "gnn-conformance",
+                ),
+                timeout=300,
+            ),
             Step("conformance probe", ("uv", "run", "python", "scripts/gnn_conformance_probe.py"), timeout=900),
             Step(
                 "bridge tests",
                 ("uv", "run", "pytest", "-q", "--no-cov", "-o", "addopts=", "-rs", *GNN_TEST_FILES),
                 timeout=1800,
+            ),
+            Step(
+                "audit surface tests",
+                (
+                    "uv",
+                    "run",
+                    "pytest",
+                    "-q",
+                    "--no-cov",
+                    "-o",
+                    "addopts=",
+                    "-p",
+                    "no:cacheprovider",
+                    "../tests/test_gnn_upstream_audit_surface.py",
+                ),
+                timeout=600,
             ),
             _audit("audit_release_integrity.py", "--no-openapi"),
         ),

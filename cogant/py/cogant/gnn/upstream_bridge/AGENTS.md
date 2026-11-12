@@ -10,9 +10,12 @@ keeping heavy dependencies (JAX, PyTorch) out of the eager import path.
 
 * **Optional** dependency: installed only through the `upstream` extra
   (`uv sync --extra upstream`; not part of `all`). The extra pins a full
-  commit of the published GNN v5.0.3 tag in `cogant/pyproject.toml`
-  (mirrored in `uv.lock`); `tools/gnn_upstream_audit_surface.py` and
-  `tools/audit_release_integrity.py` check that pin against the lock.
+  commit of the published GNN v5.1.0 tag in `cogant/pyproject.toml`
+  (mirrored in `uv.lock`). `.github/gnn-pin.json` is the one statement of the
+  expected revision: `tools/gnn_upstream_audit_surface.py` reads it through
+  `gnn.importers.read_pin`, `tools/audit_release_integrity.py` keeps the extra
+  and the lock in agreement, and `cogant/scripts/gnn_conformance_probe.py`
+  rejects an installed PEP 610 commit that differs from the pin.
 * Version gate: `_require_upstream_gnn()` raises `ImportError` (surfaced as
   "unavailable") when the distribution is missing, older than
   `MIN_UPSTREAM_MAJOR` (4), or when the importable `gnn` package belongs to
@@ -38,7 +41,7 @@ directly anywhere else in the package.
 | Symbol | Returns | Use |
 | --- | --- | --- |
 | `is_upstream_gnn_available()` | `bool` | Probe (runs the version/ownership gate); never raises. |
-| `upstream_version()` | `str \| None` | Upstream `gnn.__version__` (`"5.0.3"` for the current pin), when available. |
+| `upstream_version()` | `str \| None` | Upstream `gnn.__version__` (`"5.1.0"` for the current pin), when available. |
 | `UPSTREAM_DISTRIBUTION`, `UPSTREAM_IMPORT_NAME`, `MIN_UPSTREAM_MAJOR`, `DEFAULT_VALIDATION_LEVEL` | constants | `"generalized-notation-notation"`, `"gnn"`, `4`, `"standard"`. |
 | `UpstreamGNNValidation` | dataclass | Outcome of a validation call (`available`, `ok`, `errors`, `version`, `skipped_reason`). |
 | `run_upstream_validate_gnn(markdown, *, validation_level="standard")` | `UpstreamGNNValidation` | Stage the markdown to a temporary `.gnn.md` file and run upstream `validate_gnn_syntax` at the given `ValidationLevel` (`basic` / `standard` / `strict` / `research` / `round_trip`). |
@@ -110,7 +113,7 @@ subprocess on COGANT's active interpreter and reads per-step outcomes from
 | 23 | `23_report.py` | on | Pipeline report. |
 | 24 | `24_intelligent_analysis.py` | on | Final synthesis pass. |
 
-Upstream GNN 5.0.3 resolves hard step prerequisites inside the invocation:
+Upstream GNN 5.1.0 resolves hard step prerequisites inside the invocation:
 `12_execute` requires `3, 11`, `16_analysis` requires `3, 7, 12`, and
 `18_security` requires `11`. Upstream applies `--skip-steps` *after* that
 resolution, so the bridge always passes its skip set (`skip_steps`, plus `13`
