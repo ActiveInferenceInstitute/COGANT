@@ -20,24 +20,25 @@ git-ignored `site/` directory.
 
 ## Building locally
 
-```bash
-uv run mkdocs build
-```
-
-The repository workflow currently uses this non-strict build because the published
-site includes documentation-only `AGENTS.md` pages and a generated changelog whose
-source is outside the MkDocs docs directory. Run the package's relative-link and
-anchor checker separately when editing documentation:
+The gate's `docs` arm runs the build that CI deploys, plus the relative-link
+check:
 
 ```bash
-uv run python docs/verify_doc_links.py
+python run_gate.py docs        # from the COGANT project root
 ```
+
+Equivalently, from the package root: `uv run mkdocs build --strict` followed by
+`uv run python docs/verify_doc_links.py`. The strict build tolerates the
+documentation-only `AGENTS.md` pages and the generated changelog that are
+outside the MkDocs `nav`; it fails on a broken internal link or unknown page
+anchor.
 
 ## GitHub Pages deployment
 
 On pushes to `main`, after a successful `CI` workflow, or through manual dispatch,
-`.github/workflows/docs.yml` installs the dev dependencies, runs `uv run mkdocs build`,
-and deploys `site/` with `peaceiris/actions-gh-pages` pinned at v4.1.0 (a
+`.github/workflows/docs.yml` runs `python ../run_gate.py --prepare docs` (one
+`uv sync`, then the strict build and link check) and deploys `site/` with
+`peaceiris/actions-gh-pages` pinned at v4.1.0 (a
 Node 24 release, so no runtime override is needed). The job uses
 `actions/checkout` pinned at v7.0.1, `actions/setup-python` pinned at v7.1.0, and
 `astral-sh/setup-uv` pinned at v10.3.3; every action reference in this

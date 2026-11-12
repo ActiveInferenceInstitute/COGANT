@@ -247,7 +247,10 @@ ARM_ORDER = tuple(ARMS)
 
 
 def _selected(names: list[str]) -> list[Arm]:
-    if not names or names == ["all"]:
+    if not names:
+        # A bare invocation runs the fast default arm; ``all`` is explicit.
+        names = ["test-fast"]
+    if names == ["all"]:
         return [ARMS[name] for name in ARM_ORDER]
     unknown = [name for name in names if name not in ARMS]
     if unknown:
@@ -305,7 +308,7 @@ def main(argv: list[str] | None = None) -> int:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("arms", nargs="*", metavar="ARM", help="arm name(s); default: all")
+    parser.add_argument("arms", nargs="*", metavar="ARM", help="arm name(s); default: test-fast")
     parser.add_argument("--list", action="store_true", help="list arms and exit")
     parser.add_argument("--dry-run", action="store_true", help="print commands without running them")
     parser.add_argument(

@@ -1,8 +1,9 @@
 # AGENTS.md — repository documentation index
 
-This top-level `docs/` folder holds exactly one page, [`README.md`](README.md),
-the repository-level map of COGANT's documentation. It is **not** the MkDocs
-site source; the published site lives under [`../cogant/docs/`](../cogant/docs/index.md).
+This top-level `docs/` folder holds the repository-level documentation map
+([`README.md`](README.md)) and the gate/CI run guide
+([`RUN_GUIDE.md`](RUN_GUIDE.md)). It is **not** the MkDocs site source; the
+published site lives under [`../cogant/docs/`](../cogant/docs/index.md).
 
 ## Purpose
 
@@ -12,9 +13,14 @@ only this checkout: it links each documentation area (module hubs under
 duplicating their content. Each `cogant/docs/<module>/README.md` remains the table
 of contents for that module.
 
+[`RUN_GUIDE.md`](RUN_GUIDE.md) describes the arms of the root `run_gate.py`
+entry point, the CI job that invokes each arm, the GNN conformance pin, and the
+measured wall time of every arm on the estate workstation.
+
 ## What belongs here
 
-- The repository-level index ([`README.md`](README.md)) only.
+- The repository-level index ([`README.md`](README.md)).
+- The gate/CI run guide ([`RUN_GUIDE.md`](RUN_GUIDE.md)).
 - Relative links into `cogant/docs/`, the repository root, [`../manuscript/`](../manuscript/README.md),
   and [`../.aii/`](../.aii/README.md).
 
