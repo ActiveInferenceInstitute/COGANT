@@ -213,8 +213,11 @@ _SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 _VAR_DECL_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\s*([^\]]+?)\s*\]\s*$")
 
 # Sections that declare variables in ``name[dims,type=...]`` form.  Upstream
-# GNN uses ``StateSpaceBlock``; COGANT's hand-authored zoo models also put
-# observation, control, and preference declarations in their own blocks.
+# GNN uses ``StateSpaceBlock``.  ObservationBlock, ControlBlock and
+# PreferenceBlock stay supported for hand-authored and third-party
+# COGANT-dialect files that declare variables in their own blocks; the
+# committed zoo specs (``cogant/examples/zoo/*/model.gnn.md``) declare every
+# connection endpoint in ``StateSpaceBlock`` and use none of the extra blocks.
 _DECLARATION_SECTIONS = ("StateSpaceBlock", "ObservationBlock", "ControlBlock", "PreferenceBlock")
 
 # Ontology concepts that name a variable of the role itself (rather than a
