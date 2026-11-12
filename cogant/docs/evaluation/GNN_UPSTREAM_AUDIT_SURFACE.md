@@ -9,9 +9,9 @@ current compatibility scope. Dated earlier results are retained separately.
 | Field | Value |
 | --- | --- |
 | Distribution | `generalized-notation-notation` (optional `cogant[upstream]` extra; not part of `all`) |
-| Pin (`.github/gnn-pin.json`; dependency installation recorded in `cogant/pyproject.toml` and `cogant/uv.lock`) | `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1` |
-| Distribution version / `gnn.__version__` | `5.0.3` / `5.0.3` |
-| Pin tag | [v5.0.3](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3), dated 2026-10-31; annotated tag `2d830c75de2be2cad9b96b0879937d96ecda059d`, peeled to the exact pinned commit; release record created retroactively on 2026-11-03 |
+| Pin (`.github/gnn-pin.json`; dependency installation recorded in `cogant/pyproject.toml` and `cogant/uv.lock`) | `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf` |
+| Distribution version / `gnn.__version__` | `5.1.0` / `5.1.0` |
+| Pin tag | [v5.1.0](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.1.0), dated 2026-11-12; annotated tag `7393a5d0ef3834d71f2e11cbf2a9ac34376af5dd`, peeled to the exact pinned commit; the importer-registry release, first tag whose tree contains `src/gnn/importers.py` |
 | Import package | top-level `gnn` (GNN >= 4.0; the GNN 2.x `src.gnn` surface no longer exists) |
 | License | CC-BY-NC-SA-4.0 (see [`LICENSES.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/LICENSES.md)) |
 
@@ -20,15 +20,30 @@ The `GNN v2.0.0` value under `## GNNVersionAndFlags` in every COGANT
 (`cogant.schema.versions.CURRENT_GNN_VERSION`). It is independent of the
 upstream package release above.
 
-## Current Compatibility (2026-11-01)
+## Current Pin (2026-11-12)
 
-The current pin is the v5.0.3 tag; the release record for that tag was created
-retroactively on 2026-11-03, and the tag still resolves to the pinned commit,
+The pin moved from `v5.0.3` (`8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`) to
+`v5.1.0` (`75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`). That release is the first
+whose tree contains `src/gnn/importers.py`, so the `gnn` arm now calls the
+shared reader —
+`python -m gnn.importers check --repo . --require-pointer --workflow .github/workflows/ci.yml --job gnn-conformance` —
+from the prepared `upstream` environment, and `load_upstream_expectation()`
+reads the same pin through `gnn.importers.read_pin`. `cogant/uv.lock` and the
+installed distribution remain observations: the conformance probe rejects a run
+whose PEP 610 commit differs from the pin, and `tools/audit_release_integrity.py`
+keeps the `upstream`-extra/`uv.lock` commit agreement instead of re-reading the
+pin. The collected evidence below was taken on `v5.0.3` and is retained as
+dated history; no `v5.1.0` audit collection is claimed on this page.
+
+## Compatibility collected on v5.0.3 (2026-11-01)
+
+The pin at that time was the v5.0.3 tag; the release record for that tag was
+created retroactively on 2026-11-03, and the tag still resolves to that commit,
 `8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`. The installed source's PEP 610
 record, the lockfile, the
-distribution version, `gnn.__version__` and the bridge version all name `5.0.3`
+distribution version, `gnn.__version__` and the bridge version all named `5.0.3`
 and that commit, and `tools/audit_release_integrity.py` cross-checks the
-`pyproject.toml` pin against `uv.lock`, failing when the two disagree.
+`upstream` extra's commit against `uv.lock`, failing when the two disagree.
 
 The validator surface was re-established on the new pin: a freshly translated
 calculator package scored 100/100 under COGANT's `GNNValidator` and reported 0
@@ -166,8 +181,8 @@ and `--strict-supply-chain` fails on pip-audit findings or an absent/incomplete 
 Collection requires a new or empty audit directory and preserves previous runs.
 `--pin` selects another canonical pin, `--lock` selects dependency observations,
 and `--no-ls-remote` skips the network probe. The helper requires upstream's
-`gnn.importers`; the current pinned release lacks it, so the GNN-FEP migration
-remains blocked rather than retaining a local reader.
+`gnn.importers`, which the pinned `v5.1.0` release ships; run it from the
+`upstream` environment the `gnn` arm prepares.
 
 ## Reading The SVG
 

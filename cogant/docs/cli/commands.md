@@ -444,7 +444,7 @@ cogant migrate migrate output/model.gnn.md --dry-run
 
 ### upstream-gnn
 
-Drive the upstream GNN 25-step pipeline (`generalized-notation-notation`, optional `upstream` extra, GNN v5.0.3 release) against an existing COGANT-emitted `gnn_package/`. The selected steps run as one `python -m gnn.main --only-steps …` invocation; only `*.gnn.md` files are staged as upstream input. Steps 1 (`setup`), 2 (`tests`), 11 (`render`), and 12 (`execute`) are skipped by default; upstream may still run 11 and 12 as hard prerequisites of selected steps such as `16_analysis` and `18_security`.
+Drive the upstream GNN 25-step pipeline (`generalized-notation-notation`, optional `upstream` extra, GNN v5.1.0 release) against an existing COGANT-emitted `gnn_package/`. The selected steps run as one `python -m gnn.main --only-steps …` invocation; only `*.gnn.md` files are staged as upstream input. Steps 1 (`setup`), 2 (`tests`), 11 (`render`), and 12 (`execute`) are skipped by default; upstream may still run 11 and 12 as hard prerequisites of selected steps such as `16_analysis` and `18_security`.
 
 ```bash
 cogant upstream-gnn output/gnn_package

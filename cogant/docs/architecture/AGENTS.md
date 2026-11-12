@@ -7,7 +7,7 @@ This directory houses the deeply modularized documentation for the **Architectur
 COGANT is a 10-stage repository → GNN bundle compiler. After the validate
 stage, the bundle can be handed to the Active Inference Institute
 **generalized-notation-notation** package (optional ``upstream`` extra, pinned
-to the GNN v5.0.3 release; import package ``gnn``) via two independent
+to the GNN v5.1.0 release; import package ``gnn``) via two independent
 surfaces:
 
 | Surface | Driver | Default | Failure mode |

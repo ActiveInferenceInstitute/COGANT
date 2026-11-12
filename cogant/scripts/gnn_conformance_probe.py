@@ -4,8 +4,11 @@
 Emits a GNN package from the calculator fixture with the pipeline runner,
 validates it at the ``standard`` and ``strict`` levels of the pinned upstream
 parser, and runs upstream steps 3, 5 and 6 on the emitted package.  The pin
-itself lives in ``.github/gnn-pin.json`` and in the ``upstream`` extra of
-``pyproject.toml``; this probe only uses whatever that extra installed.
+lives in ``.github/gnn-pin.json`` and the ``upstream`` extra installs it; this
+probe reads the pin through ``gnn.importers.read_pin`` and fails when the
+revision PEP 610 records for the installed distribution is not that commit, so
+the parser exercised here is the pinned one rather than whichever revision the
+environment happens to hold.
 
 Run from the inner package root (``run_gate.py gnn`` does this):
 
@@ -16,6 +19,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+from importlib import metadata
 from pathlib import Path
 
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
@@ -29,10 +33,38 @@ from cogant.gnn.upstream_bridge.pipeline import (
     run_upstream_pipeline,
 )
 
+ROOT = Path(__file__).resolve().parents[2]
+PIN_PATH = ROOT / ".github" / "gnn-pin.json"
+
+
+def _installed_upstream_commit() -> str | None:
+    """Return the commit PEP 610 records for the installed upstream distribution."""
+    try:
+        distribution = metadata.distribution("generalized-notation-notation")
+        recorded = distribution.read_text("direct_url.json")
+    except (metadata.PackageNotFoundError, OSError):
+        return None
+    try:
+        payload = json.loads(recorded or "{}")
+    except ValueError:
+        return None
+    vcs = payload.get("vcs_info") if isinstance(payload, dict) else None
+    commit = vcs.get("commit_id") if isinstance(vcs, dict) else None
+    return str(commit) if commit else None
+
 
 def main() -> int:
     if not is_upstream_gnn_available():
         raise SystemExit("optional upstream was requested but is unavailable")
+    from gnn.importers import read_pin
+
+    pin = read_pin(PIN_PATH)
+    installed_commit = _installed_upstream_commit()
+    if installed_commit != pin.commit:
+        raise SystemExit(
+            "installed upstream "
+            f"{installed_commit or '(unrecorded)'} does not match the pin {pin.commit}"
+        )
     out = Path(tempfile.mkdtemp(prefix="cogant-upstream-smoke-"))
     PipelineRunner().run("examples/control_positive/calculator", PipelineConfig(output_dir=str(out)))
     package = out / "gnn_package"
@@ -46,6 +78,12 @@ def main() -> int:
     )
     payload = {
         "version": upstream_version(),
+        "pin": {
+            "path": str(PIN_PATH.relative_to(ROOT)),
+            "tag": pin.tag,
+            "commit": pin.commit,
+        },
+        "installed_commit": installed_commit,
         "validation": validation,
         "steps": steps.to_dict(),
     }

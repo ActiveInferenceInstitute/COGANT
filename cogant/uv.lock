@@ -610,7 +610,7 @@ requires-dist = [
     { name = "duckdb", marker = "extra == 'all'", specifier = ">=1.5" },
     { name = "duckdb", marker = "extra == 'analytics'", specifier = ">=1.5" },
     { name = "fastapi", specifier = ">=0.143" },
-    { name = "generalized-notation-notation", marker = "extra == 'upstream'", git = "https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git?rev=8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1" },
+    { name = "generalized-notation-notation", marker = "extra == 'upstream'", git = "https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git?rev=75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf" },
     { name = "httpx", marker = "extra == 'all'", specifier = ">=0.28" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28" },
     { name = "httpx2", marker = "extra == 'all'", specifier = ">=2.13" },
@@ -1333,8 +1333,8 @@ wheels = [
 
 [[package]]
 name = "generalized-notation-notation"
-version = "5.0.3"
-source = { git = "https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git?rev=8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1#8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1" }
+version = "5.1.0"
+source = { git = "https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git?rev=75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf#75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf" }
 dependencies = [
     { name = "aiohttp" },
     { name = "defusedxml" },

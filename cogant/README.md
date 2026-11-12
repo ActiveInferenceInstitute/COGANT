@@ -44,7 +44,7 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
 ## Optional third-party GNN reference implementation
 
 COGANT can validate against the Active Inference Institute
-**generalized-notation-notation** package ([GNN v5.0.3](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3); Python import
+**generalized-notation-notation** package ([GNN v5.1.0](https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.1.0); Python import
 `gnn`) through an explicit optional integration: `uv sync --extra upstream`.
 It is not part of normal installation, routine tests, or the `all` extra because
 the upstream install is large and network/disk-intensive. The `upstream` extra

@@ -14,7 +14,7 @@ GNN stands for **Generalized Notation Notation** -- a structured markdown format
 
 A GNN file is a self-contained description of a generative model. It tells you: what hidden states exist, what observations the system can make, what actions it can take, how states transition given actions, how observations relate to hidden states, and what the system prefers. In COGANT's case, the "system" is your codebase and the generative model is derived from static analysis of your source code.
 
-The format is a markdown file with specific `##` section headers that parsers and type-checkers recognize. COGANT emits the upstream-required header sections, checked against the optional, commit-pinned `generalized-notation-notation` reference implementation (GNN v5.0.3 release; `validate_gnn_syntax` at the `standard` and `strict` levels), while also appending extended sections for provenance, Markov blankets, and confidence metrics.
+The format is a markdown file with specific `##` section headers that parsers and type-checkers recognize. COGANT emits the upstream-required header sections, checked against the optional, commit-pinned `generalized-notation-notation` reference implementation (GNN v5.1.0 release; `validate_gnn_syntax` at the `standard` and `strict` levels), while also appending extended sections for provenance, Markov blankets, and confidence metrics.
 
 ## Anatomy of a GNN file
 

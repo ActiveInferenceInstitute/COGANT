@@ -1,7 +1,7 @@
 # `upstream_bridge`
 
 Lazy facade over the Active Inference Institute
-**`generalized-notation-notation`** package (GNN v5.0.3 release; import
+**`generalized-notation-notation`** package (GNN v5.1.0 release; import
 package `gnn`). It is an **optional** dependency, installed only through the
 `upstream` extra (`uv sync --extra upstream`), and heavy upstream dependencies
 are imported only on first use, so `import cogant` stays fast.
