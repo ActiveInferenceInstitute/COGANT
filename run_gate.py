@@ -188,7 +188,7 @@ ARMS: dict[str, Arm] = {
     ),
     "gnn": Arm(
         "gnn",
-        "pinned upstream GNN conformance: probe, bridge tests, provenance",
+        "pinned upstream GNN conformance: probe, bridge tests, pin/pointer drift, provenance",
         ("upstream", "dev"),
         (
             Step(

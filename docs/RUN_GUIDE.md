@@ -101,6 +101,10 @@ The Python setup in every job uses the org composite action
   library on macOS/Python versions without a prebuilt wheel. CI uses Python
   3.12, where the wheel is available; on this host the arm can run under 3.12
   with `UV_PYTHON=3.12 UV_PROJECT_ENVIRONMENT=.venv-gnn`.
+- A successful `manuscript` render writes
+  [`manuscript-render.json`](manuscript-render.json): source commit,
+  repository-relative PDF artifact location, and exact byte count. Commit this
+  small receipt after a successful run; the PDF remains under ignored `output/`.
 - `wheel`: network access for `uv build` dependencies and the isolated install.
 
 ## Measured wall time on the estate workstation
