@@ -89,8 +89,8 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
 
     original_spawn = multiprocessing.util.spawnv_passfds
 
-    def spawnv_passfds(executable: Any, argv: Any, passfds: Any) -> Any:
-        tokens = [os.fsdecode(value) for value in argv]
+    def spawnv_passfds(path: Any, args: Any, passfds: Any) -> int:
+        tokens = [os.fsdecode(value) for value in args]
         if (
             len(tokens) >= 3
             and tokens[-2] == "-c"
@@ -101,9 +101,9 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
         ):
             # Exact isolated stdlib FD housekeeping does not import target
             # source and is not claimed as a qualified GNN worker.
-            if Path(os.fsdecode(executable)).resolve() != Path(sys.executable).resolve():
+            if Path(os.fsdecode(path)).resolve() != Path(sys.executable).resolve():
                 raise RuntimeError("GNN resource tracker selected a different Python runtime")
-            return original_spawn(executable, argv, passfds)
+            return original_spawn(path, args, passfds)
         if (
             len(tokens) < 4
             or tokens[-3] != "-c"
@@ -116,8 +116,8 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
         rewritten = [
             flag for token in tokens for flag in (["-P", "-s"] if token == "-I" else [token])
         ]
-        check_launch(executable, rewritten, None)
-        return original_spawn(executable, [os.fsencode(token) for token in rewritten], passfds)
+        check_launch(path, rewritten, None)
+        return original_spawn(path, [os.fsencode(token) for token in rewritten], passfds)
 
     multiprocessing.util.spawnv_passfds = spawnv_passfds
     sys.addaudithook(audit)
