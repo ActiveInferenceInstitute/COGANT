@@ -358,5 +358,5 @@ def upstream_gnn_command(
     )
     result = run_upstream_pipeline(cfg)
     _render_upstream_pipeline_table(result)
-    if not result.available or result.failure_count:
+    if not result.available or result.error or result.failure_count:
         raise typer.Exit(code=1)

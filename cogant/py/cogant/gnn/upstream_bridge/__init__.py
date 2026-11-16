@@ -162,9 +162,9 @@ def upstream_version() -> str | None:
     """Return the upstream ``gnn.__version__`` if available."""
     try:
         mod = _require_upstream_gnn()
+        v = getattr(mod, "__version__", None)
     except ImportError:
         return None
-    v = getattr(mod, "__version__", None)
     return v if isinstance(v, str) else None
 
 

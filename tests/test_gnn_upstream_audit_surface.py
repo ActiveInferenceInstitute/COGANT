@@ -501,3 +501,15 @@ def test_strict_version_fails_when_pin_moves_without_reinstall(module, tmp_path:
     )
 
     assert exit_code == 1
+
+
+def test_upstream_bridge_error_cannot_pass_all_step_gate(module, tmp_path):
+    from dataclasses import replace
+
+    surface = module.build_surface(_write_fixture_audit_dir(tmp_path))
+    succeeded_steps = replace(
+        surface, upstream_steps_failed=0, upstream_bridge_error=None
+    )
+    assert succeeded_steps.upstream_all_steps_pass is True
+    refused = replace(succeeded_steps, upstream_bridge_error="worker postflight refused")
+    assert refused.upstream_all_steps_pass is False

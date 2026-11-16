@@ -234,7 +234,11 @@ class AuditSurface:
         summary. Steps the bridge skipped (``upstream_steps_skipped``) sit outside
         that total, so a pass does not mean all 25 upstream steps ran.
         """
-        return self.upstream_steps_total > 0 and self.upstream_steps_failed == 0
+        return (
+            self.upstream_steps_total > 0
+            and self.upstream_steps_failed == 0
+            and self.upstream_bridge_error is None
+        )
 
     @property
     def supply_chain_pass(self) -> bool:

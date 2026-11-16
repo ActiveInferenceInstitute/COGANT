@@ -67,3 +67,38 @@ def test_render_refusal_preserves_prior_receipt_and_pdf(render_workspace, tmp_pa
     assert module.publish_render(staged, pdf, [source], before) == 1
     assert receipt.read_text(encoding="utf-8") == "previous successful render\n"
     assert pdf.read_bytes() == b"previous artifact"
+
+
+def test_published_pdf_stays_readable_until_atomic_replacement(render_workspace, tmp_path, monkeypatch):
+    module, receipt, pdf, source = render_workspace
+    staged = tmp_path / "staged.pdf"
+    staged.write_bytes(b"%PDF-1.4\n" + b"x" * 10_001)
+    original_replace = module.os.replace
+    observed = []
+
+    def replace(source_path, destination):
+        observed.append(pdf.read_bytes())
+        return original_replace(source_path, destination)
+
+    monkeypatch.setattr(module.os, "replace", replace)
+    assert module.publish_render(staged, pdf, [source], module.input_manifest([source])) == 0
+    assert observed[0] == b"previous artifact"
+    assert all(observed)
+
+
+def test_receipt_publication_failure_restores_prior_pdf(render_workspace, tmp_path, monkeypatch):
+    module, receipt, pdf, source = render_workspace
+    staged = tmp_path / "staged.pdf"
+    staged.write_bytes(b"%PDF-1.4\n" + b"x" * 10_001)
+    original_replace = module.os.replace
+
+    def replace(source_path, destination):
+        if destination == receipt:
+            raise OSError("receipt destination refused")
+        return original_replace(source_path, destination)
+
+    monkeypatch.setattr(module.os, "replace", replace)
+    with pytest.raises(OSError, match="receipt destination refused"):
+        module.publish_render(staged, pdf, [source], module.input_manifest([source]))
+    assert pdf.read_bytes() == b"previous artifact"
+    assert receipt.read_text(encoding="utf-8") == "previous successful render\n"

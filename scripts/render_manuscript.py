@@ -309,7 +309,7 @@ def publish_render(
             backup = Path(transaction) / pdf.name
             had_previous = pdf.exists()
             if had_previous:
-                os.replace(pdf, backup)
+                shutil.copy2(pdf, backup)
             try:
                 os.replace(staged_pdf, pdf)
                 os.replace(temporary, RECEIPT)

@@ -364,3 +364,73 @@ def test_python_child_cannot_bypass_an_altered_owned_startup(tmp_path: Path, act
         timeout=30,
     )
     assert not marker.exists()
+
+
+def test_real_lightweight_process_workers_finalize_source_receipts(reviewed_artifacts, tmp_path):
+    import shutil
+
+    from cogant.api.pipeline import PipelineConfig, PipelineRunner
+    from cogant.gnn.upstream_bridge.qualification import invoke
+
+    calculator = Path(__file__).resolve().parents[2] / "examples/control_positive/calculator"
+    package = tmp_path / "calculator"
+    bundle = PipelineRunner().run(
+        str(calculator),
+        PipelineConfig(output_dir=str(package), skip_stages=["validate"], render_visualizations=False),
+    )
+    assert bundle.errors == []
+    models = tmp_path / "models"
+    models.mkdir()
+    for name in ("first.gnn.md", "second.gnn.md"):
+        shutil.copyfile(package / "gnn_package/model.gnn.md", models / name)
+    result = invoke("process_gnn_directory_lightweight", models, tmp_path / "processed", workers=2)
+    assert result["value"]["success"], result
+    assert result["value"]["files_processed"] == 2
+    records = result["worker_qualification"]["worker_receipts"]
+    assert len(records) >= 2
+    assert all(record["entrypoint"] == "-c" for record in records)
+    assert all(
+        record["qualification"]["ok"] and record["qualification"]["imports_verified"]
+        for record in records
+    )
+
+
+@pytest.mark.parametrize("action", ["change", "remove"])
+def test_spawn_child_cannot_bypass_altered_owned_startup(tmp_path: Path, action: str) -> None:
+    source = Path(__file__).resolve().parents[2] / "py"
+    startup = tmp_path / "startup"
+    startup.mkdir()
+    marker = tmp_path / "child-executed"
+    mutation = (
+        "startup_file.write_text('invalid startup!')"
+        if action == "change"
+        else "startup_file.unlink()"
+    )
+    program = (
+        "import multiprocessing, os, sys\n"
+        "from pathlib import Path\n"
+        f"sys.path.insert(0, {str(source)!r})\n"
+        "from cogant.gnn.upstream_bridge import source_startup\n"
+        f"startup = Path({str(startup)!r})\n"
+        "startup_file = startup / 'sitecustomize.py'\n"
+        "startup_file.write_bytes(Path(source_startup.__file__).read_bytes())\n"
+        "os.environ['PYTHONPATH'] = str(startup)\n"
+        "source_startup.install_launch_guard([], startup)\n"
+        f"{mutation}\n"
+        "try:\n"
+        f"    multiprocessing.get_context('spawn').Process(target=Path({str(marker)!r}).touch).start()\n"
+        "except RuntimeError as exc:\n"
+        "    assert 'startup source' in str(exc), str(exc)\n"
+        "else:\n"
+        "    raise AssertionError('multiprocessing worker bypassed startup admission')\n"
+    )
+    subprocess.run(
+        [sys.executable, "-I", "-B", "-c", program],
+        stdin=subprocess.DEVNULL,
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
+    assert not marker.exists()

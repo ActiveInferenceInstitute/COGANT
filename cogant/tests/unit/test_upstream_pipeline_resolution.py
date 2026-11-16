@@ -657,3 +657,24 @@ def test_source_receipt_requires_current_invocation(tmp_path: Path) -> None:
     assert pipeline_mod._read_source_qualification(tmp_path, "current-run", 0) == receipt
     assert pipeline_mod._read_source_qualification(tmp_path, "other-run", 0) == {}
     assert pipeline_mod._read_source_qualification(tmp_path, "current-run", path.stat().st_mtime + 1) == {}
+
+
+def test_cli_does_not_discard_bridge_error(tmp_path, monkeypatch):
+    from typer.testing import CliRunner
+
+    from cogant.cli.main import app
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    # Controlled consumer outcome only, not installed-source qualification evidence.
+    result = UpstreamPipelineResult(
+        available=True,
+        steps=[
+            UpstreamStepResult(
+                step_index=3, script="3_gnn.py", status="SUCCESS", success=True, duration_s=0.0
+            )
+        ],
+        error="worker postflight refused",
+    )
+    monkeypatch.setattr(pipeline_mod, "run_upstream_pipeline", lambda cfg: result)
+    response = CliRunner().invoke(app, ["upstream-gnn", str(_package(tmp_path))])
+    assert response.exit_code == 1

@@ -11,6 +11,7 @@ import atexit
 import hashlib
 import json
 import os
+import re
 import sys
 import types
 import uuid
@@ -44,10 +45,7 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
     startup_file = startup / "sitecustomize.py"
     startup_digest = hashlib.sha256(startup_file.read_bytes()).digest()
 
-    def audit(event: str, arguments: tuple[Any, ...]) -> None:
-        if event != "subprocess.Popen":
-            return
-        executable, argv, _, environment = arguments
+    def check_launch(executable: Any, argv: Any, environment: Any) -> None:
         name = Path(os.fsdecode(executable)).name.lower()
         if (
             not name.startswith("python")
@@ -76,6 +74,47 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
             raise RuntimeError("GNN worker startup source unavailable") from exc
         launches.append(entrypoint(tokens))
 
+    def audit(event: str, arguments: tuple[Any, ...]) -> None:
+        if event == "os.fork":
+            raise RuntimeError("GNN descendants require fresh spawn admission, not fork")
+        if event == "subprocess.Popen":
+            executable, argv, _, environment = arguments
+            check_launch(executable, argv, environment)
+
+    # multiprocessing spawn uses fork_exec directly, not subprocess.Popen.
+    # Its interpreter flags inherit -I from the fresh qualification worker;
+    # replace only that isolation flag with safe-path/no-user-site flags so
+    # the independently checked sitecustomize can admit each target worker.
+    import multiprocessing.util
+
+    original_spawn = multiprocessing.util.spawnv_passfds
+
+    def spawnv_passfds(executable: Any, argv: Any, passfds: Any) -> Any:
+        tokens = [os.fsdecode(value) for value in argv]
+        if (
+            len(tokens) >= 3
+            and tokens[-2] == "-c"
+            and re.fullmatch(
+                r"from multiprocessing\.resource_tracker import main;main\([0-9]+\)",
+                tokens[-1],
+            )
+        ):
+            # Exact isolated stdlib FD housekeeping does not import target
+            # source and is not claimed as a qualified GNN worker.
+            if Path(os.fsdecode(executable)).resolve() != Path(sys.executable).resolve():
+                raise RuntimeError("GNN resource tracker selected a different Python runtime")
+            return original_spawn(executable, argv, passfds)
+        if len(tokens) < 3 or tokens[-2] != "-c" or not tokens[-1].startswith(
+            "from multiprocessing.spawn import spawn_main; spawn_main("
+        ):
+            raise RuntimeError("GNN multiprocessing requires the supported fresh spawn entrypoint")
+        rewritten = [
+            flag for token in tokens for flag in (["-P", "-s"] if token == "-I" else [token])
+        ]
+        check_launch(executable, rewritten, None)
+        return original_spawn(executable, [os.fsencode(token) for token in rewritten], passfds)
+
+    multiprocessing.util.spawnv_passfds = spawnv_passfds
     sys.addaudithook(audit)
 
 
