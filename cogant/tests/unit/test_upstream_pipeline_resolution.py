@@ -656,7 +656,10 @@ def test_source_receipt_requires_current_invocation(tmp_path: Path) -> None:
     path.write_text(json.dumps(receipt), encoding="utf-8")
     assert pipeline_mod._read_source_qualification(tmp_path, "current-run", 0) == receipt
     assert pipeline_mod._read_source_qualification(tmp_path, "other-run", 0) == {}
-    assert pipeline_mod._read_source_qualification(tmp_path, "current-run", path.stat().st_mtime + 1) == {}
+    assert (
+        pipeline_mod._read_source_qualification(tmp_path, "current-run", path.stat().st_mtime + 1)
+        == {}
+    )
 
 
 def test_cli_does_not_discard_bridge_error(tmp_path, monkeypatch):

@@ -783,7 +783,9 @@ def run_upstream_pipeline(
         upstream_status=upstream_status,
         run_id=run_id,
         auto_included=auto_included,
-        source_qualification=_read_source_qualification(cfg.output_dir, invocation_id, started_wall),
+        source_qualification=_read_source_qualification(
+            cfg.output_dir, invocation_id, started_wall
+        ),
     )
     _write_bridge_summary(cfg, result)
     return result

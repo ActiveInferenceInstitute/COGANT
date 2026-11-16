@@ -376,7 +376,9 @@ def test_real_lightweight_process_workers_finalize_source_receipts(reviewed_arti
     package = tmp_path / "calculator"
     bundle = PipelineRunner().run(
         str(calculator),
-        PipelineConfig(output_dir=str(package), skip_stages=["validate"], render_visualizations=False),
+        PipelineConfig(
+            output_dir=str(package), skip_stages=["validate"], render_visualizations=False
+        ),
     )
     assert bundle.errors == []
     models = tmp_path / "models"

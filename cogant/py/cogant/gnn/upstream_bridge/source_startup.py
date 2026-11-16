@@ -107,7 +107,9 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
         if (
             len(tokens) < 4
             or tokens[-3] != "-c"
-            or not tokens[-2].startswith("from multiprocessing.spawn import spawn_main; spawn_main(")
+            or not tokens[-2].startswith(
+                "from multiprocessing.spawn import spawn_main; spawn_main("
+            )
             or tokens[-1] != "--multiprocessing-fork"
         ):
             raise RuntimeError("GNN multiprocessing requires the supported fresh spawn entrypoint")

@@ -86,11 +86,11 @@ def _graph(config: PipelineConfig) -> dict:
     return json.loads((Path(config.output_dir) / "program_graph.json").read_text(encoding="utf-8"))
 
 
-def _work(config: PipelineConfig) -> dict:
+def _work(config: PipelineConfig, qualified_name: str = "work.work") -> dict:
     return next(
         node
         for node in _graph(config)["nodes"].values()
-        if node["kind"] == "function" and node["qualified_name"] == "work.work"
+        if node["kind"] == "function" and node["qualified_name"] == qualified_name
     )
 
 
@@ -240,7 +240,7 @@ def test_source_rename_and_delete_keep_full_snapshot_semantics(repo, tmp_path):
     (repo / "work.py").rename(repo / "moved.py")
     renamed = runner.run(str(repo), config)
     assert renamed.errors == []
-    assert _work(config)["path"] == "moved.py"
+    assert _work(config, "moved.work")["path"] == "moved.py"
     _assert_matches_fresh(repo, config)
     (repo / "moved.py").unlink()
     deleted = runner.run(str(repo), config)
