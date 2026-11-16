@@ -166,7 +166,7 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
                         break
             super().__init__(args, *positional, **kwargs)
 
-    setattr(subprocess, "Popen", QualifiedPopen)
+    subprocess.__dict__["Popen"] = QualifiedPopen
     sys.addaudithook(audit)
 
 
