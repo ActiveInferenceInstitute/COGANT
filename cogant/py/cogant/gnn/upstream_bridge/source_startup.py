@@ -104,8 +104,11 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
             if Path(os.fsdecode(executable)).resolve() != Path(sys.executable).resolve():
                 raise RuntimeError("GNN resource tracker selected a different Python runtime")
             return original_spawn(executable, argv, passfds)
-        if len(tokens) < 3 or tokens[-2] != "-c" or not tokens[-1].startswith(
-            "from multiprocessing.spawn import spawn_main; spawn_main("
+        if (
+            len(tokens) < 4
+            or tokens[-3] != "-c"
+            or not tokens[-2].startswith("from multiprocessing.spawn import spawn_main; spawn_main(")
+            or tokens[-1] != "--multiprocessing-fork"
         ):
             raise RuntimeError("GNN multiprocessing requires the supported fresh spawn entrypoint")
         rewritten = [
