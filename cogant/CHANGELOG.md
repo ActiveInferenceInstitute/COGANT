@@ -18,6 +18,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   invocation/session/artifact checks. Source-only admission is not installed-origin,
   scientific, isolation, licensing or release qualification. Fresh multiprocessing
   workers retain admission; CLI/audit success rejects worker postflight errors.
+  The pinned warning-exit contract requires a complete finalized source receipt;
+  partial success and qualification failures remain errors.
   PDF replacement keeps the prior published pathname live until atomic replacement.
 
 - The optional GNN integration now pins the exact published v5.0.3 source commit

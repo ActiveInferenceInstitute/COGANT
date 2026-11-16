@@ -681,3 +681,18 @@ def test_cli_does_not_discard_bridge_error(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline_mod, "run_upstream_pipeline", lambda cfg: result)
     response = CliRunner().invoke(app, ["upstream-gnn", str(_package(tmp_path))])
     assert response.exit_code == 1
+
+
+def test_warning_exit_requires_finalized_source_receipt(tmp_path: Path) -> None:
+    # A current all-success transport summary alone cannot authorize warning exit 2.
+    driver = _driver_package(
+        tmp_path,
+        _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "exit_code": 0}),
+        returncode=2,
+    )
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3]
+    )
+    result = _run_driver(cfg, driver)
+    assert result["source_qualification"] == {}
+    assert "exited 2 despite writing a summary" in result["error"]

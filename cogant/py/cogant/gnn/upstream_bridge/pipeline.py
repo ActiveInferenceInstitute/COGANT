@@ -745,12 +745,27 @@ def run_upstream_pipeline(
     upstream_status: str | None = None
     run_id: str | None = None
     auto_included: list[int] = []
+    source_qualification = _read_source_qualification(cfg.output_dir, invocation_id, started_wall)
     if summary is not None:
         steps = _steps_from_summary(summary, cfg, chosen)
         upstream_status = str(summary.get("overall_status") or "") or None
         run_id = invocation_id
         auto_included = sorted(s.step_index for s in steps if s.step_index not in chosen)
-        if returncode not in (None, 0) and bridge_error is None:
+        # The pinned producer's public exit contract uses 2 for warnings as
+        # well as partial success. Only a complete, source-finalized warning
+        # result is successful; partial/error/postflight failures stay fatal.
+        main_qualification = source_qualification.get("main", {})
+        qualified_warning = (
+            returncode == 2
+            and upstream_status == "SUCCESS_WITH_WARNINGS"
+            and bool(steps)
+            and all(step.success for step in steps)
+            and source_qualification.get("ok") is True
+            and source_qualification.get("returncode") == 2
+            and main_qualification.get("ok") is True
+            and main_qualification.get("imports_verified") is True
+        )
+        if returncode not in (None, 0) and not qualified_warning and bridge_error is None:
             bridge_error = f"upstream gnn.main exited {returncode} despite writing a summary"
     else:
         if bridge_error is None:
@@ -783,9 +798,7 @@ def run_upstream_pipeline(
         upstream_status=upstream_status,
         run_id=run_id,
         auto_included=auto_included,
-        source_qualification=_read_source_qualification(
-            cfg.output_dir, invocation_id, started_wall
-        ),
+        source_qualification=source_qualification,
     )
     _write_bridge_summary(cfg, result)
     return result
