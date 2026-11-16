@@ -103,6 +103,8 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
             # source and is not claimed as a qualified GNN worker.
             if Path(os.fsdecode(path)).resolve() != Path(sys.executable).resolve():
                 raise RuntimeError("GNN resource tracker selected a different Python runtime")
+            if "-I" not in tokens[1:-2]:
+                args = [os.fsencode(tokens[0]), b"-I", *args[1:]]
             return original_spawn(path, args, passfds)
         if (
             len(tokens) < 4
