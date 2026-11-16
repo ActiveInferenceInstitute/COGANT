@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 import types
 import uuid
@@ -25,6 +26,9 @@ def entrypoint(argv: list[str]) -> str:
         if value in {"-c", "-m"}:
             return value
         if not value.startswith("-"):
+            index = argv.index(value)
+            if argv[index + 1 : index + 2] == ["--script"]:
+                return Path(argv[index + 2]).name
             return Path(value).name
     return ""
 
@@ -122,6 +126,47 @@ def install_launch_guard(launches: list[str], startup: Path) -> None:
         return original_spawn(path, [os.fsencode(token) for token in rewritten], passfds)
 
     multiprocessing.util.spawnv_passfds = spawnv_passfds
+
+    class QualifiedPopen(subprocess.Popen[Any]):
+        def __init__(self, args: Any, *positional: Any, **kwargs: Any) -> None:
+            if (
+                isinstance(args, (list, tuple))
+                and args
+                and kwargs.get("executable") is None
+                and Path(os.fsdecode(args[0])).resolve() == Path(sys.executable).resolve()
+            ):
+                module = sys.modules.get("gnn")
+                if module is not None and module.__file__ is not None:
+                    root = Path(module.__file__).resolve().parent
+                    tokens = [os.fsdecode(value) for value in args]
+                    skip_option_value = False
+                    for index, token in enumerate(tokens[1:], 1):
+                        if skip_option_value:
+                            skip_option_value = False
+                            continue
+                        if token in {"-c", "-m"}:
+                            break
+                        if token in {"-W", "-X", "--check-hash-based-pycs"}:
+                            skip_option_value = True
+                            continue
+                        if token.startswith("-"):
+                            continue
+                        target = Path(token)
+                        if not target.is_absolute():
+                            target = Path(kwargs.get("cwd") or Path.cwd()) / target
+                        target = target.resolve()
+                        if target.suffix == ".py" and target.is_relative_to(root):
+                            args = [
+                                *args[:index],
+                                str(startup_file),
+                                "--script",
+                                str(target),
+                                *args[index + 1 :],
+                            ]
+                        break
+            super().__init__(args, *positional, **kwargs)
+
+    subprocess.Popen = QualifiedPopen
     sys.addaudithook(audit)
 
 
@@ -169,7 +214,7 @@ def start() -> None:
         files = json.loads(manifest)["files"]
         guard = owner.qualified_upstream()
         destination = Path(os.environ["COGANT_GNN_CHILD_RECEIPTS"])
-        script_name = Path(sys.argv[0]).name
+        script_name = entrypoint([sys.executable, *sys.argv])
 
         def finish() -> None:
             if not active or guard is None:
@@ -214,7 +259,8 @@ def start() -> None:
             content = source.encode("utf-8") if isinstance(source, str) else source
             if not isinstance(content, bytes) or hashlib.sha256(content).hexdigest() != expected:
                 raise ImportError(
-                    "GNN script compile bytes differ from the frozen package inventory"
+                    "GNN script compile bytes differ from the frozen package inventory: "
+                    f"{relative} ({type(source).__name__})"
                 )
 
         # Numbered scripts are executed as files, not imported by the checked
@@ -226,5 +272,32 @@ def start() -> None:
         os._exit(78)
 
 
+def run_script(args: list[str]) -> None:
+    """Execute the exact manifest-checked buffer, not Python's opaque FILE compile."""
+    if len(args) < 2 or args[0] != "--script":
+        raise RuntimeError("GNN script runner requires its bound target")
+    owner = sys.modules["_cogant_gnn_worker_custody"]
+    _, manifest = owner._artifact("COGANT_GNN_MANIFEST", owner.MANIFEST_SHA256)
+    package_file = sys.modules["gnn"].__file__
+    if package_file is None:
+        raise ImportError("qualified GNN package has no source path")
+    root = Path(package_file).resolve().parent
+    target = Path(args[1]).resolve()
+    relative = target.relative_to(root).as_posix()
+    content = target.read_bytes()
+    expected = json.loads(manifest)["files"].get("src/gnn/" + relative)
+    if expected is None or hashlib.sha256(content).hexdigest() != expected:
+        raise ImportError("GNN script bytes differ from the frozen package inventory")
+    sys.argv = [str(target), *args[2:]]
+    main = types.ModuleType("__main__")
+    main.__file__ = str(target)
+    main.__package__ = None
+    main.__spec__ = None
+    sys.modules["__main__"] = main
+    exec(compile(content, str(target), "exec", dont_inherit=True), main.__dict__)
+
+
 if __name__ == "sitecustomize":
     start()
+elif __name__ == "__main__":
+    run_script(sys.argv[1:])
