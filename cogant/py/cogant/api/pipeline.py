@@ -314,8 +314,9 @@ class PipelineRunner:
             if raw_path is None:
                 records[name] = {"path": None, "state": "absent"}
                 continue
-            path = Path(raw_path).expanduser().resolve()
+            path = Path(raw_path).expanduser().absolute()
             record = cls._file_observation(path)
+            record["resolved_path"] = str(path.resolve())
             if (
                 name == "coverage"
                 and path.suffix.lower() != ".xml"
@@ -323,7 +324,7 @@ class PipelineRunner:
             ):
                 # SQLite readers consume an existing WAL as well as the main
                 # database. Its bytes/presence can change independently.
-                record["wal"] = cls._file_observation(Path(str(path) + "-wal"))
+                record["wal"] = cls._file_observation(Path(str(path.resolve()) + "-wal"))
                 if record["wal"]["state"] == "unavailable":
                     record["state"] = "unavailable"
             records[name] = record

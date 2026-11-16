@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 from contextlib import closing
+from pathlib import Path
 
 
 def _decode_numbits(numbits_blob: bytes) -> list[int]:
@@ -24,10 +25,12 @@ def _read_sqlite_coverage(
 
     SQLite errors propagate to the public ingester's existing error boundary.
     Both database resources close before any return or exception propagates.
+    Read-only admission preserves producer-owned database and WAL evidence.
     """
     executed_by_file: dict[str, set[int]] = {}
+    uri = Path(coverage_file).resolve().as_uri() + "?mode=ro"
     with (
-        closing(sqlite3.connect(coverage_file)) as connection,
+        closing(sqlite3.connect(uri, uri=True)) as connection,
         closing(connection.cursor()) as cursor,
     ):
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")

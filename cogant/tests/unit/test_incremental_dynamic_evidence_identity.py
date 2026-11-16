@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -246,3 +247,58 @@ def test_source_rename_and_delete_keep_full_snapshot_semantics(repo, tmp_path):
     assert deleted.errors == []
     assert not any(node["name"] == "work" for node in _graph(config)["nodes"].values())
     _assert_matches_fresh(repo, config)
+
+
+def test_xml_symlink_preserves_configured_format_and_content_identity(repo, tmp_path):
+    target = tmp_path / "coverage-payload"
+    _xml(target, {2})
+    path = tmp_path / "coverage.xml"
+    path.symlink_to(target)
+    config = _config(tmp_path, coverage_path=str(path))
+    runner = PipelineRunner()
+
+    first = runner.run(str(repo), config)
+    assert first.errors == []
+    assert _work(config)["metadata"]["coverage_hits"] == 1
+    assert runner.run(str(repo), config).metadata["incremental_stats"]["cache_hit"] is True
+    _xml(target, {2, 3})
+    changed = runner.run(str(repo), config)
+    assert changed.errors == []
+    assert changed.metadata["incremental_stats"]["cache_hit"] is False
+    assert _work(config)["metadata"]["coverage_hits"] == 2
+    _assert_matches_fresh(repo, config)
+
+
+def test_retained_sqlite_wal_is_consumed_without_mutating_evidence(repo, tmp_path):
+    path = tmp_path / ".coverage"
+    subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "-c",
+            "import os, sqlite3, sys; "
+            "connection = sqlite3.connect(sys.argv[1]); "
+            "connection.execute('PRAGMA journal_mode=WAL'); "
+            "connection.execute('CREATE TABLE file (id INTEGER, path TEXT)'); "
+            "connection.execute('CREATE TABLE line_bits (file_id INTEGER, numbits BLOB)'); "
+            "connection.execute('INSERT INTO file VALUES (1, ?)', (sys.argv[2],)); "
+            "connection.execute('INSERT INTO line_bits VALUES (1, ?)', (bytes([4]),)); "
+            "connection.commit(); os._exit(0)",
+            str(path),
+            str(repo / "work.py"),
+        ],
+        check=True,
+        stdin=subprocess.DEVNULL,
+    )
+    wal = Path(str(path) + "-wal")
+    before = (path.read_bytes(), wal.read_bytes())
+    runner = PipelineRunner()
+    config = _config(tmp_path, coverage_path=str(path))
+
+    first = runner.run(str(repo), config)
+    assert first.errors == []
+    assert _work(config)["metadata"]["coverage_hits"] == 1
+    assert (path.read_bytes(), wal.read_bytes()) == before
+    assert runner.run(str(repo), config).metadata["incremental_stats"]["cache_hit"] is True
+    _assert_matches_fresh(repo, config)
+    assert (path.read_bytes(), wal.read_bytes()) == before

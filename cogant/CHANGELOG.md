@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Dynamic extraction consumes explicit traces and reports actual evidence counts.
   Incremental reuse binds effective dynamic inputs and exported artifact bytes;
+  coverage keeps configured XML aliases and reads SQLite/WAL evidence without writes.
   translation summaries and batch/stream results retain required-stage failures.
 - Full and release gates share one command registry without excluding slow/property
   tests. Render publication binds declared input and output bytes while retaining
