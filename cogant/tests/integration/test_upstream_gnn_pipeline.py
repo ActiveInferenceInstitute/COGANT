@@ -106,6 +106,8 @@ def test_run_upstream_pipeline_only_steps_3_5(gnn_package_dir: Path, tmp_path: P
     if not result.available:
         pytest.skip(f"upstream gnn.main not importable: {result.error}")
 
+    assert result.error is None
+    assert result.run_id is not None
     assert result.executed == [3, 5]
     assert [s.step_index for s in result.steps] == [3, 5]
     assert (out / "upstream_pipeline_summary.json").is_file()
@@ -113,6 +115,10 @@ def test_run_upstream_pipeline_only_steps_3_5(gnn_package_dir: Path, tmp_path: P
     data = json.loads((out / "upstream_pipeline_summary.json").read_text(encoding="utf-8"))
     assert data["executed"] == [3, 5]
     assert len(data["steps"]) == 2
+
+    raw_path = out / "00_pipeline_summary" / "pipeline_execution_summary.json"
+    summary = json.loads(raw_path.read_text(encoding="utf-8"))
+    assert summary["run_id"] == data["run_id"] == result.run_id
 
 
 def test_cogant_package_passes_upstream_validation_steps(

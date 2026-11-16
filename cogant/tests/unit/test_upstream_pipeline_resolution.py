@@ -261,7 +261,7 @@ def test_auto_included_prerequisites_are_reported_not_hidden(tmp_path: Path) -> 
     assert 7 not in result["skipped"] and 12 in result["skipped"]
 
 
-def test_child_env_scopes_llm_model_and_drops_inherited_run_identity(
+def test_child_env_scopes_llm_model_and_overrides_inherited_run_identity(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """``llm_model`` reaches only the child; the caller's environment is untouched."""
@@ -273,12 +273,14 @@ def test_child_env_scopes_llm_model_and_drops_inherited_run_identity(
     cfg = UpstreamPipelineConfig(
         target_dir=tmp_path, output_dir=tmp_path / "out", llm_model="llama3:8b"
     )
-    env = pipeline_mod._child_env(cfg)
+    env = pipeline_mod._child_env(cfg, "current-run")
     assert env["OLLAMA_MODEL"] == "llama3:8b"
     assert env["PYTHONUNBUFFERED"] == "1"
-    assert "GNN_RUN_ID" not in env and "GNN_RUN_CONTEXT_FILE" not in env
+    assert env["GNN_RUN_ID"] == "current-run"
+    assert "GNN_RUN_CONTEXT_FILE" not in env
     assert "OLLAMA_MODEL" not in os.environ
     assert os.environ["GNN_RUN_ID"] == "stale-run"
+    assert os.environ["GNN_RUN_CONTEXT_FILE"] == "/tmp/stale.json"
 
 
 def test_upstream_worker_cannot_shadow_standard_library_types(tmp_path: Path) -> None:
@@ -288,7 +290,7 @@ def test_upstream_worker_cannot_shadow_standard_library_types(tmp_path: Path) ->
     worker = tmp_path / "worker.py"
     worker.write_text("import types\nprint(types.GenericAlias.__module__)\n", encoding="utf-8")
     cfg = UpstreamPipelineConfig(target_dir=tmp_path, output_dir=tmp_path / "out")
-    environment = pipeline_mod._child_env(cfg)
+    environment = pipeline_mod._child_env(cfg, "current-run")
     unsafe = environment.copy()
     unsafe.pop("PYTHONSAFEPATH", None)
     control = subprocess.run(
@@ -375,7 +377,12 @@ def test_steps_from_summary_maps_every_requested_step(tmp_path: Path) -> None:
 
 
 def _driver_package(
-    root: Path, summary: dict[str, object] | None, returncode: int = 0, delay: float = 0
+    root: Path,
+    summary: dict[str, object] | None,
+    returncode: int = 0,
+    delay: float = 0,
+    *,
+    old_mtime: bool = False,
 ) -> Path:
     import json
     import textwrap
@@ -384,7 +391,7 @@ def _driver_package(
     package.mkdir(parents=True)
     (package / "__init__.py").write_text("")
     body = (
-        "import json, pathlib, sys, time\n"
+        "import json, os, pathlib, sys, time\n"
         f"time.sleep({delay!r})\n"
         "print('upstream console line', flush=True)\n"
         "print('last line of output', flush=True)\n"
@@ -392,9 +399,12 @@ def _driver_package(
         "(out / 'driver_args.json').write_text(json.dumps(sys.argv))\n"
         f"summary = json.loads({json.dumps(summary)!r})\n"
         "if summary is not None:\n"
+        "    summary['run_id'] = os.environ['GNN_RUN_ID']\n"
         "    target = out / '00_pipeline_summary' / 'pipeline_execution_summary.json'\n"
         "    target.parent.mkdir(parents=True, exist_ok=True)\n"
         "    target.write_text(json.dumps(summary))\n"
+        f"    if {old_mtime!r}:\n"
+        "        os.utime(target, (1_000_000, 1_000_000))\n"
         f"sys.exit({returncode})\n"
     )
     (package / "main.py").write_text("if __name__ == '__main__':\n" + textwrap.indent(body, "    "))
@@ -438,7 +448,9 @@ def test_run_upstream_pipeline_reads_current_invocation_summary(tmp_path: Path) 
     import json
 
     driver = _driver_package(
-        tmp_path, _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "exit_code": 0})
+        tmp_path,
+        _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "exit_code": 0}),
+        old_mtime=True,
     )
     cfg = UpstreamPipelineConfig(
         target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3], timeout_s=42
@@ -448,7 +460,8 @@ def test_run_upstream_pipeline_reads_current_invocation_summary(tmp_path: Path) 
 
     assert result["available"] and result["error"] is None
     assert result["executed"] == [3]
-    assert result["upstream_status"] == "SUCCESS_WITH_WARNINGS" and result["run_id"] == "abc123"
+    assert result["upstream_status"] == "SUCCESS_WITH_WARNINGS"
+    assert re.fullmatch(r"[a-f0-9]{32}", result["run_id"])
     assert [s["status"] for s in result["steps"]] == ["SUCCESS"]
     cmd = json.loads((cfg.output_dir / "driver_args.json").read_text())
     assert cmd[cmd.index("--target-dir") + 1] == str(cfg.output_dir / "_cogant_input")
@@ -471,7 +484,8 @@ def test_run_upstream_pipeline_ignores_stale_summary(tmp_path: Path) -> None:
     stale.write_text(
         json.dumps(_summary({"script_name": "3_gnn.py", "status": "SUCCESS"})), encoding="utf-8"
     )
-    os.utime(stale, (1_000_000, 1_000_000))
+    # A future mtime cannot make a prior invocation current.
+    os.utime(stale, (2_000_000_000, 2_000_000_000))
     driver = _driver_package(tmp_path, None, returncode=1)
     cfg = UpstreamPipelineConfig(target_dir=_package(tmp_path), output_dir=out, only_steps=[3, 5])
 
@@ -479,8 +493,80 @@ def test_run_upstream_pipeline_ignores_stale_summary(tmp_path: Path) -> None:
 
     assert [s["status"] for s in result["steps"]] == ["BRIDGE_ERROR", "BRIDGE_ERROR"]
     assert result["failure_count"] == 2
-    assert "exited 1 without a pipeline summary" in result["error"]
-    assert "last line of output" in result["error"]
+    assert result["run_id"] is None
+    assert "summary run ID differs" in result["error"]
+
+
+def test_run_upstream_pipeline_rejects_mixed_step_identity(tmp_path: Path) -> None:
+    driver = _driver_package(
+        tmp_path,
+        _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "run_id": "other-run"}),
+    )
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3]
+    )
+
+    result = _run_driver(cfg, driver)
+
+    assert [step["status"] for step in result["steps"]] == ["BRIDGE_ERROR"]
+    assert result["run_id"] is None
+    assert "step run ID differs" in result["error"]
+
+
+def test_read_summary_rejects_replaced_session(tmp_path: Path) -> None:
+    import hashlib
+    import json
+
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    path = tmp_path / pipeline_mod._SUMMARY_RELPATH
+    path.parent.mkdir()
+    session = path.with_name("run_session.json")
+    original = json.dumps({"session_id": "abc123"}).encode()
+    session.write_bytes(original)
+    summary = _summary()
+    summary["run_session_sha256"] = hashlib.sha256(original).hexdigest()
+    path.write_text(json.dumps(summary), encoding="utf-8")
+
+    assert pipeline_mod._read_summary(tmp_path, "abc123") == summary
+
+    replacement = json.dumps({"session_id": "other-run"}).encode()
+    session.write_bytes(replacement)
+    with pytest.raises(ValueError, match="session checksum differs"):
+        pipeline_mod._read_summary(tmp_path, "abc123")
+
+    summary["run_session_sha256"] = hashlib.sha256(replacement).hexdigest()
+    path.write_text(json.dumps(summary), encoding="utf-8")
+    with pytest.raises(ValueError, match="session ID differs"):
+        pipeline_mod._read_summary(tmp_path, "abc123")
+
+
+def test_read_summary_rejects_replaced_artifact(tmp_path: Path) -> None:
+    import hashlib
+    import json
+
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    artifact = tmp_path / "parsed.json"
+    payload = b'{"model":"current"}'
+    artifact.write_bytes(payload)
+    summary = _summary(
+        {
+            "script_name": "3_gnn.py",
+            "run_id": "abc123",
+            "artifacts": [{"path": artifact.name, "sha256": hashlib.sha256(payload).hexdigest()}],
+        }
+    )
+    summary["artifact_inventory_contract"] = "current-run-v1"
+    path = tmp_path / pipeline_mod._SUMMARY_RELPATH
+    path.parent.mkdir()
+    path.write_text(json.dumps(summary), encoding="utf-8")
+
+    assert pipeline_mod._read_summary(tmp_path, "abc123") == summary
+
+    artifact.write_bytes(b'{"model":"other"}')
+    with pytest.raises(ValueError, match="artifact checksum differs"):
+        pipeline_mod._read_summary(tmp_path, "abc123")
 
 
 def test_run_upstream_pipeline_reports_timeout(tmp_path: Path) -> None:

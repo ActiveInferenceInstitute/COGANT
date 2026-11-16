@@ -148,14 +148,15 @@ counts them in `executed`.
 * Importing `gnn.main` has no working-directory or import-path side effects
   in GNN 4.x, so the bridge needs no cwd guard.
 * The child process inherits COGANT's environment with `PYTHONUNBUFFERED=1`,
-  `GNN_RUN_ID` / `GNN_RUN_CONTEXT_FILE` removed (upstream mints a fresh run
-  identity), and `OLLAMA_MODEL` set only when `llm_model` is given.
+  a bridge-generated `GNN_RUN_ID`, inherited `GNN_RUN_CONTEXT_FILE` removed,
+  and `OLLAMA_MODEL` set only when `llm_model` is given.
 * Only GNN markdown is staged as the upstream corpus: GNN 4.x discovery
   treats every `*.json` file as a model source, and the COGANT sidecars are
   package evidence, not standalone models.
-* A summary older than the invocation start is ignored (it belongs to a
-  previous run in the same output root); requested steps upstream never
-  reached are reported as `NOT_RUN`.
+* The bridge requires the invocation's run ID in the summary and checks any
+  per-step run IDs. When GNN advertises a run-session checksum or the
+  `current-run-v1` artifact inventory, the bridge also verifies that evidence.
+  Requested steps upstream never reached are reported as `NOT_RUN`.
 * For the calculator example the default selection takes a few minutes
   (about 140 s on 2026-10-14).
 

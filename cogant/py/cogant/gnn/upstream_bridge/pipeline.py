@@ -19,7 +19,8 @@ frozen source manifest and writes into a leased output root. Running numbered
 scripts one at a time (the GNN 2.x bridge strategy) bypasses that run
 context, so this driver issues exactly one ``python -m gnn.main`` invocation
 with ``--only-steps`` set to the selected steps and reads per-step outcomes
-from ``00_pipeline_summary/pipeline_execution_summary.json``.
+from ``00_pipeline_summary/pipeline_execution_summary.json`` after verifying
+the run ID and any advertised session and artifact checksums.
 
 Only ``*.gnn.md`` / ``model.gnn.md`` files are staged as upstream inputs:
 upstream discovery treats every ``*.json`` file as a model source, and the
@@ -54,6 +55,7 @@ not raise. Callers can promote any step to fatal by inspecting
 
 from __future__ import annotations
 
+import hashlib
 import importlib
 import json
 import logging
@@ -62,6 +64,7 @@ import shutil
 import subprocess
 import sys
 import time
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -419,14 +422,12 @@ def _build_main_command(
     return cmd
 
 
-def _child_env(cfg: UpstreamPipelineConfig) -> dict[str, str]:
+def _child_env(cfg: UpstreamPipelineConfig, invocation_id: str) -> dict[str, str]:
     """Environment for the upstream child; the caller's env is not mutated."""
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
     env["PYTHONSAFEPATH"] = "1"
-    # Let upstream mint a fresh invocation ID: an inherited ID or run-context
-    # file would claim an unrelated run's identity.
-    env.pop("GNN_RUN_ID", None)
+    env["GNN_RUN_ID"] = invocation_id
     env.pop("GNN_RUN_CONTEXT_FILE", None)
     if cfg.llm_model is not None:
         env["OLLAMA_MODEL"] = cfg.llm_model
@@ -552,19 +553,64 @@ def _bridge_failure_steps(
     ]
 
 
-def _read_summary(path: Path, started_at: float) -> dict[str, Any] | None:
-    """Load the upstream summary written by *this* invocation, if any.
-
-    A summary older than the invocation start belongs to a previous run in
-    the same output root and must not be reported as current evidence.
-    """
+def _evidence_path(output_root: Path, relative: Path) -> Path:
     try:
-        if path.stat().st_mtime < started_at:
-            return None
+        path = (output_root / relative).resolve()
+    except RuntimeError as exc:  # Python 3.11 and 3.12 report a symlink loop this way.
+        raise ValueError(f"cannot resolve upstream evidence path: {relative}") from exc
+    if relative.is_absolute() or ".." in relative.parts or not path.is_relative_to(output_root):
+        raise ValueError(f"upstream evidence path escapes the output directory: {relative}")
+    return path
+
+
+def _verify_inventory(output_root: Path, steps: list[dict[str, Any]]) -> None:
+    for step in steps:
+        artifacts = step.get("artifacts", [])
+        if not isinstance(artifacts, list):
+            raise ValueError("invalid upstream artifact inventory")
+        for record in artifacts:
+            if not isinstance(record, dict) or not isinstance(record.get("path"), str):
+                raise ValueError("invalid upstream artifact record")
+            relative = Path(record["path"])
+            path = _evidence_path(output_root, relative)
+            with path.open("rb") as handle:
+                if hashlib.file_digest(handle, "sha256").hexdigest() != record.get("sha256"):
+                    raise ValueError(f"upstream artifact checksum differs: {relative}")
+
+
+def _read_summary(output_root: Path, invocation_id: str) -> dict[str, Any] | None:
+    """Admit the current invocation's summary and verify any advertised custody evidence."""
+    output_root = output_root.resolve()
+    path = _evidence_path(output_root, _SUMMARY_RELPATH)
+    try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except FileNotFoundError:
         return None
-    return data if isinstance(data, dict) else None
+    if not isinstance(data, dict) or data.get("run_id") != invocation_id:
+        raise ValueError("upstream summary run ID differs from this invocation")
+
+    steps = data.get("steps", [])
+    if not isinstance(steps, list) or any(not isinstance(step, dict) for step in steps):
+        raise ValueError("invalid upstream step records")
+    if any("run_id" in step and step["run_id"] != invocation_id for step in steps):
+        raise ValueError("upstream step run ID differs from this invocation")
+
+    session_digest = data.get("run_session_sha256")
+    if session_digest is not None:
+        session_path = _evidence_path(output_root, _SUMMARY_RELPATH.with_name("run_session.json"))
+        payload = session_path.read_bytes()
+        if hashlib.sha256(payload).hexdigest() != session_digest:
+            raise ValueError("upstream session checksum differs")
+        session = json.loads(payload)
+        if not isinstance(session, dict) or session.get("session_id") != invocation_id:
+            raise ValueError("upstream session ID differs from this invocation")
+
+    inventory = data.get("artifact_inventory_contract")
+    if inventory is not None:
+        if inventory != "current-run-v1":
+            raise ValueError("unrecognized upstream artifact inventory contract")
+        _verify_inventory(output_root, steps)
+    return data
 
 
 def _read_log_tail(path: Path, limit: int = 20_000) -> str:
@@ -649,7 +695,7 @@ def run_upstream_pipeline(
     )
 
     log_path = cfg.output_dir / _LOG_FILENAME
-    started_wall = time.time()
+    invocation_id = uuid.uuid4().hex
     total_start = time.perf_counter()
     returncode: int | None = None
     bridge_error: str | None = None
@@ -659,7 +705,8 @@ def run_upstream_pipeline(
             completed = subprocess.run(
                 cmd,
                 cwd=cfg.output_dir,
-                env=_child_env(cfg),
+                env=_child_env(cfg, invocation_id),
+                stdin=subprocess.DEVNULL,
                 stdout=log_handle,
                 stderr=subprocess.STDOUT,
                 timeout=cfg.timeout_s,
@@ -673,14 +720,19 @@ def run_upstream_pipeline(
         bridge_error = f"could not launch upstream gnn.main: {exc}"
     total = time.perf_counter() - total_start
 
-    summary = _read_summary(cfg.output_dir / _SUMMARY_RELPATH, started_wall)
+    summary = None
+    if bridge_error is None:
+        try:
+            summary = _read_summary(cfg.output_dir, invocation_id)
+        except (OSError, ValueError) as exc:
+            bridge_error = f"could not verify upstream pipeline summary: {exc}"
     upstream_status: str | None = None
     run_id: str | None = None
     auto_included: list[int] = []
     if summary is not None:
         steps = _steps_from_summary(summary, cfg, chosen)
         upstream_status = str(summary.get("overall_status") or "") or None
-        run_id = str(summary.get("run_id") or "") or None
+        run_id = invocation_id
         auto_included = sorted(s.step_index for s in steps if s.step_index not in chosen)
     else:
         if bridge_error is None:
