@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import subprocess
 import sys
 import time
@@ -32,14 +33,10 @@ INNER = ROOT / "cogant"
 REPORT_PATH = ROOT / "output" / "reports" / "release_gate.json"
 
 
-@dataclass(frozen=True)
-class GateStep:
-    name: str
-    cwd: Path
-    command: tuple[str, ...]
-    env: tuple[tuple[str, str], ...] = ()
-    timeout_seconds: int = 900
-    required: bool = True
+# Direct script execution must import the same anchored command owner, not the
+# compatibility shell's environment or a caller's unrelated run_gate module.
+sys.path.insert(0, str(ROOT))
+from run_gate import Step, build_release_steps
 
 
 @dataclass
@@ -52,259 +49,48 @@ class GateResult:
     output_tail: str
 
 
-def _step(
-    name: str,
-    command: Sequence[str],
-    *,
-    cwd: Path = ROOT,
-    env: dict[str, str] | None = None,
-    timeout_seconds: int = 900,
-) -> GateStep:
-    if tuple(command[:2]) == ("uv", "run"):
-        command = ("uv", "run", "--project", str(INNER), *command[2:])
-    return GateStep(
-        name=name,
-        cwd=cwd,
-        command=tuple(command),
-        env=tuple(sorted((env or {}).items())),
-        timeout_seconds=timeout_seconds,
-    )
 
 
-def build_steps(*, include_tests: bool = True) -> list[GateStep]:
-    """Return the canonical gate sequence in dependency order."""
-
-    steps: list[GateStep] = []
-    if include_tests:
-        steps.append(
-            _step(
-                "package-tests",
-                (
-                    "uv",
-                    "run",
-                    "pytest",
-                    "tests/",
-                    "-q",
-                    f"--cov-report=json:{ROOT / 'output' / 'reports' / 'package_coverage.json'}",
-                ),
-                cwd=INNER,
-                # Use the metrics collector's cap: the canonical suite can
-                # exceed thirty minutes on a shared workstation.
-                timeout_seconds=5_400,
-            )
-        )
-    steps.extend(
-        [
-            _step("ruff", ("uv", "run", "ruff", "check", "py/cogant", "tests"), cwd=INNER),
-            _step(
-                "mypy",
-                (
-                    "uv",
-                    "run",
-                    "mypy",
-                    "--package",
-                    "cogant",
-                    "--strict",
-                    "--no-warn-unused-configs",
-                ),
-                cwd=INNER,
-                env={"MYPYPATH": "py"},
-            ),
-            _step(
-                "rust-format",
-                ("cargo", "fmt", "--manifest-path", "rust/Cargo.toml", "--all", "--check"),
-                cwd=INNER,
-            ),
-            _step(
-                "rust-check",
-                ("cargo", "check", "--manifest-path", "rust/Cargo.toml", "--workspace"),
-                cwd=INNER,
-            ),
-            _step(
-                "rust-test",
-                ("cargo", "test", "--manifest-path", "rust/Cargo.toml", "--workspace"),
-                cwd=INNER,
-            ),
-            _step(
-                "rust-clippy",
-                (
-                    "cargo",
-                    "clippy",
-                    "--manifest-path",
-                    "rust/Cargo.toml",
-                    "--workspace",
-                    "--all-targets",
-                    "--",
-                    "-D",
-                    "warnings",
-                ),
-                cwd=INNER,
-            ),
-            _step("wheel-smoke", ("make", "wheel-smoke"), cwd=INNER),
-            _step(
-                "release-integrity",
-                (
-                    "uv",
-                    "run",
-                    "python",
-                    "../tools/audit_release_integrity.py",
-                    "--require-wheel",
-                    "--check-wheel-reproducibility",
-                ),
-                cwd=INNER,
-                timeout_seconds=600,
-            ),
-            _step(
-                "server-security",
-                (
-                    "uv",
-                    "run",
-                    "pytest",
-                    "tests/integration/test_server.py",
-                    "tests/unit/test_server_app_routes_and_metrics.py",
-                    "-q",
-                    "--no-cov",
-                ),
-                cwd=INNER,
-                timeout_seconds=300,
-            ),
-            _step(
-                "provenance-contract",
-                (
-                    "uv",
-                    "run",
-                    "pytest",
-                    "tests/unit/test_cli_stage_outcome_exit_status.py",
-                    "tests/unit/test_cache_hasher_store_hash_file_repo_get_targeted.py",
-                    "-q",
-                    "--no-cov",
-                ),
-                cwd=INNER,
-                timeout_seconds=300,
-            ),
-            _step(
-                "parser-graph-contract",
-                (
-                    "uv",
-                    "run",
-                    "pytest",
-                    "tests/unit/test_parser.py",
-                    "tests/unit/test_api_orchestration_stage_functions.py",
-                    "-q",
-                    "--no-cov",
-                ),
-                cwd=INNER,
-                timeout_seconds=300,
-            ),
-            _step(
-                "folder-docs", ("uv", "run", "python", "../tools/audit_folder_docs.py"), cwd=INNER
-            ),
-            _step("stage-list", ("uv", "run", "python", "../tools/audit_stage_list.py"), cwd=INNER),
-            _step("roadmap-truth", ("uv", "run", "python", "tools/audit_roadmap_truth.py")),
-            _step(
-                "test-names",
-                ("uv", "run", "python", "../tools/audit_test_names.py"),
-                cwd=INNER,
-            ),
-            _step(
-                "manuscript-crossrefs",
-                ("uv", "run", "python", "tools/audit_manuscript_crossrefs.py"),
-            ),
-            _step(
-                "manuscript-citations",
-                ("uv", "run", "python", "tools/audit_manuscript_citations.py"),
-            ),
-            _step(
-                "manuscript-module-refs",
-                ("uv", "run", "python", "../tools/audit_manuscript_module_refs.py", "--strict"),
-                cwd=INNER,
-            ),
-            _step(
-                "manuscript-formalisms",
-                ("uv", "run", "python", "tools/audit_manuscript_formalisms.py", "--strict"),
-            ),
-            _step(
-                "manuscript-numbers", ("uv", "run", "python", "tools/audit_manuscript_numbers.py")
-            ),
-            _step(
-                "coverage-table",
-                ("uv", "run", "python", "tools/check_coverage_table.py", "--strict"),
-            ),
-            _step(
-                "manuscript-links",
-                ("uv", "run", "python", "tools/audit_manuscript_markdown_links.py"),
-            ),
-            _step(
-                "manuscript-math",
-                ("uv", "run", "python", "tools/audit_manuscript_math_adjacency.py"),
-            ),
-            _step(
-                "manuscript-claim-scope",
-                ("uv", "run", "python", "tools/audit_manuscript_claim_scope.py"),
-            ),
-            _step("robustness-table", ("uv", "run", "python", "tools/audit_robustness_table.py")),
-            _step(
-                "synthetic-surfaces",
-                ("uv", "run", "python", "tools/audit_synthetic_surfaces.py", "--strict"),
-            ),
-            _step(
-                "figure-renderers",
-                ("uv", "run", "python", "../tools/audit_figure_renderers.py"),
-                cwd=INNER,
-            ),
-            _step(
-                "publication-readiness",
-                ("uv", "run", "python", "tools/audit_publication_readiness.py", "--strict"),
-            ),
-            _step(
-                "metrics-freshness",
-                ("uv", "run", "python", "tools/check_metrics_fresh.py", "--fail-on-dirty"),
-            ),
-        ]
-    )
-    return steps
-
-
-def _run_step(step: GateStep) -> GateResult:
+def _run_step(name: str, step: Step) -> GateResult:
     started = time.perf_counter()
     environment = os.environ.copy()
-    environment.update(dict(step.env))
+    environment.update(step.env)
     try:
         completed = subprocess.run(
-            list(step.command),
+            list(step.argv),
             cwd=step.cwd,
             env=environment,
             capture_output=True,
             text=True,
-            timeout=step.timeout_seconds,
+            timeout=step.timeout,
             check=False,
         )
         output = (completed.stdout + completed.stderr).strip()
         return GateResult(
-            name=step.name,
+            name=name,
             status="passed" if completed.returncode == 0 else "failed",
             returncode=completed.returncode,
             duration_seconds=round(time.perf_counter() - started, 3),
-            command=list(step.command),
+            command=list(step.argv),
             output_tail=output[-4_000:],
         )
     except subprocess.TimeoutExpired as exc:
         output = str(exc.output or "")
         return GateResult(
-            name=step.name,
+            name=name,
             status="timed_out",
             returncode=None,
             duration_seconds=round(time.perf_counter() - started, 3),
-            command=list(step.command),
+            command=list(step.argv),
             output_tail=output[-4_000:],
         )
     except OSError as exc:
         return GateResult(
-            name=step.name,
+            name=name,
             status="unavailable",
             returncode=None,
             duration_seconds=round(time.perf_counter() - started, 3),
-            command=list(step.command),
+            command=list(step.argv),
             output_tail=f"{type(exc).__name__}: {exc}",
         )
 
@@ -313,24 +99,24 @@ def run_gate(*, include_tests: bool = True, dry_run: bool = False) -> tuple[list
     results: list[GateResult] = []
     if not include_tests:
         results.append(GateResult("package-tests", "skipped", None, 0.0, [], "--skip-tests"))
-    for step in build_steps(include_tests=include_tests):
-        printable = " ".join(step.command)
-        print(f"[gate] {step.name}: {printable}")
+    for name, step in build_release_steps(include_tests=include_tests):
+        printable = shlex.join(step.argv)
+        print(f"[gate] {name}: {printable}")
         if dry_run:
             results.append(
-                GateResult(step.name, "skipped", None, 0.0, list(step.command), "dry-run")
+                GateResult(name, "skipped", None, 0.0, list(step.argv), "dry-run")
             )
             continue
-        result = _run_step(step)
+        result = _run_step(name, step)
         results.append(result)
-        print(f"[gate] {step.name}: {result.status} ({result.duration_seconds:.1f}s)")
+        print(f"[gate] {name}: {result.status} ({result.duration_seconds:.1f}s)")
         if result.status != "passed":
             print(result.output_tail, file=sys.stderr)
             # Stop at the first failed required gate. Later checks would be
             # misleading because their inputs may already be invalid.
             break
     if dry_run:
-        return results, True
+        return results, False
     return results, bool(results) and all(result.status == "passed" for result in results)
 
 
@@ -366,8 +152,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     results, overall_pass = run_gate(include_tests=not args.skip_tests, dry_run=args.dry_run)
     _write_report(results, overall_pass)
-    print(f"release_gate: {'PASS' if overall_pass else 'FAIL'} ({REPORT_PATH})")
-    return 0 if overall_pass else 1
+    verdict = "DRY RUN" if args.dry_run else "PASS" if overall_pass else "FAIL"
+    print(f"release_gate: {verdict} ({REPORT_PATH})")
+    return 0 if args.dry_run or overall_pass else 1
 
 
 if __name__ == "__main__":

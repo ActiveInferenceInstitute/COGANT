@@ -37,6 +37,7 @@ cogant/*
 cogant/scripts/*
 !cogant/scripts/repository_inference.py
 !cogant/scripts/gnn_conformance_probe.py
+!cogant/scripts/check_gnn_importer.py
 !cogant/benchmarks/
 cogant/benchmarks/*
 !cogant/benchmarks/results/

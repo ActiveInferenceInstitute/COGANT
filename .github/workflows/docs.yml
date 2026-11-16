@@ -30,6 +30,8 @@ jobs:
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      UV_PYTHON: "3.11"
     # A docs-touching push to main fires this workflow twice (``push`` and
     # the ``workflow_run`` after CI). Serialize deploys so overlapping runs
     # never race each other pushing to ``gh-pages``. Scoped to the job (not
@@ -55,24 +57,19 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      # setup-uv v10 ``enable-cache: auto`` skips the cache for
-      # ``workflow_run`` events (cache-poisoning guard) and keeps it for
-      # ``push``; ``prune-cache: true`` restores the pre-v9 pruning default.
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: "latest"
-          prune-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Set up uv and Python
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.11"
+          working-directory: cogant
+          # Preserve setup-uv's workflow_run cache-poisoning boundary.
+          enable-cache: ${{ github.event_name != 'workflow_run' && 'true' || 'false' }}
 
       - name: Build docs
         # Same arm as CI and local runs; ``--prepare`` performs the one
         # ``uv sync`` this job needs, then the arm builds strictly and verifies
         # relative links.
-        run: python ../run_gate.py --prepare docs
+        run: uv run --no-project python ../run_gate.py --prepare docs
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0

@@ -14,6 +14,8 @@ jobs:
   check-metrics:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      UV_PYTHON: "3.11"
     steps:
       # Full history so check_metrics_fresh.py can diff against the recorded
       # ``generator_git_sha``; all git calls are local, so drop the token.
@@ -22,16 +24,12 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      # ``prune-cache: true`` restores the pre-v9 setup-uv default.
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: "latest"
-          prune-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Set up uv and Python
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
         with:
           python-version: "3.11"
+          working-directory: cogant
+          enable-cache: "true"
 
       - name: Install dependencies
         working-directory: cogant

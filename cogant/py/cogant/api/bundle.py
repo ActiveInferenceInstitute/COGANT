@@ -151,10 +151,10 @@ class Bundle:
         """
 
         outcomes = set(self.stage_outcomes.values())
+        if self.errors or StageOutcome.FAILED in outcomes:
+            return StageOutcome.FAILED
         if not outcomes:
             return StageOutcome.UNAVAILABLE
-        if StageOutcome.FAILED in outcomes:
-            return StageOutcome.FAILED
         if StageOutcome.UNAVAILABLE in outcomes:
             return StageOutcome.UNAVAILABLE
         if StageOutcome.PARTIAL in outcomes:

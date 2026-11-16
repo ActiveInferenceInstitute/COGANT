@@ -34,6 +34,7 @@ class UpstreamGNNValidation:
     errors: list[str]
     version: str | None
     skipped_reason: str | None
+    source_qualification: dict[str, Any]
     def to_dict(self) -> dict[str, Any]: ...
 
 def json_safe(obj: Any) -> Any: ...

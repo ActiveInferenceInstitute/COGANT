@@ -32,6 +32,7 @@ from cogant.gnn.upstream_bridge.pipeline import (
     UpstreamPipelineConfig,
     run_upstream_pipeline,
 )
+from cogant.gnn.upstream_bridge.qualification import read_consumer_pin
 
 ROOT = Path(__file__).resolve().parents[2]
 PIN_PATH = ROOT / ".github" / "gnn-pin.json"
@@ -54,11 +55,9 @@ def _installed_upstream_commit() -> str | None:
 
 
 def main() -> int:
+    pin = read_consumer_pin(PIN_PATH)
     if not is_upstream_gnn_available():
-        raise SystemExit("optional upstream was requested but is unavailable")
-    from gnn.importers import read_pin
-
-    pin = read_pin(PIN_PATH)
+        raise SystemExit("optional upstream was requested but is unavailable or unqualified")
     installed_commit = _installed_upstream_commit()
     if installed_commit != pin.commit:
         raise SystemExit(
@@ -66,7 +65,11 @@ def main() -> int:
             f"{installed_commit or '(unrecorded)'} does not match the pin {pin.commit}"
         )
     out = Path(tempfile.mkdtemp(prefix="cogant-upstream-smoke-"))
-    PipelineRunner().run("examples/control_positive/calculator", PipelineConfig(output_dir=str(out)))
+    bundle = PipelineRunner().run(
+        "examples/control_positive/calculator", PipelineConfig(output_dir=str(out))
+    )
+    if bundle.errors or bundle.pipeline_status.value != "success":
+        raise SystemExit(f"calculator package production failed: {bundle.errors}")
     package = out / "gnn_package"
     markdown = (package / "model.gnn.md").read_text(encoding="utf-8")
     validation = {
@@ -88,7 +91,7 @@ def main() -> int:
         "steps": steps.to_dict(),
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
-    if not all(result["ok"] for result in validation.values()):
+    if not all(result["available"] and result["ok"] for result in validation.values()):
         raise SystemExit("upstream validation rejected the COGANT package")
     if steps.error or steps.failure_count:
         raise SystemExit("upstream parse/type-check/validation steps failed")

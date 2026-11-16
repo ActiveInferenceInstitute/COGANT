@@ -263,17 +263,44 @@ def test_extract_static_with_layout_output(tmp_path: Path):
 
 def test_extract_dynamic_default(tmp_path: Path):
     result = runner.invoke(app, ["extract-dynamic", str(tmp_path)])
-    # May exit 0 on success or 1 on KeyError from session (API issue, not CLI)
-    assert result.exit_code in {0, 1}
-    assert "dynamic" in result.output.lower()
+    assert result.exit_code == 0, result.output
+    assert "Coverage nodes enriched: 0" in result.output
+    assert "Trace nodes enriched: 0" in result.output
+    assert "Evidence sources: none" in result.output
 
 
 def test_extract_dynamic_with_traces(tmp_path: Path):
+    from cogant.api.session import Session
+
+    (tmp_path / "worker.py").write_text("def work():\n    return 1\n", encoding="utf-8")
     trace_file = tmp_path / "trace.json"
-    trace_file.write_text("{}")
+    trace_file.write_text(
+        json.dumps({"traceEvents": [{"name": "work", "ph": "X", "ts": 0, "dur": 2000}]}),
+        encoding="utf-8",
+    )
     result = runner.invoke(app, ["extract-dynamic", str(tmp_path), "--traces", str(trace_file)])
-    # Exit 0 on success or 1 if session.extract_dynamic has a bug (API, not CLI)
-    assert result.exit_code in {0, 1}
+    assert result.exit_code == 0, result.output
+    assert "Trace nodes enriched: 1" in result.output
+    assert "Evidence sources: dynamic_trace" in result.output
+
+    summary = Session.from_target(str(tmp_path)).extract_dynamic(trace_path=str(trace_file))
+    work = next(node for node in summary["graph"].nodes.values() if node.name == "work")
+    assert summary["trace_nodes_enriched"] == 1
+    assert work.metadata["call_count"] == 1
+    assert work.metadata["avg_duration_ms"] == 2.0
+    assert "dynamic_trace" in summary["graph"].metadata.evidence_sources
+
+
+@pytest.mark.parametrize("contents", [None, "{invalid json"])
+def test_extract_dynamic_unreadable_trace_reports_zero(tmp_path: Path, contents):
+    """Retain the ingester's empty-observation contract, not a fictitious trace."""
+    (tmp_path / "worker.py").write_text("def work():\n    return 1\n", encoding="utf-8")
+    trace_file = tmp_path / "trace.json"
+    if contents is not None:
+        trace_file.write_text(contents, encoding="utf-8")
+    result = runner.invoke(app, ["extract-dynamic", str(tmp_path), "--traces", str(trace_file)])
+    assert result.exit_code == 0, result.output
+    assert "Trace nodes enriched: 0" in result.output
 
 
 # --------------------------------------------------------------- graph -------

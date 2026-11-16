@@ -56,7 +56,6 @@ not raise. Callers can promote any step to fatal by inspecting
 from __future__ import annotations
 
 import hashlib
-import importlib
 import json
 import logging
 import os
@@ -68,6 +67,8 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from cogant.gnn.upstream_bridge.qualification import invoke
 
 logger = logging.getLogger(__name__)
 
@@ -138,14 +139,10 @@ _LOG_FILENAME = "upstream_pipeline.log"
 # ---------------------------------------------------------------------------
 
 
-def _import_gnn_main() -> Any | None:
-    """Import upstream :mod:`gnn.main`, returning ``None`` if unavailable.
-
-    GNN 4.x guarantees that importing ``gnn.main`` has no working-directory
-    or import-path side effects, so no cwd guard is needed here.
-    """
+def _import_gnn_main() -> bool | None:
+    """Check main in a fresh qualified worker, never preload target code here."""
     try:
-        return importlib.import_module("gnn.main")
+        return bool(invoke("main-available")["value"])
     except ImportError:
         return None
 
@@ -270,6 +267,7 @@ class UpstreamPipelineResult:
     upstream_status: str | None = None
     run_id: str | None = None
     auto_included: list[int] = field(default_factory=list)
+    source_qualification: dict[str, Any] = field(default_factory=dict)
 
     @property
     def success_count(self) -> int:
@@ -302,6 +300,7 @@ class UpstreamPipelineResult:
             "run_id": self.run_id,
             "auto_included": list(self.auto_included),
             "steps": [s.to_dict() for s in self.steps],
+            "source_qualification": self.source_qualification,
         }
 
 
@@ -391,7 +390,7 @@ def _effective_skip(cfg: UpstreamPipelineConfig) -> list[int]:
 def _build_main_command(
     cfg: UpstreamPipelineConfig, target_dir: Path, chosen: list[int]
 ) -> list[str]:
-    """Return the single ``python -m gnn.main`` invocation for ``chosen``.
+    """Return one qualified worker invoking the real ``gnn.main`` for ``chosen``.
 
     COGANT's active interpreter is used so the child resolves the same
     installed ``gnn`` package (never an upstream checkout's nested ``.venv``).
@@ -400,8 +399,10 @@ def _build_main_command(
     """
     cmd = [
         sys.executable,
-        "-m",
-        "gnn.main",
+        "-I",
+        "-B",
+        str(Path(__file__).with_name("qualification.py")),
+        "--pipeline",
         "--target-dir",
         str(target_dir),
         "--output-dir",
@@ -613,6 +614,20 @@ def _read_summary(output_root: Path, invocation_id: str) -> dict[str, Any] | Non
     return data
 
 
+def _read_source_qualification(
+    output_root: Path, invocation_id: str, started_at: float
+) -> dict[str, Any]:
+    """Expose only a finalized source receipt from this invocation."""
+    path = output_root / "upstream_source_qualification.json"
+    try:
+        if path.stat().st_mtime < started_at:
+            return {}
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) and data.get("run_id") == invocation_id else {}
+
+
 def _read_log_tail(path: Path, limit: int = 20_000) -> str:
     """Return up to the last ``limit`` characters of the upstream log."""
     try:
@@ -696,6 +711,7 @@ def run_upstream_pipeline(
 
     log_path = cfg.output_dir / _LOG_FILENAME
     invocation_id = uuid.uuid4().hex
+    started_wall = time.time()
     total_start = time.perf_counter()
     returncode: int | None = None
     bridge_error: str | None = None
@@ -734,6 +750,8 @@ def run_upstream_pipeline(
         upstream_status = str(summary.get("overall_status") or "") or None
         run_id = invocation_id
         auto_included = sorted(s.step_index for s in steps if s.step_index not in chosen)
+        if returncode not in (None, 0) and bridge_error is None:
+            bridge_error = f"upstream gnn.main exited {returncode} despite writing a summary"
     else:
         if bridge_error is None:
             tail = _last_line(_read_log_tail(log_path)) or "no output"
@@ -765,6 +783,7 @@ def run_upstream_pipeline(
         upstream_status=upstream_status,
         run_id=run_id,
         auto_included=auto_included,
+        source_qualification=_read_source_qualification(cfg.output_dir, invocation_id, started_wall),
     )
     _write_bridge_summary(cfg, result)
     return result
