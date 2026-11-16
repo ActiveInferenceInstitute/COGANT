@@ -6357,28 +6357,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#cogant.translate.rules.semantic.ACTION_KEYWORDS" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ACTION_KEYWORDS
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cogant.translate.rules.semantic.OBSERVATION_KEYWORDS" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OBSERVATION_KEYWORDS
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#cogant.translate.rules.semantic.ActionRule" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -19855,28 +19833,6 @@
   
     <nav class="md-nav" aria-label="semantic">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#cogant.translate.rules.semantic.ACTION_KEYWORDS" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ACTION_KEYWORDS
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cogant.translate.rules.semantic.OBSERVATION_KEYWORDS" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OBSERVATION_KEYWORDS
-      
-    </span>
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#cogant.translate.rules.semantic.ActionRule" class="md-nav__link">
@@ -57362,54 +57318,6 @@ provenance and confidence.</p>
 
 
 
-
-<div class="doc doc-object doc-attribute">
-
-
-
-<h3 id="cogant.translate.rules.semantic.ACTION_KEYWORDS" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">ACTION_KEYWORDS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'set'</span><span class="p">,</span> <span class="s1">'update'</span><span class="p">,</span> <span class="s1">'create'</span><span class="p">,</span> <span class="s1">'delete'</span><span class="p">,</span> <span class="s1">'send'</span><span class="p">,</span> <span class="s1">'push'</span><span class="p">,</span> <span class="s1">'execute'</span><span class="p">,</span> <span class="s1">'run'</span><span class="p">,</span> <span class="s1">'process'</span><span class="p">,</span> <span class="s1">'handle'</span><span class="p">,</span> <span class="s1">'dispatch'</span><span class="p">,</span> <span class="s1">'encode'</span><span class="p">,</span> <span class="s1">'decode'</span><span class="p">,</span> <span class="s1">'dump'</span><span class="p">,</span> <span class="s1">'load'</span><span class="p">,</span> <span class="s1">'act_'</span><span class="p">,</span> <span class="s1">'send_'</span><span class="p">,</span> <span class="s1">'write_'</span><span class="p">,</span> <span class="s1">'execute_'</span><span class="p">,</span> <span class="s1">'command_'</span><span class="p">,</span> <span class="s1">'emit_'</span><span class="p">,</span> <span class="s1">'commit'</span><span class="p">,</span> <span class="s1">'rollback'</span><span class="p">,</span> <span class="s1">'flush'</span><span class="p">,</span> <span class="s1">'apply'</span><span class="p">,</span> <span class="s1">'perform'</span><span class="p">,</span> <span class="s1">'invoke'</span><span class="p">]</span></code>
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
-  </span>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Functions/methods that signal an ACTION semantic role.</p>
-<p>CRUD + IO verbs; <code>handle</code>/<code>dispatch</code> straddle ACTION/POLICY intentionally
-and are resolved by confidence tie-breaking in <code>_resolve_conflicts</code>.</p>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-attribute">
-
-
-
-<h3 id="cogant.translate.rules.semantic.OBSERVATION_KEYWORDS" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">OBSERVATION_KEYWORDS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'get'</span><span class="p">,</span> <span class="s1">'read'</span><span class="p">,</span> <span class="s1">'fetch'</span><span class="p">,</span> <span class="s1">'query'</span><span class="p">,</span> <span class="s1">'display'</span><span class="p">,</span> <span class="s1">'show'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">,</span> <span class="s1">'info'</span><span class="p">,</span> <span class="s1">'list'</span><span class="p">,</span> <span class="s1">'sensor_'</span><span class="p">,</span> <span class="s1">'read_'</span><span class="p">,</span> <span class="s1">'get_'</span><span class="p">,</span> <span class="s1">'fetch_'</span><span class="p">,</span> <span class="s1">'receive_'</span><span class="p">,</span> <span class="s1">'sense_'</span><span class="p">,</span> <span class="s1">'peek'</span><span class="p">,</span> <span class="s1">'sample'</span><span class="p">,</span> <span class="s1">'inspect'</span><span class="p">,</span> <span class="s1">'view'</span><span class="p">,</span> <span class="s1">'describe'</span><span class="p">]</span></code>
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
-  </span>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Functions/methods that signal an OBSERVATION semantic role.</p>
-<p>Canonical accessor prefixes (PEP 8) + UI/introspection verbs.
-Corpus gaps closed in wave-21: <code>peek</code>, <code>sample</code>, <code>inspect</code>.</p>
-
-    </div>
-
-</div>
 
 
 

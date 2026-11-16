@@ -11124,10 +11124,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-compatibility-2026-11-01" class="md-nav__link">
+  <a href="#current-pin-2026-11-12" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Compatibility (2026-11-01)
+        Current Pin (2026-11-12)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compatibility-collected-on-v503-2026-11-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibility collected on v5.0.3 (2026-11-01)
       
     </span>
   </a>
@@ -12682,10 +12693,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-compatibility-2026-11-01" class="md-nav__link">
+  <a href="#current-pin-2026-11-12" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Compatibility (2026-11-01)
+        Current Pin (2026-11-12)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compatibility-collected-on-v503-2026-11-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibility collected on v5.0.3 (2026-11-01)
       
     </span>
   </a>
@@ -12818,16 +12840,16 @@ current compatibility scope. Dated earlier results are retained separately.</p>
 <td><code>generalized-notation-notation</code> (optional <code>cogant[upstream]</code> extra; not part of <code>all</code>)</td>
 </tr>
 <tr>
-<td>Pin (<code>cogant/pyproject.toml</code>, mirrored in <code>cogant/uv.lock</code>)</td>
-<td><code>8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1</code></td>
+<td>Pin (<code>.github/gnn-pin.json</code>; dependency installation recorded in <code>cogant/pyproject.toml</code> and <code>cogant/uv.lock</code>)</td>
+<td><code>75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf</code></td>
 </tr>
 <tr>
 <td>Distribution version / <code>gnn.__version__</code></td>
-<td><code>5.0.3</code> / <code>5.0.3</code></td>
+<td><code>5.1.0</code> / <code>5.1.0</code></td>
 </tr>
 <tr>
 <td>Pin tag</td>
-<td><a href="https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.0.3">v5.0.3</a>, dated 2026-10-31; annotated tag <code>2d830c75de2be2cad9b96b0879937d96ecda059d</code>, peeled to the exact pinned commit; release record created retroactively on 2026-11-03</td>
+<td><a href="https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/releases/tag/v5.1.0">v5.1.0</a>, dated 2026-11-12; annotated tag <code>7393a5d0ef3834d71f2e11cbf2a9ac34376af5dd</code>, peeled to the exact pinned commit; the importer-registry release, first tag whose tree contains <code>src/gnn/importers.py</code></td>
 </tr>
 <tr>
 <td>Import package</td>
@@ -12843,14 +12865,27 @@ current compatibility scope. Dated earlier results are retained separately.</p>
 <code>model.gnn.md</code> is COGANT's own schema identifier
 (<code>cogant.schema.versions.CURRENT_GNN_VERSION</code>). It is independent of the
 upstream package release above.</p>
-<h2 id="current-compatibility-2026-11-01">Current Compatibility (2026-11-01)</h2>
-<p>The current pin is the v5.0.3 tag; the release record for that tag was created
-retroactively on 2026-11-03, and the tag still resolves to the pinned commit,
+<h2 id="current-pin-2026-11-12">Current Pin (2026-11-12)</h2>
+<p>The pin moved from <code>v5.0.3</code> (<code>8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1</code>) to
+<code>v5.1.0</code> (<code>75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf</code>). That release is the first
+whose tree contains <code>src/gnn/importers.py</code>, so the <code>gnn</code> arm now calls the
+shared reader —
+<code>python -m gnn.importers check --repo . --require-pointer --workflow .github/workflows/ci.yml --job gnn-conformance</code> —
+from the prepared <code>upstream</code> environment, and <code>load_upstream_expectation()</code>
+reads the same pin through <code>gnn.importers.read_pin</code>. <code>cogant/uv.lock</code> and the
+installed distribution remain observations: the conformance probe rejects a run
+whose PEP 610 commit differs from the pin, and <code>tools/audit_release_integrity.py</code>
+keeps the <code>upstream</code>-extra/<code>uv.lock</code> commit agreement instead of re-reading the
+pin. The collected evidence below was taken on <code>v5.0.3</code> and is retained as
+dated history; no <code>v5.1.0</code> audit collection is claimed on this page.</p>
+<h2 id="compatibility-collected-on-v503-2026-11-01">Compatibility collected on v5.0.3 (2026-11-01)</h2>
+<p>The pin at that time was the v5.0.3 tag; the release record for that tag was
+created retroactively on 2026-11-03, and the tag still resolves to that commit,
 <code>8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1</code>. The installed source's PEP 610
 record, the lockfile, the
-distribution version, <code>gnn.__version__</code> and the bridge version all name <code>5.0.3</code>
+distribution version, <code>gnn.__version__</code> and the bridge version all named <code>5.0.3</code>
 and that commit, and <code>tools/audit_release_integrity.py</code> cross-checks the
-<code>pyproject.toml</code> pin against <code>uv.lock</code>, failing when the two disagree.</p>
+<code>upstream</code> extra's commit against <code>uv.lock</code>, failing when the two disagree.</p>
 <p>The validator surface was re-established on the new pin: a freshly translated
 calculator package scored 100/100 under COGANT's <code>GNNValidator</code> and reported 0
 errors under upstream <code>validate_gnn_syntax</code> at both <code>standard</code> and <code>strict</code>,
@@ -12910,11 +12945,11 @@ The 2026-10-26 receipt's unscanned lane remains unchanged.</p>
 <h2 id="claims-kept-separate">Claims Kept Separate</h2>
 <ol>
 <li><strong>Version currentness.</strong> The installed upstream commit (PEP 610
-   <code>direct_url.json</code>) equals the commit pinned by the <code>upstream</code> extra, the
-   <code>uv.lock</code> entry for that commit records the same commit, and both the
-   distribution version and <code>gnn.__version__</code> equal the locked version. The
-   expected commit and version are read from <code>cogant/pyproject.toml</code> and
-   <code>cogant/uv.lock</code>; the helper hard-codes no release.</li>
+   <code>direct_url.json</code>) equals the commit read by <code>gnn.importers.read_pin</code> from
+   <code>.github/gnn-pin.json</code>. The <code>uv.lock</code> entry must match that commit, and both
+   the distribution version and <code>gnn.__version__</code> must equal the locked version.
+   The pin supplies the expected commit and tag; the lock supplies observed
+   dependency metadata. The helper hard-codes no release.</li>
 <li><strong>Bridge usability.</strong> <code>cogant.gnn.upstream_bridge</code> imports upstream and
    reports the same version (it refuses GNN &lt; 4.0 and a <code>gnn</code> package owned by
    another distribution). The negative control requires a clean
@@ -13007,9 +13042,10 @@ surface. Collection needs an interpreter that imports <code>cogant</code> with t
 claim fails, <code>--strict-upstream</code> fails on any selected upstream step failure,
 and <code>--strict-supply-chain</code> fails on pip-audit findings or an absent/incomplete scan.
 Collection requires a new or empty audit directory and preserves previous runs.
-<code>--pyproject</code> and
-<code>--lock</code> point the expectation at other pin sources, and <code>--no-ls-remote</code>
-skips the network probe.</p>
+<code>--pin</code> selects another canonical pin, <code>--lock</code> selects dependency observations,
+and <code>--no-ls-remote</code> skips the network probe. The helper requires upstream's
+<code>gnn.importers</code>, which the pinned <code>v5.1.0</code> release ships; run it from the
+<code>upstream</code> environment the <code>gnn</code> arm prepares.</p>
 <h2 id="reading-the-svg">Reading The SVG</h2>
 <p>The SVG has three lanes: version/bridge, selected upstream all-step gate, and
 supply-chain scan. Below them is one cell per upstream step index. Green means
@@ -13066,6 +13102,14 @@ committed <code>cogant/uv.lock</code> (<code>uv sync --frozen --extra upstream -
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Snapshot, not current state.</strong> <code>lock_matches_pin: true</code> and the
+release-tag row (<code>v4.1.0</code> resolving to <code>9255e19f…</code>) were true of the 4.1.0
+lane this result was collected on (pin <code>b4a583a5…</code>). Today's
+<code>cogant/uv.lock</code> locks GNN at <code>v5.1.0</code>, commit
+<code>75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf</code>; re-collect before quoting any
+identity from this section as current.</p>
+</blockquote>
 <p>Per-step outcomes for the bridge selection (steps 0, 3–10, 14–24; step 13 is
 excluded by <code>skip_llm=True</code>):</p>
 <table>

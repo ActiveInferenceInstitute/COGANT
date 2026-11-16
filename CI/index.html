@@ -12654,18 +12654,20 @@ uv<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </sp
 <p>Open <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a> in a browser. The generated site is written to the
 git-ignored <code>site/</code> directory.</p>
 <h2 id="building-locally">Building locally</h2>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>build
+<p>The gate's <code>docs</code> arm runs the build that CI deploys, plus the relative-link
+check:</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>run_gate.py<span class="w"> </span>docs<span class="w">        </span><span class="c1"># from the COGANT project root</span>
 </code></pre></div>
-<p>The repository workflow currently uses this non-strict build because the published
-site includes documentation-only <code>AGENTS.md</code> pages and a generated changelog whose
-source is outside the MkDocs docs directory. Run the package's relative-link and
-anchor checker separately when editing documentation:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>docs/verify_doc_links.py
-</code></pre></div>
+<p>Equivalently, from the package root: <code>uv run mkdocs build --strict</code> followed by
+<code>uv run python docs/verify_doc_links.py</code>. The strict build tolerates the
+documentation-only <code>AGENTS.md</code> pages and the generated changelog that are
+outside the MkDocs <code>nav</code>; it fails on a broken internal link or unknown page
+anchor.</p>
 <h2 id="github-pages-deployment">GitHub Pages deployment</h2>
 <p>On pushes to <code>main</code>, after a successful <code>CI</code> workflow, or through manual dispatch,
-<code>.github/workflows/docs.yml</code> installs the dev dependencies, runs <code>uv run mkdocs build</code>,
-and deploys <code>site/</code> with <code>peaceiris/actions-gh-pages</code> pinned at v4.1.0 (a
+<code>.github/workflows/docs.yml</code> runs <code>python ../run_gate.py --prepare docs</code> (one
+<code>uv sync</code>, then the strict build and link check) and deploys <code>site/</code> with
+<code>peaceiris/actions-gh-pages</code> pinned at v4.1.0 (a
 Node 24 release, so no runtime override is needed). The job uses
 <code>actions/checkout</code> pinned at v7.0.1, <code>actions/setup-python</code> pinned at v7.1.0, and
 <code>astral-sh/setup-uv</code> pinned at v10.3.3; every action reference in this
