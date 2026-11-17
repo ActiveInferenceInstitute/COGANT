@@ -17,7 +17,7 @@ concurrency:
 jobs:
   perf:
     name: Graph-build benchmark
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
       run:
@@ -31,7 +31,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # ``prune-cache: true`` restores the pre-v9 setup-uv default.
       - name: Set up uv

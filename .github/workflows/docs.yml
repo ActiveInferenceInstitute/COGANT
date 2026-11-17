@@ -28,7 +28,7 @@ jobs:
       github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     # A docs-touching push to main fires this workflow twice (``push`` and
     # the ``workflow_run`` after CI). Serialize deploys so overlapping runs
@@ -66,7 +66,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Build docs
         # Same arm as CI and local runs; ``--prepare`` performs the one

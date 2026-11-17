@@ -77,7 +77,7 @@ class TestDoctorCommand:
             assert check.status in {"ok", "warn", "fail"}
             assert check.name  # non-empty name
 
-        # Python check should always be present and passing (tests need 3.11+).
+        # Python check should always be present and passing (tests need 3.12+).
         python_checks = [c for c in report.checks if c.name == "Python"]
         assert len(python_checks) == 1
         assert python_checks[0].status == "ok"

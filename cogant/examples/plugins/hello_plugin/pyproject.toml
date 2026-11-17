@@ -2,7 +2,7 @@
 name = "cogant-hello-plugin"
 version = "0.1.0"
 description = "Minimal example COGANT plugin"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 
 [project.entry-points."cogant.plugins"]
 hello_rule = "hello_plugin.rule:HelloRule"

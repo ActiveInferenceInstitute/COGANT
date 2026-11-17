@@ -53,8 +53,8 @@ not run separately in CI because `test-full` collects the property tree.
 | --- | --- |
 | `static` / Static gates (lint, content, docs) | `python ../run_gate.py --prepare lint content docs` |
 | `typecheck` / Typecheck (mypy) | `python ../run_gate.py --prepare types` |
-| `test` / `test (3.11)` | `python ../run_gate.py --prepare test-full` |
-| `test` / `test (3.12)`, `test (3.13)`, `test (3.14)` | `python ../run_gate.py --prepare test-fast` |
+| `test` / `test (3.12)` | `python ../run_gate.py --prepare test-full` |
+| `test` / `test (3.13)`, `test (3.14)` | `python ../run_gate.py --prepare test-fast` |
 | `rust-build` / Rust backend checks | `python3 ../run_gate.py rust` |
 | `clean-wheel` / Clean wheel install smoke | `python ../run_gate.py --prepare wheel` |
 | `gnn-conformance` / gnn conformance (pinned) | `python ../run_gate.py --prepare gnn` |
@@ -136,7 +136,7 @@ where the command lives and how many times a job runs it.
 
 Job-level deduplication (the part that saves the most runner time):
 
-- the 3.11 test leg ran the suite three times (fast, property, coverage); it now
+- the full-suite test leg ran the suite three times (fast, property, coverage); it now
   runs once (`test-full`), and the other legs run `test-fast` once each;
 - lint, typecheck, and the documentation/content audits previously occupied
   four jobs with four checkouts and four `uv sync` runs; they now share one;
