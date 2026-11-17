@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   metrics:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Regeneration runs the full pytest suite plus pipeline probes (~25 min
     # on a hosted runner); leave headroom without allowing a 6 h hang.
     timeout-minutes: 60
@@ -37,7 +37,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: uv sync --all-extras

@@ -13,14 +13,13 @@ under `../cogant/docs/reference/`.
 
 | Python version | `pyproject.toml` classifier | Status |
 |---|---|---|
-| 3.11 | `Programming Language :: Python :: 3.11` | supported (minimum version, `requires-python = ">=3.11"`) |
-| 3.12 | `Programming Language :: Python :: 3.12` | supported (canonical CI interpreter; benchmark runs use {{BENCHMARK_PYTHON_VERSION}}) |
+| 3.12 | `Programming Language :: Python :: 3.12` | supported (minimum version, `requires-python = ">=3.12"`; canonical CI interpreter; benchmark runs use {{BENCHMARK_PYTHON_VERSION}}) |
 | 3.13 | `Programming Language :: Python :: 3.13` | supported |
 | 3.14 | `Programming Language :: Python :: 3.14` | included in the CI test matrix |
 
 : Python interpreter matrix. {#tbl:python-interpreter-matrix}
 
-The interpreters in @tbl:python-interpreter-matrix are listed in the `classifiers` block of `../cogant/pyproject.toml`. The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/{{BENCHMARK_SUITE_FILE}}` was executed on CPython {{BENCHMARK_PYTHON_VERSION}} under {{BENCHMARK_OS}}.
+The interpreters in @tbl:python-interpreter-matrix are listed in the `classifiers` block of `../cogant/pyproject.toml`. The declared minimum is Python 3.12, the oldest interpreter in the CI test matrix, so the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/{{BENCHMARK_SUITE_FILE}}` was executed on CPython {{BENCHMARK_PYTHON_VERSION}} under {{BENCHMARK_OS}}.
 
 Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE_COUNT}}** packaged fixtures exercise end-to-end. @tbl:coverage-stmt-modules records statement coverage (`coverage.py` **Stmts** / **Cover**) for the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, validation, simulation helpers) --- the modules whose correctness is load-bearing for the claims in this manuscript. Figures match the `uv run pytest tests/ --cov=py/cogant` run that produced the {{TEST_COUNT}}/{{TEST_COUNT_SKIPPED}} pass/skip summary in `METRICS.yaml` (**{{METRICS_GENERATED_AT}}**).
 

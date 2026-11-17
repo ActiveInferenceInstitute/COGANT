@@ -7,7 +7,7 @@ through `uv run` so CI matches local development.
 
 | File | Trigger(s) | Jobs | Purpose |
 |------|-----------|------|---------|
-| [`ci.yml`](ci.yml) | `push` to `main`/`feat/**`/`fix/**`, `pull_request`, `workflow_dispatch` | `static`, `typecheck`, `test (3.11/3.12/3.13/3.14)`, `rust-build`, `clean-wheel`, `gnn-conformance` (`gnn conformance (pinned)`), `pre-commit` | Primary quality gate. Every check runs through the root [`run_gate.py`](../../run_gate.py) entry point, so the commands live in one place: `static` runs `lint content docs` with one checkout and one `uv sync`; `typecheck` keeps the mypy check-run name and runs `types`; 3.11 runs `test-full` (coverage gate `--cov-fail-under=89`), 3.12–3.14 run `test-fast`; `rust-build` runs `rust`; `clean-wheel` runs `wheel`; `gnn-conformance` runs `gnn`; `pre-commit` runs only third-party hygiene hooks (ruff is not a hook). See [`docs/RUN_GUIDE.md`](../../docs/RUN_GUIDE.md). |
+| [`ci.yml`](ci.yml) | `push` to `main`/`feat/**`/`fix/**`, `pull_request`, `workflow_dispatch` | `static`, `typecheck`, `test (3.12/3.13/3.14)`, `rust-build`, `clean-wheel`, `gnn-conformance` (`gnn conformance (pinned)`), `pre-commit` | Primary quality gate. Every check runs through the root [`run_gate.py`](../../run_gate.py) entry point, so the commands live in one place: `static` runs `lint content docs` with one checkout and one `uv sync`; `typecheck` keeps the mypy check-run name and runs `types`; 3.12 runs `test-full` (coverage gate `--cov-fail-under=89`), 3.13–3.14 run `test-fast`; `rust-build` runs `rust`; `clean-wheel` runs `wheel`; `gnn-conformance` runs `gnn`; `pre-commit` runs only third-party hygiene hooks (ruff is not a hook). See [`docs/RUN_GUIDE.md`](../../docs/RUN_GUIDE.md). |
 | [`metrics.yml`](metrics.yml) | `push`/`pull_request` to `main` | `metrics` | Regenerate `cogant/evaluation/METRICS.yaml` against the live tree and refuse to merge if any structural field drifted (env-dependent fields like `generated_at`, `test_count_*`, `suite_runtime_s`, and `coverage_percent` are tolerated via `git diff -I`). |
 | [`metrics-fresh.yml`](metrics-fresh.yml) | `pull_request` | `check-metrics` | Fast out-of-syncness gate — verifies `METRICS.yaml` was regenerated against the PR's HEAD. Runs `tools/check_metrics_fresh.py`. |
 | [`docs.yml`](docs.yml) | `push` to `main` (paths `cogant/docs/**`, `cogant/mkdocs.yml`, `cogant/py/**`); `workflow_run: [CI] completed`; `workflow_dispatch` | `deploy` | `run_gate.py --prepare docs` (strict MkDocs build plus relative-link verification) and GitHub Pages deploy via `peaceiris/actions-gh-pages`. Only deploys when CI is green. |
@@ -54,7 +54,7 @@ When bumping any of these, update this table, the dependent
   and records the measured wall time per arm.
 * Edit alongside [`../../cogant/docs/CI.md`](../../cogant/docs/CI.md)
   whenever job names, gates, or artefact paths change.
-* The CI `cov-fail-under` (89, 3.11 leg only) matches the
+* The CI `cov-fail-under` (89, 3.12 leg only) matches the
   `pyproject.toml` `addopts` floor; the measured coverage recorded in
   `METRICS.yaml` sits above it to absorb run-to-run noise.
 * `metrics-refresh` is the only workflow that may produce a "drift"

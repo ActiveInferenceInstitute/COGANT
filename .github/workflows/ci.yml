@@ -27,7 +27,7 @@ jobs:
   # never in this file.
   static:
     name: Static gates (lint, content, docs)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -45,9 +45,9 @@ jobs:
       - name: Set up uv and Python
         # The org standard's composite action installs the pinned uv release
         # and the CPython interpreter in one step.
-        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # untagged; .github main 2026-11-07 (PR #2)
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           working-directory: cogant
           enable-cache: "true"
 
@@ -62,7 +62,7 @@ jobs:
     name: Typecheck (mypy)
     # Kept as its own job so the mypy check-run name stays stable for branch
     # protection, but the command itself lives only in ``run_gate.py types``.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: static
     steps:
@@ -72,9 +72,9 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv and Python
-        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # untagged; .github main 2026-11-07 (PR #2)
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           working-directory: cogant
           enable-cache: "true"
 
@@ -86,18 +86,18 @@ jobs:
     # expands for jobs that actually RUN — while the job is skipped (e.g.
     # ``needs: static`` failing) GitHub renders the raw ``${{ matrix.* }}``
     # expression literally in the UI. Dropping the name lets GitHub apply
-    # its default matrix naming (``test (3.11)`` …), which renders the
+    # its default matrix naming (``test (3.12)`` …), which renders the
     # expanded python version in both skipped and executed states.
-    runs-on: ubuntu-latest
-    # The 3.11 leg runs the full suite with the coverage gate; 3.12–3.14 run
+    runs-on: ubuntu-24.04
+    # The 3.12 leg runs the full suite with the coverage gate; 3.13–3.14 run
     # the fast arm. Each leg installs once and invokes pytest once: the
-    # previous 3.11 leg ran the suite three times (fast, property, coverage).
+    # former full-suite leg ran the suite three times (fast, property, coverage).
     timeout-minutes: 90
     needs: static
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -105,18 +105,18 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv and Python ${{ matrix.python-version }}
-        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # untagged; .github main 2026-11-07 (PR #2)
         with:
           python-version: ${{ matrix.python-version }}
           working-directory: cogant
           enable-cache: "true"
 
       - name: Fast tests
-        if: matrix.python-version != '3.11'
+        if: matrix.python-version != '3.12'
         run: python ../run_gate.py --prepare test-fast
 
       - name: Full tests with coverage gate
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.12'
         # Coverage gate raised from 75% to 89% to align with ``pyproject.toml``
         # ``[tool.pytest.ini_options].addopts.--cov-fail-under=89``. The
         # manuscript-reported headline number is the *measured* value on the
@@ -126,7 +126,7 @@ jobs:
 
   rust-build:
     name: Rust backend checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -138,7 +138,7 @@ jobs:
       # community-maintained ``dtolnay/rust-toolchain`` action which is the
       # de-facto replacement and runs on the modern Node runtime.
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # untagged; former stable-branch tip committed 2026-10-16
 
       - name: Cache cargo registry
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -156,7 +156,7 @@ jobs:
 
   clean-wheel:
     name: Clean wheel install smoke
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: static
     steps:
@@ -166,7 +166,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv and Python
-        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # untagged; .github main 2026-11-07 (PR #2)
         with:
           python-version: "3.12"
           working-directory: cogant
@@ -189,7 +189,7 @@ jobs:
     # reachable through ``cogant upstream-gnn`` and
     # ``cogant analyze --upstream-gnn-pipeline``; this job exercises the
     # selected parse/type-check/validation steps and the bridge tests.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
       # The gate also sets this for its ``uv sync``; pinning it at job level
@@ -204,7 +204,7 @@ jobs:
 
       - name: Set up uv and Python
         # Caching stays off here so this lane cannot hide its provenance.
-        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # untagged; .github main 2026-11-07 (PR #2)
         with:
           python-version: "3.12"
           working-directory: cogant
@@ -218,7 +218,7 @@ jobs:
 
   pre-commit:
     name: Pre-commit hooks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -227,9 +227,9 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv and Python
-        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # AII standard 7159e67
+        uses: ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448 # untagged; .github main 2026-11-07 (PR #2)
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           working-directory: cogant
           enable-cache: "true"
 
@@ -238,7 +238,7 @@ jobs:
       # the pip install of pre-commit below.
       - name: Create the pinned Python environment
         run: |
-          uv venv --seed --python 3.11 "$RUNNER_TEMP/python"
+          uv venv --seed --python 3.12 "$RUNNER_TEMP/python"
           echo "$RUNNER_TEMP/python/bin" >> "$GITHUB_PATH"
 
       # Inline ``pip install pre-commit`` rather than using
@@ -252,9 +252,9 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-py3.11-${{ hashFiles('cogant/.pre-commit-config.yaml') }}
+          key: pre-commit-${{ runner.os }}-py3.12-${{ hashFiles('cogant/.pre-commit-config.yaml') }}
           restore-keys: |
-            pre-commit-${{ runner.os }}-py3.11-
+            pre-commit-${{ runner.os }}-py3.12-
 
       - name: Run pre-commit
         # Ruff hooks were removed from the config: ``run_gate.py lint`` is the

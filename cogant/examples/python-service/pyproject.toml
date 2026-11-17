@@ -7,7 +7,7 @@ name = "example-python-service"
 version = "0.1.0"
 description = "Example Python microservice for COGANT analysis"
 authors = [{name = "COGANT", email = "contrib@cogant.dev"}]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 dependencies = [
     "fastapi>=0.104.0",

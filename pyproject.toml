@@ -2,7 +2,7 @@
 name = "cogant-template-shell"
 version = "0.8.0"
 description = "Template-facing compatibility shell for the nested COGANT package project."
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "pyyaml>=6.0",
 ]

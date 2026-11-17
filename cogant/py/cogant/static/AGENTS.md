@@ -30,7 +30,7 @@ The static module is the **bridge between raw source and graph representation**.
 ### Existing Modules (7 files)
 
 **parser.py** — `PythonASTParser`
-- Parses Python source via `ast.parse()` (Python 3.11+)
+- Parses Python source via `ast.parse()` (Python 3.12+)
 - Entry point: `parse_file(path) -> ast.Module` and `parse_string(source) -> ast.Module`
 - Handles syntax errors gracefully; logs diagnostics
 - Used by all downstream analyzers
@@ -59,7 +59,7 @@ The static module is the **bridge between raw source and graph representation**.
 - Optional: method dispatch analysis (static only, imprecise)
 
 **types.py** — `TypeInferencer`
-- Combines annotations (Python 3.11+ type hints) and assignment analysis
+- Combines annotations (Python 3.12+ type hints) and assignment analysis
 - Infers variable types from assignments and function returns
 - Outputs: `TypeInfo` records (name, inferred_type, confidence)
 - Confidence < 1.0 for heuristic-only inferences

@@ -2,7 +2,7 @@
 
 ## Environment
 
-**Requirements**: Python 3.11 or newer (enforced in `pyproject.toml`), plus an optional Rust toolchain (`cargo`, stable 1.70+) when building native acceleration crates under `../cogant/rust/`.
+**Requirements**: Python 3.12 or newer (enforced in `pyproject.toml`), plus an optional Rust toolchain (`cargo`, stable 1.70+) when building native acceleration crates under `../cogant/rust/`.
 
 From the COGANT package root `../cogant/` (where `pyproject.toml` and `py/cogant/` live), install with `uv sync --all-extras`, or `pip install -e ".[dev,viz]"` / `pip install -e ".[all]"` as in the MkDocs installation and quickstart guides under `../cogant/docs/getting-started/`. Run those commands from that directory when working inside this monorepo layout. Python sources live under `../cogant/py/cogant/`; package orientation is in `../cogant/README.md`.
 

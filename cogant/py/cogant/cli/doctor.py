@@ -97,7 +97,7 @@ class DoctorReport:
 # --------------------------------------------------------------- helpers ----
 
 
-MIN_PYTHON: tuple[int, int] = (3, 11)
+MIN_PYTHON: tuple[int, int] = (3, 12)
 
 # (module_name, friendly_label, category, required)
 # category is one of: "core", "viz", "multilang", "optional"
