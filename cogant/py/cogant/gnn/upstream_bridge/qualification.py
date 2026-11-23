@@ -313,7 +313,10 @@ def _worker() -> int:
                     }:
                         args[:2] = [Path(value) for value in args[:2]]
                         if operation == "process_gnn_multi_format":
-                            args[2] = logging.getLogger("cogant.gnn.upstream_bridge")
+                            name = args[2]
+                            if name is not None and not isinstance(name, str):
+                                raise ValueError("upstream logger name must be a string or null")
+                            args[2] = logging.getLogger(name or "cogant.gnn.upstream_bridge")
                         child_state = _prepare_children(Path(args[1]))
                     else:
                         child_state = None

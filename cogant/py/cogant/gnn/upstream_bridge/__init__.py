@@ -78,6 +78,12 @@ class _Upstream:
             self._version = self._call("version")
         return self._version
 
+    def process_gnn_multi_format(
+        self, input_dir: Path, output_dir: Path, log: logging.Logger, **kwargs: Any
+    ) -> Any:
+        # The worker reconstructs its own logger from data; logger objects stay in this process.
+        return self._call("process_gnn_multi_format", input_dir, output_dir, log.name, **kwargs)
+
     def __getattr__(self, name: str) -> Any:
         if name not in OPERATIONS:
             raise AttributeError(name)
@@ -331,7 +337,7 @@ def upstream_process_multi_format(
 ) -> Any:
     """Call upstream ``process_gnn_multi_format`` (may import upstream pipeline helpers)."""
     mod = _require_upstream_gnn()
-    return mod.process_gnn_multi_format(Path(input_dir), Path(output_dir), None, **kwargs)
+    return mod.process_gnn_multi_format(Path(input_dir), Path(output_dir), log or logger, **kwargs)
 
 
 def upstream_parse_formal(*args: Any, **kwargs: Any) -> Any:

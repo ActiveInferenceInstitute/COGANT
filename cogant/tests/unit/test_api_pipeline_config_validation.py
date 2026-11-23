@@ -355,17 +355,16 @@ def test_stage_dynamic_plugins_path_resolution(tmp_path: Path) -> None:
     ``trace_path`` field is unset."""
     runner = PipelineRunner()
     bundle = Bundle(target=str(tmp_path))
-    # An obviously fake trace path — we just want to see it propagate
-    # to the orchestration call, which will then fail to read it. The
-    # important thing is that the plugins-resolution branch is hit.
+    from cogant.graph.builder import ProgramGraphBuilder
+
+    bundle.artifacts["_program_graph"] = ProgramGraphBuilder(tmp_path.as_uri()).graph
     fake_trace = tmp_path / "fake.json"
     fake_trace.write_text('{"traceEvents": []}')
     cfg = PipelineConfig(
         plugins={"dynamic": {"trace_path": str(fake_trace)}},
     )
     result = runner._stage_dynamic(bundle, cfg)
-    # No coverage, but trace_path is resolved → result includes trace_path.
-    assert result.get("trace_path") == str(fake_trace) or result.get("skipped") is None
+    assert result["trace_path"] == str(fake_trace)
 
 
 # ------------------------------------------------------------------ #

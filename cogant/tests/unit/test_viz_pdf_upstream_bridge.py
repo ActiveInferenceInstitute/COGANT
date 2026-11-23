@@ -906,6 +906,25 @@ def test_upstream_process_multi_format_uses_explicit_logger(monkeypatch, tmp_pat
     assert captured["log"] is custom_log
 
 
+def test_upstream_worker_receives_logger_name(monkeypatch, tmp_path: Path) -> None:
+    import logging
+
+    from cogant.gnn import upstream_bridge
+
+    def invoke(operation: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        assert operation == "process_gnn_multi_format"
+        assert args == (tmp_path, tmp_path / "out", "transport-test-logger")
+        assert kwargs == {"recursive": True}
+        return {"qualification": {}, "value": "done"}
+
+    monkeypatch.setattr(upstream_bridge, "invoke", invoke)
+    worker = upstream_bridge._Upstream()
+    result = worker.process_gnn_multi_format(
+        tmp_path, tmp_path / "out", logging.getLogger("transport-test-logger"), recursive=True
+    )
+    assert result == "done"
+
+
 def test_parse_upstream_model_gnn_md_exception_branch(monkeypatch, tmp_path: Path) -> None:
     """A raising upstream parser yields ``{'path': ..., 'error': ...}``."""
     from cogant.gnn import upstream_bridge

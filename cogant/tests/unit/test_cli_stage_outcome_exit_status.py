@@ -60,7 +60,8 @@ def test_failed_stages_are_reported_and_exit_non_zero(
     assert _row_status(result.output, "translate") == "✗ Failed"
     # validate returns passed=False without a program graph.
     assert _row_status(result.output, "validate") == "✗ Failed"
-    assert "complete" not in result.output.split("Errors:", 1)[-1].lower()
+    assert "Translation complete" not in result.output
+    assert "Analysis complete" not in result.output
     # The bundle is still written so the failure can be inspected.
     saved = json.loads((out / "bundle.json").read_text(encoding="utf-8"))
     assert saved["stage_outcomes"]["validate"] == "failed"
