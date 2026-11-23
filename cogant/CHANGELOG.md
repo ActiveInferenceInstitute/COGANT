@@ -7,6 +7,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Dynamic extraction consumes explicit traces and reports actual evidence counts.
+  Incremental reuse binds effective dynamic inputs and exported artifact bytes;
+  coverage keeps configured XML aliases and reads SQLite/WAL evidence without writes.
+  translation summaries and batch/stream results retain required-stage failures.
+- Full and release gates share one command registry without excluding slow/property
+  tests. Render publication binds declared input and output bytes while retaining
+  its local-only evidence limits. Selected CI consumers use pinned shared setup.
+- Optional GNN calls use independently qualified fresh workers, retaining current
+  invocation/session/artifact checks. Source-only admission is not installed-origin,
+  scientific, isolation, licensing or release qualification. Fresh multiprocessing
+  workers retain admission; CLI/audit success rejects worker postflight errors.
+  The pinned warning-exit contract requires a complete finalized source receipt;
+  partial success and qualification failures remain errors.
+  PDF replacement keeps the prior published pathname live until atomic replacement.
+
 - The optional GNN integration now pins the exact published v5.0.3 source commit
   (`8f293d9ba810e6eda5c09842d9c7ed9ffa5f92c1`) instead of the v5.0.1 commit, and
   `uv.lock` mirrors the new revision. Installed-source identity, the bridge

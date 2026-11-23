@@ -186,6 +186,7 @@ def test_upstream_gnn_validation_to_dict_full() -> None:
         "errors": ["e1", "e2"],
         "version": "1.2.3",
         "skipped_reason": None,
+        "source_qualification": {},
     }
     # to_dict copies the errors list
     d["errors"].append("e3")
@@ -310,12 +311,12 @@ def test_upstream_parse_formal_smoke(tmp_path: Path) -> None:
 
 
 @pytest.mark.skipif(not UPSTREAM_AVAILABLE, reason="src.gnn not importable")
-def test_upstream_validate_syntax_formal_returns_tuple() -> None:
+def test_upstream_validate_syntax_formal_returns_json_list() -> None:
     """Lines 263-264: forward to validate_gnn_syntax_formal."""
     content = "## GNNSection\nmodel\n"
     res = upstream_validate_syntax_formal(content)
     # Signature: Tuple[bool, List[str]]
-    assert isinstance(res, tuple)
+    assert isinstance(res, list)
     assert len(res) == 2
     assert isinstance(res[0], bool)
     assert isinstance(res[1], list)
@@ -400,3 +401,13 @@ def test_upstream_validate_file_content_with_path_string(tmp_path: Path) -> None
     md.write_text("## GNNSection\nx\n", encoding="utf-8")
     out = upstream_validate_file_content(str(md), is_content=False)
     assert isinstance(out, dict)
+
+
+def test_deferred_version_refusal_returns_unavailable(tmp_path, monkeypatch):
+    from cogant.gnn.upstream_bridge import upstream_version
+
+    # Exercise the real worker's missing independent-input refusal, not a fake provider.
+    monkeypatch.setenv("COGANT_GNN_ORIGIN", "source")
+    monkeypatch.setenv("COGANT_GNN_SOURCE_ROOT", str(tmp_path))
+    monkeypatch.delenv("COGANT_GNN_BOOTSTRAP", raising=False)
+    assert upstream_version() is None

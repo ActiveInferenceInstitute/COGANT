@@ -71,6 +71,8 @@ def _write_pin_sources(
 
 
 def _write_fixture_audit_dir(tmp_path: Path, *, installed_commit: str = PIN) -> Path:
+    from cogant.gnn.upstream_bridge.qualification import MANIFEST_SHA256
+
     audit = tmp_path / "audit"
     upstream = audit / "upstream_full"
     (upstream / "6_validation_output").mkdir(parents=True)
@@ -86,6 +88,9 @@ def _write_fixture_audit_dir(tmp_path: Path, *, installed_commit: str = PIN) -> 
                 f"release_tag_commit={TAG_COMMIT}",
                 "bridge_available=True",
                 "bridge_upstream_version=4.1.0",
+                "source_origin=installed-vcs",
+                f"source_manifest_sha256={MANIFEST_SHA256}",
+                "source_imports_verified=True",
                 "negative_control_import=src.gnn",
                 "returncode=1",
                 "stderr_last=ModuleNotFoundError: No module named 'src'",
@@ -212,6 +217,17 @@ def test_lock_entry_for_a_different_commit_fails_the_version_claim(module, tmp_p
     assert expectation.lock_matches_pin is False
     assert surface.upstream_commit_expected is True
     assert surface.version_claim_pass is False
+
+
+@pytest.mark.parametrize("origin", ["explicit-source", ""])
+def test_source_or_historical_probe_cannot_certify_installed_identity(module, tmp_path, origin):
+    audit = _write_fixture_audit_dir(tmp_path)
+    probe = audit / "version_probe.txt"
+    probe.write_text(
+        probe.read_text(encoding="utf-8").replace("source_origin=installed-vcs", f"source_origin={origin}"),
+        encoding="utf-8",
+    )
+    assert module.build_surface(audit).version_claim_pass is False
 
 
 def test_build_surface_separates_version_pass_from_upstream_failures(
@@ -485,3 +501,15 @@ def test_strict_version_fails_when_pin_moves_without_reinstall(module, tmp_path:
     )
 
     assert exit_code == 1
+
+
+def test_upstream_bridge_error_cannot_pass_all_step_gate(module, tmp_path):
+    from dataclasses import replace
+
+    surface = module.build_surface(_write_fixture_audit_dir(tmp_path))
+    succeeded_steps = replace(
+        surface, upstream_steps_failed=0, upstream_bridge_error=None
+    )
+    assert succeeded_steps.upstream_all_steps_pass is True
+    refused = replace(succeeded_steps, upstream_bridge_error="worker postflight refused")
+    assert refused.upstream_all_steps_pass is False

@@ -210,6 +210,7 @@ class AuditSurface:
     single_file_validation: tuple[ValidationFinding, ...] = field(default_factory=tuple)
     supply_chain_scanned: bool = False
     supply_chain_findings: tuple[SupplyChainFinding, ...] = field(default_factory=tuple)
+    installed_source_qualified: bool = False
 
     @property
     def version_claim_pass(self) -> bool:
@@ -222,6 +223,7 @@ class AuditSurface:
             and self.engine_version == self.locked_version
             and self.bridge_import_success
             and self.raw_import_negative_control
+            and self.installed_source_qualified
         )
 
     @property
@@ -232,7 +234,11 @@ class AuditSurface:
         summary. Steps the bridge skipped (``upstream_steps_skipped``) sit outside
         that total, so a pass does not mean all 25 upstream steps ran.
         """
-        return self.upstream_steps_total > 0 and self.upstream_steps_failed == 0
+        return (
+            self.upstream_steps_total > 0
+            and self.upstream_steps_failed == 0
+            and self.upstream_bridge_error is None
+        )
 
     @property
     def supply_chain_pass(self) -> bool:
@@ -297,9 +303,9 @@ def load_upstream_expectation(
     observations: a mismatching lock must fail the version claim rather than
     redefine the expected revision.
     """
-    from gnn.importers import read_pin
+    from cogant.gnn.upstream_bridge.qualification import read_consumer_pin
 
-    pin = read_pin(pin_path or PIN_PATH)
+    pin = read_consumer_pin(pin_path or PIN_PATH)
     pinned_commit = pin.commit
     repository_url = f"https://github.com/{pin.repository}.git" if pin.repository else None
 
@@ -663,6 +669,7 @@ def build_surface(
             ``cogant/pyproject.toml`` and the matching ``cogant/uv.lock`` entry.
     """
     expectation = expectation or load_upstream_expectation()
+    from cogant.gnn.upstream_bridge.qualification import MANIFEST_SHA256
     version = parse_version_probe(audit_dir / "version_probe.txt")
 
     summary_dir = resolve_summary_dir(audit_dir)
@@ -715,6 +722,11 @@ def build_surface(
         engine_version=engine,
         raw_import_negative_control=raw_negative,
         bridge_import_success=bridge_success,
+        installed_source_qualified=(
+            version.get("source_origin") == "installed-vcs"
+            and version.get("source_manifest_sha256") == MANIFEST_SHA256
+            and version.get("source_imports_verified") == "True"
+        ),
         upstream_commit_expected=(
             expectation.pinned_commit is not None and upstream_commit == expectation.pinned_commit
         ),
@@ -1094,8 +1106,9 @@ def _ls_remote(url: str, tag: str | None) -> dict[str, str]:
 
 def probe_versions(expectation: UpstreamExpectation, *, ls_remote: bool = True) -> dict[str, str]:
     """Probe the running interpreter's upstream install and the import controls."""
-    import importlib
     import importlib.metadata
+
+    from cogant.gnn.upstream_bridge.qualification import invoke
 
     values: dict[str, str] = {
         "collected_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -1114,8 +1127,11 @@ def probe_versions(expectation: UpstreamExpectation, *, ls_remote: bool = True) 
     values["installed_commit"] = commit or ""
     values["installed_url"] = url or ""
     try:
-        engine = getattr(importlib.import_module(UPSTREAM_IMPORT_NAME), "__version__", "")
-        values["engine"] = str(engine or "")
+        observation = invoke("version")
+        values["engine"] = str(observation["value"] or "")
+        values["source_origin"] = observation["qualification"]["origin"]["kind"]
+        values["source_manifest_sha256"] = observation["qualification"]["manifest_sha256"]
+        values["source_imports_verified"] = str(observation["qualification"]["imports_verified"])
     except Exception as exc:  # upstream import can fail on optional native deps
         values["engine"] = ""
         values["engine_error"] = f"{type(exc).__name__}: {exc}"[:300]
@@ -1134,11 +1150,14 @@ def probe_versions(expectation: UpstreamExpectation, *, ls_remote: bool = True) 
     values["negative_control_import"] = NEGATIVE_CONTROL_MODULE
     values["returncode"] = str(negative.returncode)
     values["stderr_last"] = _last_line(negative.stderr)
-    positive = _clean_import(UPSTREAM_IMPORT_NAME, attribute="__version__")
-    values["clean_gnn_import_returncode"] = str(positive.returncode)
-    values["clean_gnn_import_version"] = (
-        _last_line(positive.stdout) if positive.returncode == 0 else ""
-    )
+    try:
+        positive = invoke("version")
+        values["clean_gnn_import_returncode"] = "0"
+        values["clean_gnn_import_version"] = str(positive["value"] or "")
+    except ImportError as exc:
+        values["clean_gnn_import_returncode"] = "1"
+        values["clean_gnn_import_version"] = ""
+        values["clean_gnn_import_error"] = str(exc)[:300]
 
     if ls_remote and expectation.repository_url:
         values.update(_ls_remote(expectation.repository_url, expectation.release_tag))

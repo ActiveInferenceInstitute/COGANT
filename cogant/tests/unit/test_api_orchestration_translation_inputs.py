@@ -230,6 +230,25 @@ def test_translate_batch_with_explicit_stages() -> None:
     assert completed == ["ingest", "static"]
 
 
+def test_translate_batch_captured_failure_does_not_hide_or_stop_later_work() -> None:
+    results = translate_batch(
+        [
+            {"language": "python", "source_code": PYTHON_SNIPPET, "stages": ["static"]},
+            {
+                "language": "python",
+                "source_code": PYTHON_SNIPPET,
+                "stages": ["ingest", "static"],
+            },
+        ]
+    )
+    assert results[0]["status"] == "error"
+    assert "ingest stage must run before static" in results[0]["error"]
+    assert results[0]["result"]["pipeline_status"] == "failed"
+    assert results[0]["result"]["stage_outcomes"] == {"static": "failed"}
+    assert results[1]["status"] == "success"
+    assert results[1]["result"]["stages_completed"] == ["ingest", "static"]
+
+
 # --------------------------------------------------------------------------- #
 # translate_stream (async generator)
 # --------------------------------------------------------------------------- #
@@ -302,6 +321,38 @@ def test_translate_stream_multiple_sources_with_failure() -> None:
     # All three start events present
     start_events = [e for e in events if e["event"] == "translation_start"]
     assert len(start_events) == 3
+
+
+def test_translate_stream_captured_failure_is_terminal_error() -> None:
+    events = _drain_async_gen(
+        translate_stream(
+            [("python", PYTHON_SNIPPET), ("python", "def later():\n    return 1\n")],
+            options={"stages": ["static"]},
+        )
+    )
+    assert not any(event["event"] == "translation_complete" for event in events)
+    failures = [event for event in events if event["event"] == "translation_error"]
+    assert [event["index"] for event in failures] == [0, 1]
+    assert all("ingest stage must run before static" in event["error"] for event in failures)
+    assert all(event["result"]["pipeline_status"] == "failed" for event in failures)
+    assert events[-1] == {"event": "progress", "percent_complete": 100, "processed": 2, "total": 2}
+
+
+def test_translate_stream_partial_parse_failure_allows_later_valid_source() -> None:
+    events = _drain_async_gen(
+        translate_stream(
+            [("python", "def broken(:\n"), ("python", "def later():\n    return 1\n")],
+            options={"stages": ["ingest", "static"]},
+        )
+    )
+    failures = [event for event in events if event["event"] == "translation_error"]
+    completed = [event for event in events if event["event"] == "translation_complete"]
+    assert [event["index"] for event in failures] == [0]
+    assert failures[0]["result"]["pipeline_status"] == "partial"
+    assert failures[0]["result"]["stage_outcomes"]["static"] == "partial"
+    assert [event["index"] for event in completed] == [1]
+    assert completed[0]["result"]["pipeline_status"] == "success"
+    assert events[-1]["percent_complete"] == 100
 
 
 def test_translate_stream_default_stages_without_options() -> None:

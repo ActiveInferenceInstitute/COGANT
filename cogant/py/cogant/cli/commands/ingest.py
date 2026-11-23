@@ -134,19 +134,28 @@ def extract_dynamic(
         help="Optional path to a pre-recorded trace file to merge into the session.",
     ),
 ) -> None:
-    """Run dynamic analysis (coverage databases, runtime traces).
+    """Enrich the static graph with an optional pre-recorded runtime trace.
 
-    Requires either a ``coverage`` database under the target repo or
-    a trace file passed via ``--traces``. Prefer ``cogant translate``
-    when you want both static and dynamic signal — this command is
-    for debugging the dynamic layer in isolation.
+    Without ``--traces``, reports zero enrichment and no evidence sources.
+    Use ``cogant translate --coverage PATH`` for coverage-file enrichment.
     """
     console.print(f"[bold blue]Extracting dynamic analysis[/bold blue] from {target}")
 
-    session = Session.from_target(target)
-    result = session.extract_dynamic()
+    try:
+        session = Session.from_target(target)
+        result = session.extract_dynamic(trace_path=traces)
+    except Exception as exc:  # noqa: BLE001 — CLI boundary
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1) from exc
 
-    console.print(Panel(f"Extracted {len(result['traces'])} traces and coverage data"))
+    sources = ", ".join(result["evidence_sources"]) or "none"
+    console.print(
+        Panel(
+            f"Coverage nodes enriched: {result['coverage_nodes_enriched']}\n"
+            f"Trace nodes enriched: {result['trace_nodes_enriched']}\n"
+            f"Evidence sources: {sources}"
+        )
+    )
 
 
 @app.command()

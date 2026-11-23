@@ -19,9 +19,6 @@ the validator/pipeline/CLI option.
 
 from __future__ import annotations
 
-import functools
-import importlib
-import importlib.metadata
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -36,6 +33,7 @@ from cogant.gnn.upstream_bridge.pipeline import (
     resolve_steps,
     run_upstream_pipeline,
 )
+from cogant.gnn.upstream_bridge.qualification import OPERATIONS, invoke
 
 logger = logging.getLogger(__name__)
 
@@ -52,19 +50,6 @@ DEFAULT_VALIDATION_LEVEL = "standard"
 """Upstream ``ValidationLevel`` used by :func:`run_upstream_validate_gnn`."""
 
 
-@functools.lru_cache(maxsize=1)
-def _gnn_owned_by_upstream_distribution() -> bool:
-    """True when the importable ``gnn`` package belongs to the upstream wheel.
-
-    A different distribution can also provide a top-level ``gnn`` module; the
-    bridge must not drive an unrelated package under the upstream's name.
-    Editable installs may not record top-level ownership at all; with no
-    recorded owner the import is allowed (the version gate still applies).
-    """
-    owners = importlib.metadata.packages_distributions().get(UPSTREAM_IMPORT_NAME, [])
-    return not owners or any(owner.lower() == UPSTREAM_DISTRIBUTION for owner in owners)
-
-
 def _major_version(version: str | None) -> int | None:
     if not version:
         return None
@@ -72,35 +57,51 @@ def _major_version(version: str | None) -> int | None:
     return int(head) if head.isdigit() else None
 
 
-def _require_upstream_gnn() -> Any:
-    """Import and return the optional upstream ``gnn`` package.
+class _Upstream:
+    """Data-only calls; target objects and lazy imports stay in a fresh worker."""
 
-    Raises:
-        ImportError: When the upstream distribution is not installed, the
-            importable ``gnn`` belongs to another distribution, or the
-            installed upstream predates GNN 4.0.
-    """
-    try:
-        dist_version = importlib.metadata.version(UPSTREAM_DISTRIBUTION)
-    except importlib.metadata.PackageNotFoundError as e:
-        raise ImportError(
-            "generalized-notation-notation (import package `gnn`) is not installed. "
-            "Install the optional `cogant[upstream]` extra to enable this check; "
-            "core COGANT remains usable without it."
-        ) from e
-    major = _major_version(dist_version)
-    if major is None or major < MIN_UPSTREAM_MAJOR:
-        raise ImportError(
-            f"generalized-notation-notation {dist_version} is installed, but the COGANT "
-            f"bridge requires >= {MIN_UPSTREAM_MAJOR}.0 (top-level `gnn` package); "
-            "reinstall the pinned `cogant[upstream]` extra."
-        )
-    if not _gnn_owned_by_upstream_distribution():
-        raise ImportError(
-            "the importable top-level `gnn` package is not provided by "
-            "generalized-notation-notation; refusing to use it as the upstream reference."
-        )
-    return importlib.import_module(UPSTREAM_IMPORT_NAME)
+    def __init__(self) -> None:
+        self.source_qualification: dict[str, Any] = {}
+        self._version: str | None = None
+
+    def _call(self, operation: str, *args: Any, **kwargs: Any) -> Any:
+        if operation == "validate_gnn_syntax" and args and isinstance(args[0], Path):
+            operation = "syntax-file"
+        response = invoke(operation, *args, **kwargs)
+        self.source_qualification = response["qualification"]
+        self._version = response.get("version")
+        return response["value"]
+
+    @property
+    def __version__(self) -> str | None:
+        if self._version is None:
+            self._version = self._call("version")
+        return self._version
+
+    def __getattr__(self, name: str) -> Any:
+        if name not in OPERATIONS:
+            raise AttributeError(name)
+        return lambda *args, **kwargs: self._call(name, *args, **kwargs)
+
+
+def _require_upstream_gnn() -> Any:
+    """Select optional execution; the worker authenticates origin and full content."""
+    import importlib.metadata
+    import os
+
+    if os.environ.get("COGANT_GNN_ORIGIN", "installed") == "installed":
+        try:
+            version = importlib.metadata.version(UPSTREAM_DISTRIBUTION)
+        except importlib.metadata.PackageNotFoundError as exc:
+            raise ImportError(
+                "Install the pinned optional cogant[upstream] extra; core COGANT remains usable without it."
+            ) from exc
+        major = _major_version(version)
+        if major is None or major < MIN_UPSTREAM_MAJOR:
+            raise ImportError(
+                f"generalized-notation-notation {version} does not meet the bridge API floor"
+            )
+    return _Upstream()
 
 
 def json_safe(obj: Any) -> Any:
@@ -135,6 +136,7 @@ class UpstreamGNNValidation:
     errors: list[str] = field(default_factory=list)
     version: str | None = None
     skipped_reason: str | None = None
+    source_qualification: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -143,13 +145,14 @@ class UpstreamGNNValidation:
             "errors": list(self.errors),
             "version": self.version,
             "skipped_reason": self.skipped_reason,
+            "source_qualification": self.source_qualification,
         }
 
 
 def is_upstream_gnn_available() -> bool:
     """Return True if the upstream ``gnn`` package (GNN >= 4.0) imports successfully."""
     try:
-        _require_upstream_gnn()
+        _ = _require_upstream_gnn().__version__
     except ImportError:
         return False
     return True
@@ -159,9 +162,9 @@ def upstream_version() -> str | None:
     """Return the upstream ``gnn.__version__`` if available."""
     try:
         mod = _require_upstream_gnn()
+        v = getattr(mod, "__version__", None)
     except ImportError:
         return None
-    v = getattr(mod, "__version__", None)
     return v if isinstance(v, str) else None
 
 
@@ -193,7 +196,7 @@ def run_upstream_validate_gnn(
     except ImportError as e:
         return UpstreamGNNValidation(
             available=False,
-            ok=True,
+            ok=False,
             skipped_reason=(
                 f"{e} core COGANT validation remains available; this optional upstream "
                 "check was skipped."
@@ -204,11 +207,11 @@ def run_upstream_validate_gnn(
     if validate_gnn_syntax is None:
         return UpstreamGNNValidation(
             available=False,
-            ok=True,
+            ok=False,
             skipped_reason="upstream gnn has no validate_gnn_syntax",
         )
 
-    ver = upstream_version()
+    ver = None
 
     try:
         with tempfile.NamedTemporaryFile(
@@ -227,13 +230,21 @@ def run_upstream_validate_gnn(
             except OSError:
                 pass
         err_list = [str(e) for e in errors] if errors else []
+        ver = getattr(mod, "__version__", None)
         return UpstreamGNNValidation(
             available=True,
             ok=bool(ok),
             errors=err_list,
             version=ver,
+            source_qualification=getattr(mod, "source_qualification", {}),
         )
+    except ImportError as e:
+        return UpstreamGNNValidation(available=False, ok=False, skipped_reason=str(e))
     except Exception as e:
+        try:
+            ver = getattr(mod, "__version__", None)
+        except ImportError:
+            ver = None
         logger.warning("Upstream validate_gnn_syntax raised: %s", e, exc_info=True)
         return UpstreamGNNValidation(
             available=True,
@@ -265,13 +276,13 @@ def upstream_validate_file_content(
 def upstream_parse_file(path: str | Path) -> Any:
     """Call upstream ``parse_gnn_file``."""
     mod = _require_upstream_gnn()
-    return mod.parse_gnn_file(Path(path))
+    return json_safe(mod.parse_gnn_file(Path(path)))
 
 
 def upstream_discover_files(root: str | Path) -> Any:
     """Call upstream ``discover_gnn_files``."""
     mod = _require_upstream_gnn()
-    return mod.discover_gnn_files(Path(root))
+    return json_safe(mod.discover_gnn_files(Path(root)))
 
 
 def upstream_process_directory(
@@ -320,7 +331,7 @@ def upstream_process_multi_format(
 ) -> Any:
     """Call upstream ``process_gnn_multi_format`` (may import upstream pipeline helpers)."""
     mod = _require_upstream_gnn()
-    return mod.process_gnn_multi_format(Path(input_dir), Path(output_dir), log or logger, **kwargs)
+    return mod.process_gnn_multi_format(Path(input_dir), Path(output_dir), None, **kwargs)
 
 
 def upstream_parse_formal(*args: Any, **kwargs: Any) -> Any:
@@ -336,15 +347,17 @@ def upstream_validate_syntax_formal(*args: Any, **kwargs: Any) -> Any:
 
 
 def get_upstream_parsing_system() -> Any:
-    """Return a new ``GNNParsingSystem`` instance."""
-    mod = _require_upstream_gnn()
-    return mod.GNNParsingSystem()
+    """Construct a real parser inside the caller's qualified_upstream scope."""
+    from cogant.gnn.upstream_bridge.qualification import active_upstream
+
+    return active_upstream().GNNParsingSystem()
 
 
 def get_upstream_gnn_format_enum() -> Any:
-    """Return `GNNFormat` enum class from upstream."""
-    mod = _require_upstream_gnn()
-    return mod.GNNFormat
+    """Access the real enum inside the caller's qualified_upstream scope."""
+    from cogant.gnn.upstream_bridge.qualification import active_upstream
+
+    return active_upstream().GNNFormat
 
 
 def parse_upstream_model_gnn_md(package_dir: str | Path) -> dict[str, Any]:

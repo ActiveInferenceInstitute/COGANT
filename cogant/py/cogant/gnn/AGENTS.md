@@ -41,10 +41,11 @@ The Active Inference Institute **generalized-notation-notation** package is an
 **optional** dependency, installed only through the ``upstream`` extra
 (``uv sync --extra upstream``; not part of ``all``). The extra pins a full GNN
 5.1.0 released commit in ``pyproject.toml`` (mirrored in ``uv.lock``).
-GNN >= 4.0 ships the top-level Python package ``gnn``; the bridge
-(``cogant.gnn.upstream_bridge``, re-exported from ``cogant.gnn``) refuses an
-installed upstream older than 4.0 or a ``gnn`` package owned by another
-distribution. The ``GNN v2.0.0`` value COGANT writes under
+GNN >= 4.0 ships the top-level Python package ``gnn``. The bridge
+(``cogant.gnn.upstream_bridge``, re-exported from ``cogant.gnn``) requires
+independently bound bootstrap/full-manifest admission in addition to the pin;
+see [required producer inputs](upstream_bridge/AGENTS.md#required-producer-inputs).
+The ``GNN v2.0.0`` value COGANT writes under
 ``## GNNVersionAndFlags`` is COGANT's own schema identifier
 (``cogant.schema.versions.CURRENT_GNN_VERSION``), not the upstream release.
 

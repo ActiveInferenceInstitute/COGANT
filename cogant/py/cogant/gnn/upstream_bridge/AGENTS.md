@@ -16,10 +16,9 @@ keeping heavy dependencies (JAX, PyTorch) out of the eager import path.
   `gnn.importers.read_pin`, `tools/audit_release_integrity.py` keeps the extra
   and the lock in agreement, and `cogant/scripts/gnn_conformance_probe.py`
   rejects an installed PEP 610 commit that differs from the pin.
-* Version gate: `_require_upstream_gnn()` raises `ImportError` (surfaced as
-  "unavailable") when the distribution is missing, older than
-  `MIN_UPSTREAM_MAJOR` (4), or when the importable `gnn` package belongs to
-  a different distribution.
+* Admission: `_require_upstream_gnn()` raises `ImportError` when independently
+  bound bootstrap/manifest inputs or exact source identity cannot qualify.
+  Version metadata alone is not source admission. See the required inputs below.
 * Upstream license: **CC-BY-NC-SA-4.0** — see `cogant/LICENSES.md`.
 * Upstream calls are **opt-in**. `GNNValidator.validate_package` runs
   upstream validation only for `upstream_gnn=True`, or for
@@ -32,6 +31,28 @@ keeping heavy dependencies (JAX, PyTorch) out of the eager import path.
 * The `GNN v2.0.0` value under `## GNNVersionAndFlags` is COGANT's own schema
   identifier (`cogant.schema.versions.CURRENT_GNN_VERSION`), not the upstream
   release.
+
+### Required producer inputs
+
+`COGANT_GNN_BOOTSTRAP` and `COGANT_GNN_MANIFEST` select independently reviewed
+artifacts whose trusted hashes are checked before target imports. The complete
+manifest, not only importer-file digests, binds the selected package.
+`COGANT_GNN_PIN` can select the checkout's canonical `.github/gnn-pin.json`.
+Keep v5.1.0 / `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf` unchanged unless
+separately admitted.
+
+`COGANT_GNN_ORIGIN=installed` is the default and requires genuine matching
+PEP610 VCS origin and package content. Explicit `source` mode additionally
+requires `COGANT_GNN_SOURCE_ROOT`; it never certifies installed-origin acceptance.
+Neither unavailable mode silently falls back to the other. Do not manufacture
+distribution metadata or copy bootstrap code over the target importer.
+
+Keep the qualified context active during target calls, lazy iteration and
+serialization. Numbered Python workers require their own startup/source receipts;
+a parent receipt alone does not certify descendants. Missing parser dependencies
+remain failures even when source bytes qualify. These controls do not establish
+scientific semantics, release readiness or arbitrary-code isolation.
+
 
 ## Public API
 
@@ -166,8 +187,9 @@ counts them in `executed`.
   upstream imports happen inside the function body via
   `_require_upstream_gnn()` so `import cogant` does not pull in JAX.
 * `run_upstream_validate_gnn` never raises on a missing upstream — it
-  returns `UpstreamGNNValidation(available=False, ok=True, skipped_reason=…)`
-  so callers can fall back to COGANT-only checks. The thin `upstream_*`
+  returns `UpstreamGNNValidation(available=False, ok=False, skipped_reason=…)`.
+  Core-only validation remains distinct; unavailable is not a successful upstream check.
+  The thin `upstream_*`
   passthroughs raise `ImportError` when upstream is unavailable;
   `parse_upstream_model_gnn_md` returns a dict with an `"error"` key instead.
 * Parsing helpers return JSON-coercible payloads via `json_safe()` so the

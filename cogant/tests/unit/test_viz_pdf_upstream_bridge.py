@@ -724,6 +724,7 @@ def test_require_upstream_gnn_wraps_missing_distribution(monkeypatch) -> None:
     def _missing(name: str) -> str:
         raise importlib.metadata.PackageNotFoundError(name)
 
+    monkeypatch.setenv("COGANT_GNN_ORIGIN", "installed")
     monkeypatch.setattr(importlib.metadata, "version", _missing)
     with pytest.raises(ImportError) as excinfo:
         _require_upstream_gnn()
@@ -761,7 +762,7 @@ def test_run_upstream_validate_gnn_returns_skipped_on_import_error(monkeypatch) 
     result = upstream_bridge.run_upstream_validate_gnn("## anything\n")
     assert isinstance(result, UpstreamGNNValidation)
     assert result.available is False
-    assert result.ok is True
+    assert result.ok is False
     assert result.skipped_reason is not None
     assert "core COGANT" in result.skipped_reason
 
