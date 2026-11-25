@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Collect, summarize, and visualize a COGANT / upstream GNN audit directory.
 
 This is a manuscript and technical-documentation helper, not a runtime API.
@@ -210,6 +209,7 @@ class AuditSurface:
     single_file_validation: tuple[ValidationFinding, ...] = field(default_factory=tuple)
     supply_chain_scanned: bool = False
     supply_chain_findings: tuple[SupplyChainFinding, ...] = field(default_factory=tuple)
+    installed_source_qualified: bool = False
 
     @property
     def version_claim_pass(self) -> bool:
@@ -222,6 +222,7 @@ class AuditSurface:
             and self.engine_version == self.locked_version
             and self.bridge_import_success
             and self.raw_import_negative_control
+            and self.installed_source_qualified
         )
 
     @property
@@ -232,7 +233,11 @@ class AuditSurface:
         summary. Steps the bridge skipped (``upstream_steps_skipped``) sit outside
         that total, so a pass does not mean all 25 upstream steps ran.
         """
-        return self.upstream_steps_total > 0 and self.upstream_steps_failed == 0
+        return (
+            self.upstream_steps_total > 0
+            and self.upstream_steps_failed == 0
+            and self.upstream_bridge_error is None
+        )
 
     @property
     def supply_chain_pass(self) -> bool:
@@ -297,18 +302,21 @@ def load_upstream_expectation(
     observations: a mismatching lock must fail the version claim rather than
     redefine the expected revision.
     """
-    from gnn.importers import read_pin
+    from cogant.gnn.upstream_bridge.qualification import read_consumer_pin
 
-    pin = read_pin(pin_path or PIN_PATH)
+    pin = read_consumer_pin(pin_path or PIN_PATH)
     pinned_commit = pin.commit
-    repository_url = f"https://github.com/{pin.repository}.git" if pin.repository else None
+    repository_url = (
+        f"https://github.com/{pin.repository}.git" if pin.repository else None
+    )
 
     lock = _load_toml(lock_path or LOCK_PATH)
     entries = [
         package
         for package in lock.get("package", [])
         if isinstance(package, dict)
-        and str(package.get("name", "")).lower().replace("_", "-") == UPSTREAM_DISTRIBUTION
+        and str(package.get("name", "")).lower().replace("_", "-")
+        == UPSTREAM_DISTRIBUTION
     ]
     matching = next(
         (
@@ -323,7 +331,9 @@ def load_upstream_expectation(
         release_tag=pin.tag,
         repository_url=repository_url,
         pinned_commit=pinned_commit,
-        locked_version=str(chosen["version"]) if chosen and chosen.get("version") else None,
+        locked_version=str(chosen["version"])
+        if chosen and chosen.get("version")
+        else None,
         locked_commit=_lock_commit(chosen.get("source")) if chosen else None,
     )
 
@@ -417,7 +427,9 @@ def read_upstream_plan(summary_dir: Path) -> UpstreamPlan | None:
                 records[number] = raw
     if isinstance(planned_raw, list):
         planned = tuple(
-            sorted(n for n in (_step_number(str(s)) for s in planned_raw) if n is not None)
+            sorted(
+                n for n in (_step_number(str(s)) for s in planned_raw) if n is not None
+            )
         )
     else:
         planned = tuple(sorted(records))
@@ -437,7 +449,9 @@ def _upstream_record_error(raw: dict[str, Any]) -> str:
         text = str(raw.get(key) or "")
         for line in reversed(text.splitlines()):
             stripped = line.strip()
-            if stripped and (key == "stderr" or " - ERROR - " in stripped or "FAILED" in stripped):
+            if stripped and (
+                key == "stderr" or " - ERROR - " in stripped or "FAILED" in stripped
+            ):
                 return stripped[:500]
     return ""
 
@@ -463,14 +477,16 @@ def _reason_for_failure(
     if script == "2_tests.py":
         text = _read_text(step_dir / "pytest_reliable_output.txt")
         if "No module named 'scripts'" in text:
-            return (
-                "upstream installed package tests import missing scripts.check_capability_contracts"
-            )
+            return "upstream installed package tests import missing scripts.check_capability_contracts"
     if script == "11_render.py":
         data = _read_json(step_dir / "render_processing_summary.json")
         if isinstance(data, dict):
             failures = data.get("failed_framework_renderings", [])
-            if isinstance(failures, list) and failures and isinstance(failures[0], dict):
+            if (
+                isinstance(failures, list)
+                and failures
+                and isinstance(failures[0], dict)
+            ):
                 message = failures[0].get("message")
                 if isinstance(message, str) and message:
                     return message
@@ -479,17 +495,23 @@ def _reason_for_failure(
         if isinstance(data, dict) and data.get("total_scripts_found") == 0:
             return "no executable scripts were produced because render failed"
 
-    if status == "NOT_RUN" and plan is not None and step_index is not None:
-        if step_index not in plan.planned:
-            detail = ", ".join(
-                part
-                for part in (
-                    f"upstream skip_steps={plan.skip_steps}" if plan.skip_steps else "",
-                    f"skip_llm={plan.skip_llm}" if plan.skip_llm is not None else "",
-                )
-                if part
+    if (
+        status == "NOT_RUN"
+        and plan is not None
+        and step_index is not None
+        and step_index not in plan.planned
+    ):
+        detail = ", ".join(
+            part
+            for part in (
+                f"upstream skip_steps={plan.skip_steps}" if plan.skip_steps else "",
+                f"skip_llm={plan.skip_llm}" if plan.skip_llm is not None else "",
             )
-            return "selected but never planned by upstream" + (f" ({detail})" if detail else "")
+            if part
+        )
+        return "selected but never planned by upstream" + (
+            f" ({detail})" if detail else ""
+        )
     if error_text:
         return error_text
     if status == "NOT_RUN":
@@ -504,11 +526,17 @@ def _reason_for_failure(
 
 
 def _optional_float(value: Any) -> float | None:
-    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+    return (
+        float(value)
+        if isinstance(value, (int, float)) and not isinstance(value, bool)
+        else None
+    )
 
 
 def _optional_int(value: Any) -> int | None:
-    return int(value) if isinstance(value, int) and not isinstance(value, bool) else None
+    return (
+        int(value) if isinstance(value, int) and not isinstance(value, bool) else None
+    )
 
 
 def parse_upstream_summary(path: Path, summary_dir: Path | None = None) -> UpstreamRun:
@@ -523,7 +551,9 @@ def parse_upstream_summary(path: Path, summary_dir: Path | None = None) -> Upstr
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise SystemExit(f"ERROR: could not read upstream summary {path}: {exc}") from exc
+        raise SystemExit(
+            f"ERROR: could not read upstream summary {path}: {exc}"
+        ) from exc
     if not isinstance(data, dict):
         raise SystemExit(f"ERROR: {path} is not a JSON object")
     steps = data.get("steps")
@@ -547,7 +577,9 @@ def parse_upstream_summary(path: Path, summary_dir: Path | None = None) -> Upstr
             )
         )
     skipped = _int_tuple(data.get("skipped"))
-    executed = _int_tuple(data.get("executed")) or tuple(sorted(f.step_index for f in findings))
+    executed = _int_tuple(data.get("executed")) or tuple(
+        sorted(f.step_index for f in findings)
+    )
     auto_included: list[StepFinding] = []
     unplanned: tuple[int, ...] = ()
     if plan is not None:
@@ -589,7 +621,9 @@ def parse_upstream_summary(path: Path, summary_dir: Path | None = None) -> Upstr
 def _int_tuple(raw: Any) -> tuple[int, ...]:
     if not isinstance(raw, list):
         return ()
-    return tuple(sorted(int(i) for i in raw if isinstance(i, int) and not isinstance(i, bool)))
+    return tuple(
+        sorted(int(i) for i in raw if isinstance(i, int) and not isinstance(i, bool))
+    )
 
 
 def parse_pip_audit(path: Path) -> tuple[SupplyChainFinding, ...]:
@@ -607,7 +641,9 @@ def parse_pip_audit(path: Path) -> tuple[SupplyChainFinding, ...]:
         if not isinstance(vulns, list) or not vulns:
             continue
         ids = tuple(
-            dict.fromkeys(str(v.get("id", "unknown")) for v in vulns if isinstance(v, dict))
+            dict.fromkeys(
+                str(v.get("id", "unknown")) for v in vulns if isinstance(v, dict)
+            )
         )
         findings.append(
             SupplyChainFinding(
@@ -663,6 +699,8 @@ def build_surface(
             ``cogant/pyproject.toml`` and the matching ``cogant/uv.lock`` entry.
     """
     expectation = expectation or load_upstream_expectation()
+    from cogant.gnn.upstream_bridge.qualification import MANIFEST_SHA256
+
     version = parse_version_probe(audit_dir / "version_probe.txt")
 
     summary_dir = resolve_summary_dir(audit_dir)
@@ -676,12 +714,17 @@ def build_surface(
         and engine is not None
         and bridge_version == engine
     )
-    raw_negative = version.get("returncode") == "1" and "ModuleNotFoundError" in version.get(
+    raw_negative = version.get(
+        "returncode"
+    ) == "1" and "ModuleNotFoundError" in version.get(
         "stderr_last",
         "",
     )
     upstream_commit = (
-        version.get("installed_commit") or version.get("HEAD") or version.get("head") or None
+        version.get("installed_commit")
+        or version.get("HEAD")
+        or version.get("head")
+        or None
     )
     origin_head = version.get("origin_HEAD") or version.get("origin_head") or None
     release_tag = expectation.release_tag
@@ -715,8 +758,14 @@ def build_surface(
         engine_version=engine,
         raw_import_negative_control=raw_negative,
         bridge_import_success=bridge_success,
+        installed_source_qualified=(
+            version.get("source_origin") == "installed-vcs"
+            and version.get("source_manifest_sha256") == MANIFEST_SHA256
+            and version.get("source_imports_verified") == "True"
+        ),
         upstream_commit_expected=(
-            expectation.pinned_commit is not None and upstream_commit == expectation.pinned_commit
+            expectation.pinned_commit is not None
+            and upstream_commit == expectation.pinned_commit
         ),
         lock_matches_pin=expectation.lock_matches_pin,
         upstream_steps_total=run.total,
@@ -824,7 +873,13 @@ def render_markdown(surface: AuditSurface) -> str:
             ]
         )
         for finding in surface.single_file_validation:
-            verdict = "UNAVAILABLE" if not finding.available else "PASS" if finding.ok else "FAIL"
+            verdict = (
+                "UNAVAILABLE"
+                if not finding.available
+                else "PASS"
+                if finding.ok
+                else "FAIL"
+            )
             errors = str(finding.error_count)
             if finding.first_error:
                 errors += f" (first: {_md_cell(finding.first_error)})"
@@ -867,15 +922,19 @@ def render_markdown(surface: AuditSurface) -> str:
         if surface.upstream_auto_included:
             lines.extend(
                 [
-                    "Run by upstream outside the bridge selection (hard prerequisites of "
-                    "selected steps; not part of the all-step gate):",
+                    (
+                        "Run by upstream outside the bridge selection (hard prerequisites of "
+                        "selected steps; not part of the all-step gate):"
+                    ),
                     "",
                     "| Step | Script | Upstream status | Duration (s) |",
                     "| --- | --- | --- | --- |",
                 ]
             )
             for step in surface.upstream_auto_included:
-                duration = f"{step.duration_s:.1f}" if step.duration_s is not None else "-"
+                duration = (
+                    f"{step.duration_s:.1f}" if step.duration_s is not None else "-"
+                )
                 lines.append(
                     f"| {step.step_index} | `{step.script}` | {step.status} | {duration} |"
                 )
@@ -896,7 +955,9 @@ def render_markdown(surface: AuditSurface) -> str:
     if surface.upstream_failures:
         lines.extend(["## Upstream Step Failures", ""])
         for failure in surface.upstream_failures:
-            lines.append(f"- Step {failure.step_index} `{failure.script}`: {failure.reason}")
+            lines.append(
+                f"- Step {failure.step_index} `{failure.script}`: {failure.reason}"
+            )
         lines.append("")
     if surface.supply_chain_findings:
         lines.extend(["## Supply-Chain Findings", ""])
@@ -948,12 +1009,15 @@ def render_svg(surface: AuditSurface) -> str:
     step_gap = 4
     cell_w = (width - (2 * margin) - ((total - 1) * step_gap)) / total
     kind_by_index = {
-        step.step_index: "pass" if step.success else "fail" for step in surface.upstream_steps
+        step.step_index: "pass" if step.success else "fail"
+        for step in surface.upstream_steps
     }
     for failure in surface.upstream_failures:
         kind_by_index[failure.step_index] = "fail"
     for step in surface.upstream_auto_included:
-        kind_by_index.setdefault(step.step_index, "auto_pass" if step.success else "auto_fail")
+        kind_by_index.setdefault(
+            step.step_index, "auto_pass" if step.success else "auto_fail"
+        )
     rects: list[str] = []
     for position, step_index in enumerate(universe):
         x = margin + position * (cell_w + step_gap)
@@ -969,7 +1033,9 @@ def render_svg(surface: AuditSurface) -> str:
     version_fill = "#2f9e6e" if surface.version_claim_pass else "#d84c4c"
     supply_fill = "#2f9e6e" if surface.supply_chain_pass else "#d49a28"
     upstream_fill = "#2f9e6e" if surface.upstream_all_steps_pass else "#d84c4c"
-    title = html.escape(f"COGANT GNN upstream audit surface ({_release_label(surface)})")
+    title = html.escape(
+        f"COGANT GNN upstream audit surface ({_release_label(surface)})"
+    )
     label = html.escape(
         f"COGANT GNN upstream audit surface ({_release_label(surface)})", quote=True
     )
@@ -1006,7 +1072,9 @@ def write_outputs(surface: AuditSurface, output_dir: Path) -> list[Path]:
         output_dir / f"{SURFACE_STEM}.md",
         output_dir / f"{SURFACE_STEM}.svg",
     ]
-    paths[0].write_text(json.dumps(surface.to_dict(), indent=2) + "\n", encoding="utf-8")
+    paths[0].write_text(
+        json.dumps(surface.to_dict(), indent=2) + "\n", encoding="utf-8"
+    )
     paths[1].write_text(render_markdown(surface), encoding="utf-8")
     paths[2].write_text(render_svg(surface), encoding="utf-8")
     return paths
@@ -1024,7 +1092,9 @@ def _last_line(text: str) -> str:
     return ""
 
 
-def _clean_import(module: str, *, attribute: str | None = None) -> subprocess.CompletedProcess[str]:
+def _clean_import(
+    module: str, *, attribute: str | None = None
+) -> subprocess.CompletedProcess[str]:
     """Import ``module`` in an isolated interpreter (``-I``) from an empty cwd."""
     code = f"import {module}"
     if attribute:
@@ -1045,7 +1115,9 @@ def _installed_commit() -> tuple[str | None, str | None]:
     import importlib.metadata
 
     try:
-        raw = importlib.metadata.distribution(UPSTREAM_DISTRIBUTION).read_text("direct_url.json")
+        raw = importlib.metadata.distribution(UPSTREAM_DISTRIBUTION).read_text(
+            "direct_url.json"
+        )
     except importlib.metadata.PackageNotFoundError:
         return None, None
     try:
@@ -1075,7 +1147,8 @@ def _ls_remote(url: str, tag: str | None) -> dict[str, str]:
         return {"ls_remote_error": str(exc)[:300]}
     if proc.returncode != 0:
         return {
-            "ls_remote_error": _last_line(proc.stderr) or f"git ls-remote exited {proc.returncode}"
+            "ls_remote_error": _last_line(proc.stderr)
+            or f"git ls-remote exited {proc.returncode}"
         }
     found: dict[str, str] = {}
     for line in proc.stdout.splitlines():
@@ -1092,10 +1165,13 @@ def _ls_remote(url: str, tag: str | None) -> dict[str, str]:
     return values
 
 
-def probe_versions(expectation: UpstreamExpectation, *, ls_remote: bool = True) -> dict[str, str]:
+def probe_versions(
+    expectation: UpstreamExpectation, *, ls_remote: bool = True
+) -> dict[str, str]:
     """Probe the running interpreter's upstream install and the import controls."""
-    import importlib
     import importlib.metadata
+
+    from cogant.gnn.upstream_bridge.qualification import invoke
 
     values: dict[str, str] = {
         "collected_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -1114,9 +1190,16 @@ def probe_versions(expectation: UpstreamExpectation, *, ls_remote: bool = True) 
     values["installed_commit"] = commit or ""
     values["installed_url"] = url or ""
     try:
-        engine = getattr(importlib.import_module(UPSTREAM_IMPORT_NAME), "__version__", "")
-        values["engine"] = str(engine or "")
-    except Exception as exc:  # upstream import can fail on optional native deps
+        observation = invoke("version")
+        values["engine"] = str(observation["value"] or "")
+        values["source_origin"] = observation["qualification"]["origin"]["kind"]
+        values["source_manifest_sha256"] = observation["qualification"][
+            "manifest_sha256"
+        ]
+        values["source_imports_verified"] = str(
+            observation["qualification"]["imports_verified"]
+        )
+    except (ImportError, OSError, RuntimeError, KeyError, TypeError) as exc:
         values["engine"] = ""
         values["engine_error"] = f"{type(exc).__name__}: {exc}"[:300]
 
@@ -1125,7 +1208,7 @@ def probe_versions(expectation: UpstreamExpectation, *, ls_remote: bool = True) 
 
         values["bridge_available"] = str(upstream_bridge.is_upstream_gnn_available())
         values["bridge_upstream_version"] = upstream_bridge.upstream_version() or ""
-    except Exception as exc:
+    except (ImportError, OSError, RuntimeError) as exc:
         values["bridge_available"] = "False"
         values["bridge_upstream_version"] = ""
         values["bridge_error"] = f"{type(exc).__name__}: {exc}"[:300]
@@ -1134,11 +1217,14 @@ def probe_versions(expectation: UpstreamExpectation, *, ls_remote: bool = True) 
     values["negative_control_import"] = NEGATIVE_CONTROL_MODULE
     values["returncode"] = str(negative.returncode)
     values["stderr_last"] = _last_line(negative.stderr)
-    positive = _clean_import(UPSTREAM_IMPORT_NAME, attribute="__version__")
-    values["clean_gnn_import_returncode"] = str(positive.returncode)
-    values["clean_gnn_import_version"] = (
-        _last_line(positive.stdout) if positive.returncode == 0 else ""
-    )
+    try:
+        positive = invoke("version")
+        values["clean_gnn_import_returncode"] = "0"
+        values["clean_gnn_import_version"] = str(positive["value"] or "")
+    except ImportError as exc:
+        values["clean_gnn_import_returncode"] = "1"
+        values["clean_gnn_import_version"] = ""
+        values["clean_gnn_import_error"] = str(exc)[:300]
 
     if ls_remote and expectation.repository_url:
         values.update(_ls_remote(expectation.repository_url, expectation.release_tag))
@@ -1175,7 +1261,9 @@ def _single_file_validation(package_dir: Path) -> dict[str, Any]:
     from cogant.gnn.validator import GNNValidator
 
     results: list[dict[str, Any]] = []
-    cogant_result = GNNValidator().validate_package(str(package_dir), upstream_gnn=False)
+    cogant_result = GNNValidator().validate_package(
+        str(package_dir), upstream_gnn=False
+    )
     results.append(
         {
             "validator": "cogant GNNValidator",
@@ -1219,9 +1307,19 @@ def _run_pip_audit(destination: Path, log_path: Path) -> dict[str, Any]:
         base = [pip_audit]
     else:
         return {"ran": False, "reason": "neither uvx nor pip-audit is on PATH"}
-    cmd = [*base, "--format", "json", "--progress-spinner", "off", "--path", _site_packages()]
+    cmd = [
+        *base,
+        "--format",
+        "json",
+        "--progress-spinner",
+        "off",
+        "--path",
+        _site_packages(),
+    ]
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900, check=False)
+        proc = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=900, check=False
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"ran": False, "reason": f"pip-audit could not run: {exc}"[:300]}
     log_path.write_text(proc.stderr, encoding="utf-8")
@@ -1260,7 +1358,9 @@ def collect_audit_dir(
     expectation = expectation or load_upstream_expectation()
     audit_dir = audit_dir.resolve()
     if audit_dir.exists() and any(audit_dir.iterdir()):
-        raise FileExistsError(f"Audit collection requires an empty directory: {audit_dir}")
+        raise FileExistsError(
+            f"Audit collection requires an empty directory: {audit_dir}"
+        )
     audit_dir.mkdir(parents=True, exist_ok=True)
     manifest: dict[str, Any] = {
         "tool": Path(__file__).name,
@@ -1273,10 +1373,16 @@ def collect_audit_dir(
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
     def _phase(name: str, started: float, **info: Any) -> None:
-        manifest["phases"][name] = {"duration_s": round(time.perf_counter() - started, 2), **info}
+        manifest["phases"][name] = {
+            "duration_s": round(time.perf_counter() - started, 2),
+            **info,
+        }
 
     started = time.perf_counter()
-    _write_probe(audit_dir / "version_probe.txt", probe_versions(expectation, ls_remote=ls_remote))
+    _write_probe(
+        audit_dir / "version_probe.txt",
+        probe_versions(expectation, ls_remote=ls_remote),
+    )
     _phase("version_probe", started)
 
     started = time.perf_counter()
@@ -1293,13 +1399,17 @@ def collect_audit_dir(
     started = time.perf_counter()
     upstream_dir = audit_dir / SUMMARY_DIRNAMES[0]
     result = run_upstream_pipeline(
-        UpstreamPipelineConfig(target_dir=package_dir, output_dir=upstream_dir, skip_llm=True)
+        UpstreamPipelineConfig(
+            target_dir=package_dir, output_dir=upstream_dir, skip_llm=True
+        )
     )
     summary_path = upstream_dir / PIPELINE_SUMMARY_NAME
     if not summary_path.is_file():
         # The bridge returns early (no summary) when upstream is unavailable.
         upstream_dir.mkdir(parents=True, exist_ok=True)
-        summary_path.write_text(json.dumps(result.to_dict(), indent=2) + "\n", encoding="utf-8")
+        summary_path.write_text(
+            json.dumps(result.to_dict(), indent=2) + "\n", encoding="utf-8"
+        )
     _phase(
         "upstream_pipeline",
         started,
@@ -1317,7 +1427,9 @@ def collect_audit_dir(
         _phase(
             "pip_audit",
             started,
-            **_run_pip_audit(audit_dir / "pip_audit_path.json", audit_dir / "pip_audit.log"),
+            **_run_pip_audit(
+                audit_dir / "pip_audit_path.json", audit_dir / "pip_audit.log"
+            ),
         )
 
     manifest["finished_at"] = datetime.now(UTC).isoformat(timespec="seconds")
@@ -1352,7 +1464,9 @@ def main(argv: list[str] | None = None) -> int:
         help="Repository COGANT translates for --collect (default: control-positive calculator).",
     )
     parser.add_argument(
-        "--no-pip-audit", action="store_true", help="Skip the pip-audit scan in --collect."
+        "--no-pip-audit",
+        action="store_true",
+        help="Skip the pip-audit scan in --collect.",
     )
     parser.add_argument(
         "--no-ls-remote",
@@ -1362,7 +1476,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--pin", type=Path, help="Pin source (default: .github/gnn-pin.json)."
     )
-    parser.add_argument("--lock", type=Path, help="Lock source (default: cogant/uv.lock).")
+    parser.add_argument(
+        "--lock", type=Path, help="Lock source (default: cogant/uv.lock)."
+    )
     parser.add_argument(
         "--strict-version",
         action="store_true",

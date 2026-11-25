@@ -15,7 +15,9 @@ SCRIPT = PROJECT_ROOT / "tools" / "gnn_upstream_audit_surface.py"
 PIN = "a" * 40
 OTHER = "b" * 40
 TAG_COMMIT = "c" * 40
-REPO_URL = "https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git"
+REPO_URL = (
+    "https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git"
+)
 
 
 def _load_module():
@@ -71,6 +73,8 @@ def _write_pin_sources(
 
 
 def _write_fixture_audit_dir(tmp_path: Path, *, installed_commit: str = PIN) -> Path:
+    from cogant.gnn.upstream_bridge.qualification import MANIFEST_SHA256
+
     audit = tmp_path / "audit"
     upstream = audit / "upstream_full"
     (upstream / "6_validation_output").mkdir(parents=True)
@@ -86,6 +90,9 @@ def _write_fixture_audit_dir(tmp_path: Path, *, installed_commit: str = PIN) -> 
                 f"release_tag_commit={TAG_COMMIT}",
                 "bridge_available=True",
                 "bridge_upstream_version=4.1.0",
+                "source_origin=installed-vcs",
+                f"source_manifest_sha256={MANIFEST_SHA256}",
+                "source_imports_verified=True",
                 "negative_control_import=src.gnn",
                 "returncode=1",
                 "stderr_last=ModuleNotFoundError: No module named 'src'",
@@ -143,7 +150,9 @@ def _write_fixture_audit_dir(tmp_path: Path, *, installed_commit: str = PIN) -> 
         json.dumps(
             {
                 "failed_framework_renderings": [
-                    {"message": "POMDP not compatible with pymdp: missing modality metadata"}
+                    {
+                        "message": "POMDP not compatible with pymdp: missing modality metadata"
+                    }
                 ]
             }
         ),
@@ -200,7 +209,9 @@ def module(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     return loaded
 
 
-def test_lock_entry_for_a_different_commit_fails_the_version_claim(module, tmp_path: Path) -> None:
+def test_lock_entry_for_a_different_commit_fails_the_version_claim(
+    module, tmp_path: Path
+) -> None:
     audit = _write_fixture_audit_dir(tmp_path)
     drifted = tmp_path / "drifted"
     drifted.mkdir()
@@ -212,6 +223,21 @@ def test_lock_entry_for_a_different_commit_fails_the_version_claim(module, tmp_p
     assert expectation.lock_matches_pin is False
     assert surface.upstream_commit_expected is True
     assert surface.version_claim_pass is False
+
+
+@pytest.mark.parametrize("origin", ["explicit-source", ""])
+def test_source_or_historical_probe_cannot_certify_installed_identity(
+    module, tmp_path, origin
+):
+    audit = _write_fixture_audit_dir(tmp_path)
+    probe = audit / "version_probe.txt"
+    probe.write_text(
+        probe.read_text(encoding="utf-8").replace(
+            "source_origin=installed-vcs", f"source_origin={origin}"
+        ),
+        encoding="utf-8",
+    )
+    assert module.build_surface(audit).version_claim_pass is False
 
 
 def test_build_surface_separates_version_pass_from_upstream_failures(
@@ -236,7 +262,10 @@ def test_build_surface_separates_version_pass_from_upstream_failures(
         "11_render.py",
     ]
     # Bridge error field is used when no step-specific artifact explains the failure.
-    assert surface.upstream_failures[0].reason == "6_validation - ERROR - undeclared variable A_m0"
+    assert (
+        surface.upstream_failures[0].reason
+        == "6_validation - ERROR - undeclared variable A_m0"
+    )
     # Step-specific upstream artifacts in the summary dir win over the generic error line.
     assert "missing modality metadata" in surface.upstream_failures[1].reason
     assert surface.single_file_validation_pass is True
@@ -244,8 +273,12 @@ def test_build_surface_separates_version_pass_from_upstream_failures(
     assert surface.supply_chain_pass is False
 
 
-def test_installed_commit_off_the_pin_fails_the_version_claim(module, tmp_path: Path) -> None:
-    surface = module.build_surface(_write_fixture_audit_dir(tmp_path, installed_commit=OTHER))
+def test_installed_commit_off_the_pin_fails_the_version_claim(
+    module, tmp_path: Path
+) -> None:
+    surface = module.build_surface(
+        _write_fixture_audit_dir(tmp_path, installed_commit=OTHER)
+    )
 
     assert surface.upstream_commit_expected is False
     assert surface.version_claim_pass is False
@@ -271,7 +304,9 @@ def test_engine_or_negative_control_mismatch_fails_the_version_claim(
     assert surface.version_claim_pass is False
 
 
-def test_earlier_summary_dir_name_and_reason_files_still_resolve(module, tmp_path: Path) -> None:
+def test_earlier_summary_dir_name_and_reason_files_still_resolve(
+    module, tmp_path: Path
+) -> None:
     audit = _write_fixture_audit_dir(tmp_path)
     (audit / "upstream_full").rename(audit / "upstream_full_after_A_patch")
     tests_dir = audit / "upstream_full_after_A_patch" / "2_tests_output"
@@ -280,13 +315,20 @@ def test_earlier_summary_dir_name_and_reason_files_still_resolve(module, tmp_pat
         "ModuleNotFoundError: No module named 'scripts'",
         encoding="utf-8",
     )
-    summary_path = audit / "upstream_full_after_A_patch" / "upstream_pipeline_summary.json"
+    summary_path = (
+        audit / "upstream_full_after_A_patch" / "upstream_pipeline_summary.json"
+    )
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     summary["steps"].append(
         {"step_index": 2, "script": "2_tests.py", "status": "FAILED", "success": False}
     )
     summary["steps"].append(
-        {"step_index": 4, "script": "4_model_registry.py", "status": "NOT_RUN", "success": False}
+        {
+            "step_index": 4,
+            "script": "4_model_registry.py",
+            "status": "NOT_RUN",
+            "success": False,
+        }
     )
     summary_path.write_text(json.dumps(summary), encoding="utf-8")
 
@@ -296,10 +338,15 @@ def test_earlier_summary_dir_name_and_reason_files_still_resolve(module, tmp_pat
     reasons = {failure.script: failure.reason for failure in surface.upstream_failures}
     assert "missing modality metadata" in reasons["11_render.py"]
     assert "scripts.check_capability_contracts" in reasons["2_tests.py"]
-    assert reasons["4_model_registry.py"] == "step absent from the upstream pipeline summary"
+    assert (
+        reasons["4_model_registry.py"]
+        == "step absent from the upstream pipeline summary"
+    )
 
 
-def test_upstream_plan_reconciles_auto_included_and_unplanned_steps(module, tmp_path: Path) -> None:
+def test_upstream_plan_reconciles_auto_included_and_unplanned_steps(
+    module, tmp_path: Path
+) -> None:
     audit = _write_fixture_audit_dir(tmp_path)
     upstream = audit / "upstream_full"
     summary_path = upstream / "upstream_pipeline_summary.json"
@@ -307,7 +354,12 @@ def test_upstream_plan_reconciles_auto_included_and_unplanned_steps(module, tmp_
     summary["executed"] = [0, 3, 13, 16]
     summary["skipped"] = [11, 12]
     summary["steps"] = [
-        {"step_index": 0, "script": "0_template.py", "status": "SUCCESS", "success": True},
+        {
+            "step_index": 0,
+            "script": "0_template.py",
+            "status": "SUCCESS",
+            "success": True,
+        },
         {"step_index": 3, "script": "3_gnn.py", "status": "SUCCESS", "success": True},
         {
             "step_index": 13,
@@ -316,7 +368,12 @@ def test_upstream_plan_reconciles_auto_included_and_unplanned_steps(module, tmp_
             "success": False,
             "error": "step absent from the upstream pipeline summary",
         },
-        {"step_index": 16, "script": "16_analysis.py", "status": "SUCCESS", "success": True},
+        {
+            "step_index": 16,
+            "script": "16_analysis.py",
+            "status": "SUCCESS",
+            "success": True,
+        },
     ]
     summary_path.write_text(json.dumps(summary), encoding="utf-8")
     (upstream / "00_pipeline_summary").mkdir()
@@ -335,7 +392,11 @@ def test_upstream_plan_reconciles_auto_included_and_unplanned_steps(module, tmp_
                 "steps": [
                     {"script_name": "0_template.py", "status": "SUCCESS"},
                     {"script_name": "3_gnn.py", "status": "SUCCESS"},
-                    {"script_name": "11_render.py", "status": "SUCCESS", "duration_seconds": 0.9},
+                    {
+                        "script_name": "11_render.py",
+                        "status": "SUCCESS",
+                        "duration_seconds": 0.9,
+                    },
                     {
                         "script_name": "12_execute.py",
                         "status": "FAILED",
@@ -352,11 +413,15 @@ def test_upstream_plan_reconciles_auto_included_and_unplanned_steps(module, tmp_
     surface = module.build_surface(audit)
 
     assert surface.upstream_planned_steps == (0, 3, 11, 12, 16)
-    assert [(s.step_index, s.status, s.success) for s in surface.upstream_auto_included] == [
+    assert [
+        (s.step_index, s.status, s.success) for s in surface.upstream_auto_included
+    ] == [
         (11, "SUCCESS", True),
         (12, "FAILED", False),
     ]
-    assert surface.upstream_auto_included[1].reason == "RuntimeError: pymdp runner crashed"
+    assert (
+        surface.upstream_auto_included[1].reason == "RuntimeError: pymdp runner crashed"
+    )
     assert surface.upstream_unplanned_steps == (13,)
     # The all-step gate covers the bridge selection only.
     assert surface.upstream_steps_total == 4
@@ -371,7 +436,9 @@ def test_upstream_plan_reconciles_auto_included_and_unplanned_steps(module, tmp_
     assert "#9fd3b8" in svg and "#f0a8a8" in svg
 
 
-def test_version_probe_records_pin_and_negative_control_round_trip(module, tmp_path: Path) -> None:
+def test_version_probe_records_pin_and_negative_control_round_trip(
+    module, tmp_path: Path
+) -> None:
     """The probe runs the clean-interpreter negative control and round-trips."""
     expectation = module.load_upstream_expectation()
     values = module.probe_versions(expectation, ls_remote=False)
@@ -407,7 +474,9 @@ def test_historical_probe_cannot_override_current_probe(module, tmp_path: Path) 
 
 
 @pytest.mark.parametrize("phase", [{"ran": False}, {"ran": True, "returncode": 2}, {}])
-def test_failed_collection_does_not_admit_old_scan(module, tmp_path: Path, phase) -> None:
+def test_failed_collection_does_not_admit_old_scan(
+    module, tmp_path: Path, phase
+) -> None:
     audit = _write_fixture_audit_dir(tmp_path)
     (audit / "pip_audit_path.json").write_text('{"dependencies": []}')
     (audit / "collect_manifest.json").write_text(
@@ -432,27 +501,47 @@ def test_main_writes_json_markdown_svg_and_strict_exit(module, tmp_path: Path) -
 
     assert module.main(["--audit-dir", str(audit), "--output-dir", str(output)]) == 0
     assert (
-        module.main(["--audit-dir", str(audit), "--output-dir", str(output), "--strict-upstream"])
-        == 1
-    )
-    assert (
         module.main(
-            ["--audit-dir", str(audit), "--output-dir", str(output), "--strict-supply-chain"]
+            [
+                "--audit-dir",
+                str(audit),
+                "--output-dir",
+                str(output),
+                "--strict-upstream",
+            ]
         )
         == 1
     )
     assert (
-        module.main(["--audit-dir", str(audit), "--output-dir", str(output), "--strict-version"])
+        module.main(
+            [
+                "--audit-dir",
+                str(audit),
+                "--output-dir",
+                str(output),
+                "--strict-supply-chain",
+            ]
+        )
+        == 1
+    )
+    assert (
+        module.main(
+            ["--audit-dir", str(audit), "--output-dir", str(output), "--strict-version"]
+        )
         == 0
     )
-    payload = json.loads((output / "gnn_upstream_audit_surface.json").read_text(encoding="utf-8"))
+    payload = json.loads(
+        (output / "gnn_upstream_audit_surface.json").read_text(encoding="utf-8")
+    )
     assert payload["version_claim_pass"] is True
     assert payload["upstream_all_steps_pass"] is False
     assert payload["supply_chain_pass"] is False
     assert payload["release_tag"] == "v4.1.0"
     assert payload["expected_commit"] == PIN
     markdown = (output / "gnn_upstream_audit_surface.md").read_text(encoding="utf-8")
-    assert markdown.startswith("# GNN Upstream Audit Surface (generalized-notation-notation 4.1.0)")
+    assert markdown.startswith(
+        "# GNN Upstream Audit Surface (generalized-notation-notation 4.1.0)"
+    )
     assert "A high COGANT validator score is not an all-25" in markdown
     assert "| 6 | `6_validation.py` | FAILED |" in markdown
     svg = (output / "gnn_upstream_audit_surface.svg").read_text(encoding="utf-8")
@@ -464,11 +553,15 @@ def test_main_writes_json_markdown_svg_and_strict_exit(module, tmp_path: Path) -
     assert ">12</text>" in svg
 
 
-def test_strict_version_fails_when_pin_moves_without_reinstall(module, tmp_path: Path) -> None:
+def test_strict_version_fails_when_pin_moves_without_reinstall(
+    module, tmp_path: Path
+) -> None:
     audit = _write_fixture_audit_dir(tmp_path)
     moved = tmp_path / "moved"
     moved.mkdir()
-    pin_path, lock = _write_pin_sources(moved, pin=OTHER, lock_commit=OTHER, version="4.2.0")
+    pin_path, lock = _write_pin_sources(
+        moved, pin=OTHER, lock_commit=OTHER, version="4.2.0"
+    )
 
     exit_code = module.main(
         [
@@ -485,3 +578,17 @@ def test_strict_version_fails_when_pin_moves_without_reinstall(module, tmp_path:
     )
 
     assert exit_code == 1
+
+
+def test_upstream_bridge_error_cannot_pass_all_step_gate(module, tmp_path):
+    from dataclasses import replace
+
+    surface = module.build_surface(_write_fixture_audit_dir(tmp_path))
+    succeeded_steps = replace(
+        surface, upstream_steps_failed=0, upstream_bridge_error=None
+    )
+    assert succeeded_steps.upstream_all_steps_pass is True
+    refused = replace(
+        succeeded_steps, upstream_bridge_error="worker postflight refused"
+    )
+    assert refused.upstream_all_steps_pass is False

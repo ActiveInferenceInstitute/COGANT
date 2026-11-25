@@ -24,6 +24,13 @@ orchestration.py: Low-level pipeline functions (run_ingest through run_validate)
 
 pipeline.py: PipelineConfig dataclass and PipelineRunner class. Runner has stage handlers mapping stage names to orchestration calls. Run method iterates stages, catches errors per stage, and supports layout_output post-processing.
 
+Incremental full-hit reuse checks the exported bytes, not merely artifact
+existence. With `layout_output`, moved root files follow the organizer's canonical
+destination map, never a basename search through unrelated bundles. Directory
+contents remain recursively bound; missing or changed artifacts require recomputation.
+Dynamic-evidence identity follows
+the effective inputs actually consumed by the requested dynamic stage.
+
 bundle.py: Bundle dataclass wraps artifacts, stage_results, errors, metadata. Provides accessors (repo_summary, program_graph, state_space_model, process_model, gnn_markdown, validation_report). Implements render_site, to_json, save_json for export.
 
 review.py: ReviewAPI class loads bundles, extracts ReviewableMapping objects, and tracks accept/reject/edit decisions. Methods include load_bundle, present_mapping, accept_mapping, reject_mapping, edit_mapping, get_review_summary, save_curated_bundle, and status queries.

@@ -210,7 +210,8 @@ def test_build_main_command_is_one_invocation_with_active_python(tmp_path: Path)
         skip_llm=True,
     )
     cmd = pipeline_mod._build_main_command(cfg, tmp_path / "staged", [3, 5, 7])
-    assert cmd[:3] == [sys.executable, "-m", "gnn.main"]
+    assert cmd[:3] == [sys.executable, "-I", "-B"]
+    assert Path(cmd[3]).name == "qualification.py" and cmd[4] == "--pipeline"
     flags = _flag_values(cmd)
     assert flags["--target-dir"] == str(tmp_path / "staged")
     assert flags["--output-dir"] == str(cfg.output_dir)
@@ -385,11 +386,9 @@ def _driver_package(
     old_mtime: bool = False,
 ) -> Path:
     import json
-    import textwrap
 
-    package = root / "driver" / "gnn"
+    package = root / "driver"
     package.mkdir(parents=True)
-    (package / "__init__.py").write_text("")
     body = (
         "import json, os, pathlib, sys, time\n"
         f"time.sleep({delay!r})\n"
@@ -407,8 +406,9 @@ def _driver_package(
         "        os.utime(target, (1_000_000, 1_000_000))\n"
         f"sys.exit({returncode})\n"
     )
-    (package / "main.py").write_text("if __name__ == '__main__':\n" + textwrap.indent(body, "    "))
-    return package.parent
+    script = package / "driver_main.py"
+    script.write_text(body)
+    return script
 
 
 def _run_driver(cfg: UpstreamPipelineConfig, driver: Path) -> dict:
@@ -416,9 +416,7 @@ def _run_driver(cfg: UpstreamPipelineConfig, driver: Path) -> dict:
     import subprocess
 
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join(
-        (str(driver), str(Path(__file__).resolve().parents[2] / "py"))
-    )
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[2] / "py")
     config = {
         "target_dir": str(cfg.target_dir),
         "output_dir": str(cfg.output_dir),
@@ -430,11 +428,19 @@ def _run_driver(cfg: UpstreamPipelineConfig, driver: Path) -> dict:
         [
             sys.executable,
             "-c",
-            "import json, sys; from cogant.gnn.upstream_bridge.pipeline import "
-            "UpstreamPipelineConfig, run_upstream_pipeline; "
-            "print(json.dumps(run_upstream_pipeline(UpstreamPipelineConfig("
+            "import json, sys\n"
+            "from cogant.gnn.upstream_bridge import pipeline as p\n"
+            "# Controlled transport only: this driver never poses as a GNN provider.\n"
+            "p._import_gnn_main = lambda: True\n"
+            "original = p._build_main_command\n"
+            "def driver_command(cfg, target, chosen):\n"
+            "    command = original(cfg, target, chosen)\n"
+            "    return [sys.executable, sys.argv[2], *command[5:]]\n"
+            "p._build_main_command = driver_command\n"
+            "print(json.dumps(p.run_upstream_pipeline(p.UpstreamPipelineConfig("
             "**json.loads(sys.argv[1]))).to_dict()))",
             json.dumps(config),
+            str(driver),
         ],
         env=env,
         capture_output=True,
@@ -623,3 +629,70 @@ def test_pipeline_config_default_skip_matches_bridge_default() -> None:
     from cogant.config.pipeline import PipelineConfig
 
     assert PipelineConfig().upstream_gnn_skip_steps == sorted(DEFAULT_SKIP_STEPS)
+
+
+def test_run_upstream_pipeline_retains_nonzero_exit_with_current_summary(tmp_path: Path) -> None:
+    driver = _driver_package(
+        tmp_path,
+        _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "exit_code": 0}),
+        returncode=1,
+    )
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3]
+    )
+
+    result = _run_driver(cfg, driver)
+
+    assert "exited 1 despite writing a summary" in result["error"]
+
+
+def test_source_receipt_requires_current_invocation(tmp_path: Path) -> None:
+    import json
+
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    path = tmp_path / "upstream_source_qualification.json"
+    receipt = {"ok": True, "run_id": "current-run", "main": {"imports_verified": True}}
+    path.write_text(json.dumps(receipt), encoding="utf-8")
+    assert pipeline_mod._read_source_qualification(tmp_path, "current-run", 0) == receipt
+    assert pipeline_mod._read_source_qualification(tmp_path, "other-run", 0) == {}
+    assert (
+        pipeline_mod._read_source_qualification(tmp_path, "current-run", path.stat().st_mtime + 1)
+        == {}
+    )
+
+
+def test_cli_does_not_discard_bridge_error(tmp_path, monkeypatch):
+    from typer.testing import CliRunner
+
+    from cogant.cli.main import app
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    # Controlled consumer outcome only, not installed-source qualification evidence.
+    result = UpstreamPipelineResult(
+        available=True,
+        steps=[
+            UpstreamStepResult(
+                step_index=3, script="3_gnn.py", status="SUCCESS", success=True, duration_s=0.0
+            )
+        ],
+        error="worker postflight refused",
+    )
+    monkeypatch.setattr(pipeline_mod, "run_upstream_pipeline", lambda cfg: result)
+    response = CliRunner().invoke(app, ["upstream-gnn", str(_package(tmp_path))])
+    assert response.exit_code == 1
+
+
+def test_warning_exit_requires_finalized_source_receipt(tmp_path: Path) -> None:
+    # A current all-success transport summary alone cannot authorize warning exit 2.
+    driver = _driver_package(
+        tmp_path,
+        _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "exit_code": 0}),
+        returncode=2,
+    )
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3]
+    )
+    result = _run_driver(cfg, driver)
+    assert result["source_qualification"] == {}
+    assert "exited 2 despite writing a summary" in result["error"]

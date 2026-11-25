@@ -21,10 +21,11 @@ from __future__ import annotations
 
 import argparse
 import os
+import shlex
 import subprocess
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -58,12 +59,29 @@ def _ruff_check() -> Step:
 
 
 def _audit(script: str, *args: str, timeout: int = 300) -> Step:
-    return Step(script, ("uv", "run", "python", f"../tools/{script}", *args), timeout=timeout)
+    return Step(
+        script, ("uv", "run", "python", f"../tools/{script}", *args), timeout=timeout
+    )
+
+
+def make_step(
+    label: str,
+    argv: tuple[str, ...],
+    *,
+    cwd: Path = INNER,
+    env: dict[str, str] | None = None,
+    timeout: int = 900,
+) -> Step:
+    """Select the installable package even for root-working-directory checks."""
+    if cwd == ROOT and argv[:2] == ("uv", "run"):
+        argv = ("uv", "run", "--project", str(INNER), *argv[2:])
+    return Step(label, argv, cwd=cwd, env=env or {}, timeout=timeout)
 
 
 GNN_TEST_FILES = (
     "tests/unit/test_gnn_upstream_bridge.py",
     "tests/unit/test_gnn_upstream_bridge_contract.py",
+    "tests/unit/test_gnn_upstream_installed_release.py",
     "tests/unit/test_upstream_pipeline_resolution.py",
     "tests/integration/test_upstream_gnn_pipeline.py",
 )
@@ -75,7 +93,11 @@ ARMS: dict[str, Arm] = {
         ("dev",),
         (
             _ruff_check(),
-            Step("ruff format --check", ("uv", "run", "ruff", "format", "--check", "py/cogant/", "tests/"), timeout=300),
+            Step(
+                "ruff format --check",
+                ("uv", "run", "ruff", "format", "--check", "py/cogant/", "tests/"),
+                timeout=300,
+            ),
         ),
     ),
     "types": Arm(
@@ -85,7 +107,15 @@ ARMS: dict[str, Arm] = {
         (
             Step(
                 "mypy --strict",
-                ("uv", "run", "mypy", "--package", "cogant", "--strict", "--no-warn-unused-configs"),
+                (
+                    "uv",
+                    "run",
+                    "mypy",
+                    "--package",
+                    "cogant",
+                    "--strict",
+                    "--no-warn-unused-configs",
+                ),
                 env={"MYPYPATH": "py"},
                 timeout=900,
             ),
@@ -117,8 +147,16 @@ ARMS: dict[str, Arm] = {
         "MkDocs strict build and relative-link verification",
         ("dev",),
         (
-            Step("mkdocs build --strict", ("uv", "run", "mkdocs", "build", "--strict"), timeout=900),
-            Step("verify_doc_links", ("uv", "run", "python", "docs/verify_doc_links.py"), timeout=300),
+            Step(
+                "mkdocs build --strict",
+                ("uv", "run", "mkdocs", "build", "--strict"),
+                timeout=900,
+            ),
+            Step(
+                "verify_doc_links",
+                ("uv", "run", "python", "docs/verify_doc_links.py"),
+                timeout=300,
+            ),
         ),
     ),
     "test-fast": Arm(
@@ -178,9 +216,10 @@ ARMS: dict[str, Arm] = {
                     "tests/",
                     "-q",
                     "-m",
-                    "not slow",
+                    "",
                     "--cov=cogant",
                     "--cov-fail-under=89",
+                    f"--cov-report=json:{ROOT / 'output' / 'reports' / 'package_coverage.json'}",
                 ),
                 timeout=5400,
             ),
@@ -194,16 +233,38 @@ ARMS: dict[str, Arm] = {
             Step(
                 "GNN-FEP importer contract",
                 (
-                    "uv", "run", "python", "-m", "gnn.importers", "check",
-                    "--repo", str(ROOT), "--require-pointer",
-                    "--workflow", ".github/workflows/ci.yml", "--job", "gnn-conformance",
+                    "uv",
+                    "run",
+                    "python",
+                    "scripts/check_gnn_importer.py",
+                    "--repo",
+                    str(ROOT),
+                    "--require-pointer",
+                    "--workflow",
+                    ".github/workflows/ci.yml",
+                    "--job",
+                    "gnn-conformance",
                 ),
                 timeout=300,
             ),
-            Step("conformance probe", ("uv", "run", "python", "scripts/gnn_conformance_probe.py"), timeout=900),
+            Step(
+                "conformance probe",
+                ("uv", "run", "python", "scripts/gnn_conformance_probe.py"),
+                timeout=900,
+            ),
             Step(
                 "bridge tests",
-                ("uv", "run", "pytest", "-q", "--no-cov", "-o", "addopts=", "-rs", *GNN_TEST_FILES),
+                (
+                    "uv",
+                    "run",
+                    "pytest",
+                    "-q",
+                    "--no-cov",
+                    "-o",
+                    "addopts=",
+                    "-rs",
+                    *GNN_TEST_FILES,
+                ),
                 timeout=1800,
             ),
             Step(
@@ -230,7 +291,11 @@ ARMS: dict[str, Arm] = {
         "clean wheel build, isolated install smoke, and release integrity",
         ("dev",),
         (
-            Step("wheel smoke", ("uv", "run", "python", "../tools/wheel_smoke.py"), timeout=1800),
+            Step(
+                "wheel smoke",
+                ("uv", "run", "python", "../tools/wheel_smoke.py"),
+                timeout=1800,
+            ),
             _audit(
                 "audit_release_integrity.py",
                 "--require-wheel",
@@ -244,12 +309,37 @@ ARMS: dict[str, Arm] = {
         "Rust backend fmt/check/test/clippy",
         (),
         (
-            Step("cargo fmt", ("cargo", "fmt", "--manifest-path", "rust/Cargo.toml", "--all", "--check")),
-            Step("cargo check", ("cargo", "check", "--manifest-path", "rust/Cargo.toml", "--workspace")),
-            Step("cargo test", ("cargo", "test", "--manifest-path", "rust/Cargo.toml", "--workspace")),
+            Step(
+                "cargo fmt",
+                (
+                    "cargo",
+                    "fmt",
+                    "--manifest-path",
+                    "rust/Cargo.toml",
+                    "--all",
+                    "--check",
+                ),
+            ),
+            Step(
+                "cargo check",
+                ("cargo", "check", "--manifest-path", "rust/Cargo.toml", "--workspace"),
+            ),
+            Step(
+                "cargo test",
+                ("cargo", "test", "--manifest-path", "rust/Cargo.toml", "--workspace"),
+            ),
             Step(
                 "cargo clippy",
-                ("cargo", "clippy", "--manifest-path", "rust/Cargo.toml", "--workspace", "--", "-D", "warnings"),
+                (
+                    "cargo",
+                    "clippy",
+                    "--manifest-path",
+                    "rust/Cargo.toml",
+                    "--workspace",
+                    "--",
+                    "-D",
+                    "warnings",
+                ),
             ),
         ),
     ),
@@ -258,7 +348,11 @@ ARMS: dict[str, Arm] = {
         "inject manuscript variables, validate figures, render the PDF",
         ("dev",),
         (
-            Step("render manuscript", ("uv", "run", "python", "../scripts/render_manuscript.py"), timeout=3600),
+            Step(
+                "render manuscript",
+                ("uv", "run", "python", "../scripts/render_manuscript.py"),
+                timeout=3600,
+            ),
             Step(
                 "verify manuscript links",
                 ("uv", "run", "python", "docs/verify_manuscript_links.py"),
@@ -267,6 +361,129 @@ ARMS: dict[str, Arm] = {
         ),
     ),
 }
+
+# This is the sole command registry. Arms and the report-producing release
+# composer share these Step objects; release-only checks are registered here.
+STEPS = {
+    f"{arm.name}/{step.label}": step for arm in ARMS.values() for step in arm.steps
+}
+STEPS.update(
+    {
+        "rust-clippy-all-targets": replace(
+            STEPS["rust/cargo clippy"],
+            argv=(
+                *STEPS["rust/cargo clippy"].argv[:-3],
+                "--all-targets",
+                *STEPS["rust/cargo clippy"].argv[-3:],
+            ),
+        ),
+        "module-refs-strict": _audit("audit_manuscript_module_refs.py", "--strict"),
+        "synthetic-surfaces-strict": _audit("audit_synthetic_surfaces.py", "--strict"),
+        "server-security": make_step(
+            "server-security",
+            (
+                "uv",
+                "run",
+                "pytest",
+                "tests/integration/test_server.py",
+                "tests/unit/test_server_app_routes_and_metrics.py",
+                "-q",
+                "--no-cov",
+            ),
+            timeout=300,
+        ),
+        "provenance-contract": make_step(
+            "provenance-contract",
+            (
+                "uv",
+                "run",
+                "pytest",
+                "tests/unit/test_cli_stage_outcome_exit_status.py",
+                "tests/unit/test_cache_hasher_store_hash_file_repo_get_targeted.py",
+                "-q",
+                "--no-cov",
+            ),
+            timeout=300,
+        ),
+        "parser-graph-contract": make_step(
+            "parser-graph-contract",
+            (
+                "uv",
+                "run",
+                "pytest",
+                "tests/unit/test_parser.py",
+                "tests/unit/test_api_orchestration_stage_functions.py",
+                "-q",
+                "--no-cov",
+            ),
+            timeout=300,
+        ),
+        **{
+            name: _audit(script, *args)
+            for name, script, args in (
+                ("roadmap-truth", "audit_roadmap_truth.py", ()),
+                ("manuscript-crossrefs", "audit_manuscript_crossrefs.py", ()),
+                ("manuscript-citations", "audit_manuscript_citations.py", ()),
+                (
+                    "manuscript-formalisms",
+                    "audit_manuscript_formalisms.py",
+                    ("--strict",),
+                ),
+                ("manuscript-numbers", "audit_manuscript_numbers.py", ()),
+                ("manuscript-claim-scope", "audit_manuscript_claim_scope.py", ()),
+                (
+                    "publication-readiness",
+                    "audit_publication_readiness.py",
+                    ("--strict",),
+                ),
+                ("metrics-freshness", "check_metrics_fresh.py", ("--fail-on-dirty",)),
+            )
+        },
+    }
+)
+
+RELEASE_PLAN = (
+    ("package-tests", "test-full/pytest full"),
+    ("ruff", "lint/ruff check"),
+    ("mypy", "types/mypy --strict"),
+    ("rust-format", "rust/cargo fmt"),
+    ("rust-check", "rust/cargo check"),
+    ("rust-test", "rust/cargo test"),
+    ("rust-clippy", "rust-clippy-all-targets"),
+    ("wheel-smoke", "wheel/wheel smoke"),
+    ("release-integrity", "wheel/audit_release_integrity.py"),
+    ("server-security", "server-security"),
+    ("provenance-contract", "provenance-contract"),
+    ("parser-graph-contract", "parser-graph-contract"),
+    ("folder-docs", "content/audit_folder_docs.py"),
+    ("stage-list", "content/audit_stage_list.py"),
+    ("roadmap-truth", "roadmap-truth"),
+    ("test-names", "content/audit_test_names.py"),
+    ("manuscript-crossrefs", "manuscript-crossrefs"),
+    ("manuscript-citations", "manuscript-citations"),
+    ("manuscript-module-refs", "module-refs-strict"),
+    ("manuscript-formalisms", "manuscript-formalisms"),
+    ("manuscript-numbers", "manuscript-numbers"),
+    ("coverage-table", "content/check_coverage_table.py"),
+    ("manuscript-links", "content/audit_manuscript_markdown_links.py"),
+    ("manuscript-math", "content/audit_manuscript_math_adjacency.py"),
+    ("manuscript-claim-scope", "manuscript-claim-scope"),
+    ("robustness-table", "content/audit_robustness_table.py"),
+    ("synthetic-surfaces", "synthetic-surfaces-strict"),
+    ("figure-renderers", "content/audit_figure_renderers.py"),
+    ("publication-readiness", "publication-readiness"),
+    ("metrics-freshness", "metrics-freshness"),
+)
+
+
+def build_release_steps(*, include_tests: bool = True) -> list[tuple[str, Step]]:
+    """Compose release admission without regenerating scientific artifacts."""
+    return [
+        (name, STEPS[key])
+        for name, key in RELEASE_PLAN
+        if include_tests or name != "package-tests"
+    ]
+
 
 ARM_ORDER = tuple(ARMS)
 
@@ -279,7 +496,9 @@ def _selected(names: list[str]) -> list[Arm]:
         return [ARMS[name] for name in ARM_ORDER]
     unknown = [name for name in names if name not in ARMS]
     if unknown:
-        raise SystemExit(f"unknown arm(s): {', '.join(unknown)}\nknown: {', '.join(ARM_ORDER)}")
+        raise SystemExit(
+            f"unknown arm(s): {', '.join(unknown)}\nknown: {', '.join(ARM_ORDER)}"
+        )
     seen: list[str] = []
     for name in names:
         if name not in seen:
@@ -312,10 +531,12 @@ def _prepare(arms: list[Arm], dry_run: bool) -> int:
 def _run_step(step: Step) -> tuple[bool, float]:
     env = os.environ.copy()
     env.update(step.env)
-    print(f"  - {step.label}: {' '.join(step.argv)}")
+    print(f"  - {step.label}: {shlex.join(step.argv)}")
     started = time.perf_counter()
     try:
-        completed = subprocess.run(step.argv, cwd=step.cwd, env=env, timeout=step.timeout, check=False)
+        completed = subprocess.run(
+            step.argv, cwd=step.cwd, env=env, timeout=step.timeout, check=False
+        )
     except subprocess.TimeoutExpired:
         print(f"    {step.label}: TIMEOUT after {step.timeout}s", file=sys.stderr)
         return False, time.perf_counter() - started
@@ -323,7 +544,9 @@ def _run_step(step: Step) -> tuple[bool, float]:
         print(f"    {step.label}: unavailable: {exc}", file=sys.stderr)
         return False, time.perf_counter() - started
     elapsed = time.perf_counter() - started
-    status = "pass" if completed.returncode == 0 else f"FAIL (exit {completed.returncode})"
+    status = (
+        "pass" if completed.returncode == 0 else f"FAIL (exit {completed.returncode})"
+    )
     print(f"    {step.label}: {status} ({elapsed:.1f}s)")
     return completed.returncode == 0, elapsed
 
@@ -333,9 +556,13 @@ def main(argv: list[str] | None = None) -> int:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("arms", nargs="*", metavar="ARM", help="arm name(s); default: test-fast")
+    parser.add_argument(
+        "arms", nargs="*", metavar="ARM", help="arm name(s); default: test-fast"
+    )
     parser.add_argument("--list", action="store_true", help="list arms and exit")
-    parser.add_argument("--dry-run", action="store_true", help="print commands without running them")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="print commands without running them"
+    )
     parser.add_argument(
         "--prepare",
         action="store_true",
@@ -368,7 +595,7 @@ def main(argv: list[str] | None = None) -> int:
         status = "dry" if args.dry_run else "pass"
         for step in arm.steps:
             if args.dry_run:
-                print(f"  - {step.label}: {' '.join(step.argv)}")
+                print(f"  - {step.label}: {shlex.join(step.argv)}")
                 continue
             ok, _ = _run_step(step)
             if not ok:

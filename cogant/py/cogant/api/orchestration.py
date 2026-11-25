@@ -275,6 +275,11 @@ def run_static(bundle: Any) -> dict[str, Any]:
         "edges": [],
         "symbols": {"python_modules_parsed": len(modules)},
         "modules": modules,
+        "errors": [
+            f"{module['relative_path']}: {error}"
+            for module in modules
+            for error in module["errors"]
+        ],
     }
 
 
@@ -413,6 +418,8 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
       the caller's module and class, locals of an evident in-repo class, and
       in-repo imports (see ``_SymbolResolver``); other dynamic dispatch is
       left unresolved
+    * ``DEPENDS_ON`` edges - annotated owner → explicitly referenced in-repo
+      class, with type-annotation provenance (not an inferred runtime call)
 
     The finalized graph is stored under
     ``bundle.artifacts['_program_graph']``. Without edges the translate
@@ -496,6 +503,36 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     parsed_module_meta: dict[Path, tuple[str, str]] = {}
     # (file, dotted module key, owning class, graph node, FunctionDef AST node)
     callable_context: list[tuple[Path, str, str | None, Any, Any]] = []
+    annotation_context: list[tuple[str, Any, Any, str]] = []
+
+    def _collect_annotations(module_key: str, owner: Any, definition: Any) -> None:
+        """Keep lexical owners separate; nested callable bodies are not theirs."""
+        if isinstance(definition, (_ast.FunctionDef, _ast.AsyncFunctionDef)):
+            args = definition.args
+            for arg in [*args.posonlyargs, *args.args, *args.kwonlyargs, args.vararg, args.kwarg]:
+                if arg is not None and arg.annotation is not None:
+                    annotation_context.append(
+                        (module_key, owner, arg.annotation, f"parameter:{arg.arg}")
+                    )
+            if definition.returns is not None:
+                annotation_context.append((module_key, owner, definition.returns, "return"))
+        pending = list(getattr(definition, "body", []))
+        while pending:
+            statement = pending.pop()
+            if isinstance(
+                statement, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef, _ast.Lambda)
+            ):
+                continue
+            if isinstance(statement, _ast.AnnAssign):
+                annotation_context.append(
+                    (
+                        module_key,
+                        owner,
+                        statement.annotation,
+                        f"variable:{_ast.unparse(statement.target)}",
+                    )
+                )
+            pending.extend(_ast.iter_child_nodes(statement))
 
     def _file_flags(path: Path, rel: str) -> tuple[bool, bool]:
         """Return explicit test/generated classifications for a source file."""
@@ -592,6 +629,8 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
             else {},
             is_stub=is_stub,
         )
+        if module_tree is not None:
+            _collect_annotations(dotted_name, module_node, module_tree)
 
         for cls in getattr(module, "classes", []) or []:
             class_qname = f"{module_name}.{cls.name}"
@@ -613,6 +652,17 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
             class_entries.append((dotted_name, class_node))
             builder.add_edge(module_node.id, class_node.id, EdgeKind.CONTAINS)
             _emit_decorator_edges(list(getattr(cls, "decorators", []) or []), class_node, rel)
+            if module_tree is not None:
+                class_def = next(
+                    (
+                        node
+                        for node in module_tree.body
+                        if isinstance(node, _ast.ClassDef) and node.name == cls.name
+                    ),
+                    None,
+                )
+                if class_def is not None:
+                    _collect_annotations(dotted_name, class_node, class_def)
 
             for method in getattr(cls, "methods", []) or []:
                 method_qname = f"{class_qname}.{method.name}"
@@ -648,6 +698,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                     callable_context.append(
                         (file_path, dotted_name, cls.name, method_node, method_def)
                     )
+                    _collect_annotations(dotted_name, method_node, method_def)
                 _emit_decorator_edges(
                     list(getattr(method, "decorators", []) or []), method_node, rel
                 )
@@ -686,6 +737,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
             )
             if func_def is not None:
                 callable_context.append((file_path, dotted_name, None, func_node, func_def))
+                _collect_annotations(dotted_name, func_node, func_def)
             _emit_decorator_edges(list(getattr(func, "decorators", []) or []), func_node, rel)
             builder.add_edge(module_node.id, func_node.id, EdgeKind.CONTAINS)
 
@@ -740,6 +792,61 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                         EdgeKind.IMPORTS,
                     )
                     break
+
+    def _annotation_classes(module_key: str, annotation: Any) -> list[Any]:
+        """Resolve references without executing annotations or guessing by basename."""
+        if isinstance(annotation, _ast.Constant) and isinstance(annotation.value, str):
+            try:
+                parsed_annotation = _ast.parse(annotation.value, mode="eval").body
+            except (SyntaxError, ValueError):
+                return []
+            return _annotation_classes(module_key, parsed_annotation)
+        if isinstance(annotation, (_ast.Name, _ast.Attribute)):
+            referenced = resolver.base_class(module_key, _ast.unparse(annotation))
+            return [referenced] if referenced is not None else []
+        if isinstance(annotation, _ast.Subscript):
+            name = _ast.unparse(annotation.value)
+            # Literal values and Annotated's metadata are not type references.
+            head, _, tail = name.partition(".")
+            binding = resolver.bindings.get(module_key, {}).get(head, head)
+            type_name = f"{binding}.{tail}" if tail else binding
+            if type_name in {"typing.Literal", "typing_extensions.Literal"}:
+                return []
+            args = (
+                list(annotation.slice.elts)
+                if isinstance(annotation.slice, _ast.Tuple)
+                else [annotation.slice]
+            )
+            if type_name in {"typing.Annotated", "typing_extensions.Annotated"}:
+                args = args[:1]
+            return [
+                *_annotation_classes(module_key, annotation.value),
+                *[node for arg in args for node in _annotation_classes(module_key, arg)],
+            ]
+        if isinstance(annotation, _ast.BinOp) and isinstance(annotation.op, _ast.BitOr):
+            return [
+                *_annotation_classes(module_key, annotation.left),
+                *_annotation_classes(module_key, annotation.right),
+            ]
+        if isinstance(annotation, (_ast.Tuple, _ast.List)):
+            return [
+                node for arg in annotation.elts for node in _annotation_classes(module_key, arg)
+            ]
+        return []
+
+    for module_key, owner, annotation, location in annotation_context:
+        for referenced in _annotation_classes(module_key, annotation):
+            edge = builder.add_edge(
+                owner.id,
+                referenced.id,
+                EdgeKind.DEPENDS_ON,
+                metadata={"type_annotation": True, "confidence": "explicit", "annotations": []},
+                evidence_sources=["static_annotation"],
+            )
+            if edge is not None:
+                evidence = {"location": location, "expression": _ast.unparse(annotation)}
+                if evidence not in edge.metadata["annotations"]:
+                    edge.metadata["annotations"].append(evidence)
 
     # Resolve local function/method calls after all callable nodes exist. The
     # resolver is intentionally conservative: only the caller's own module and
@@ -1620,8 +1727,23 @@ def run_validate(
     }
     if gnn_result is not None:
         payload["gnn_validation"] = gnn_result
+        if not gnn_result.get("valid"):
+            payload["passed"] = False
+            payload["errors"] = ["GNN package validation failed or was unavailable"]
     if upstream_pipeline_summary is not None:
         payload["upstream_pipeline"] = upstream_pipeline_summary
+        if (
+            upstream_pipeline_summary.get("error")
+            or not upstream_pipeline_summary.get("available")
+            or upstream_pipeline_summary.get("failure_count")
+        ):
+            payload["passed"] = False
+            payload.setdefault("errors", []).append("requested upstream pipeline did not complete")
+    elif upstream_pipeline:
+        payload["passed"] = False
+        payload.setdefault("errors", []).append(
+            "requested upstream pipeline is unavailable or has no package"
+        )
     return payload
 
 
@@ -1705,9 +1827,40 @@ def _summarize_bundle(bundle: Any, language: str) -> dict[str, Any]:
         "semantic_mappings_count": len(semantic_mappings),
         "roles": role_counts,
         "validator_score": score,
-        "stages_completed": sorted(bundle.stage_results.keys()),
-        "errors": list(bundle.errors),
+        "stages_completed": sorted(
+            name for name in bundle.stage_results if bundle.stage_outcomes.get(name) == "success"
+        ),
+        "errors": [
+            *bundle.errors,
+            *[
+                str(error)
+                for result in bundle.stage_results.values()
+                for error in result.get("errors", [])
+            ],
+        ],
+        "pipeline_status": bundle.pipeline_status.value,
+        "stage_outcomes": {
+            name: outcome.value for name, outcome in sorted(bundle.stage_outcomes.items())
+        },
     }
+
+
+def _translation_error(bundle: Bundle) -> str | None:
+    """Use the domain outcome, not the absence of a raised exception."""
+    from cogant.api.bundle import StageOutcome
+
+    if bundle.pipeline_status is StageOutcome.SUCCESS and not bundle.errors:
+        return None
+    diagnostics = list(bundle.errors)
+    diagnostics.extend(
+        str(error) for result in bundle.stage_results.values() for error in result.get("errors", [])
+    )
+    diagnostics.extend(
+        f"{name}: {outcome.value}"
+        for name, outcome in bundle.stage_outcomes.items()
+        if outcome not in {StageOutcome.SUCCESS, StageOutcome.SKIPPED}
+    )
+    return "; ".join(diagnostics) or f"pipeline status: {bundle.pipeline_status.value}"
 
 
 def translate_source(
@@ -1766,8 +1919,8 @@ async def translate_stream(
       and the new overall percent.
     * ``translation_complete`` — after a successful run, carrying the
       summary dict from :func:`_summarize_bundle`.
-    * ``translation_error`` — when a job raises; processing continues
-      with the next source.
+    * ``translation_error`` — when a job raises or returns an unsuccessful
+      bundle; processing continues with the next source.
     * ``progress`` — final overall percent after each job.
 
     Args:
@@ -1814,6 +1967,8 @@ async def translate_stream(
         else:
             for stage_idx, stage in enumerate(job_stages, start=1):
                 if stage in bundle.stage_results:
+                    if bundle.stage_outcomes.get(stage) != "success":
+                        continue
                     sub_pct = start_pct + int((100 / total_work) * (stage_idx / len(job_stages)))
                     yield {
                         "event": "stage_complete",
@@ -1821,13 +1976,23 @@ async def translate_stream(
                         "stage": stage,
                         "percent_complete": min(sub_pct, 100),
                     }
-            yield {
-                "event": "translation_complete",
-                "index": idx,
-                "percent_complete": int(100 * (idx + 1) / total_work),
-                "status": "success",
-                "result": _summarize_bundle(bundle, language),
-            }
+            error = _translation_error(bundle)
+            if error is not None:
+                yield {
+                    "event": "translation_error",
+                    "index": idx,
+                    "status": "failed",
+                    "error": error,
+                    "result": _summarize_bundle(bundle, language),
+                }
+            else:
+                yield {
+                    "event": "translation_complete",
+                    "index": idx,
+                    "percent_complete": int(100 * (idx + 1) / total_work),
+                    "status": "success",
+                    "result": _summarize_bundle(bundle, language),
+                }
 
         yield {
             "event": "progress",
@@ -1884,12 +2049,14 @@ def translate_batch(requests: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 }
             )
         else:
-            results.append(
-                {
-                    "index": idx,
-                    "status": "success",
-                    "result": _summarize_bundle(bundle, language),
-                }
-            )
+            error = _translation_error(bundle)
+            result = {
+                "index": idx,
+                "status": "error" if error is not None else "success",
+                "result": _summarize_bundle(bundle, language),
+            }
+            if error is not None:
+                result["error"] = error
+            results.append(result)
 
     return results

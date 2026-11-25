@@ -38,6 +38,7 @@ class UpstreamPipelineResult:
     upstream_status: str | None
     run_id: str | None
     auto_included: list[int]
+    source_qualification: dict[str, Any]
     @property
     def success_count(self) -> int: ...
     @property

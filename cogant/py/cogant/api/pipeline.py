@@ -102,6 +102,7 @@ class PipelineRunner:
         bundle.metadata["version"] = self._package_version()
         contract = self._contract_metadata()
         bundle.metadata.update(contract)
+        bundle.metadata["dynamic_evidence"] = self._dynamic_evidence(target, config)
         try:
             from cogant.cache.hasher import hash_repo
 
@@ -167,10 +168,14 @@ class PipelineRunner:
                 stage_start = time.perf_counter()
                 handler = self.stage_handlers[stage]
                 result = handler(bundle, config)
+                if not config.dry_run:
+                    self._require_stage_artifacts(stage, bundle, result)
                 stage_duration = time.perf_counter() - stage_start
                 timing[stage] = round(stage_duration * 1000, 3)
                 bundle.stage_results[stage] = result
                 bundle.stage_outcomes[stage] = self._classify_stage_result(result, config)
+                if bundle.stage_outcomes[stage] is StageOutcome.FAILED:
+                    bundle.errors.append(f"Stage {stage} reported failure: {result}")
                 logger.info(
                     "Stage %s completed in %.1fms",
                     stage,
@@ -252,11 +257,93 @@ class PipelineRunner:
                 return StageOutcome.FAILED
             if result.get("unavailable") or result.get("available") is False:
                 return StageOutcome.UNAVAILABLE
+            if result.get("skipped"):
+                return StageOutcome.SKIPPED
             if result.get("partial") or result.get("degraded"):
                 return StageOutcome.PARTIAL
             if result.get("errors"):
                 return StageOutcome.PARTIAL
         return StageOutcome.SUCCESS
+
+    @staticmethod
+    def _require_stage_artifacts(stage: str, bundle: Bundle, result: Any) -> None:
+        """Admit actual producer outputs, without requiring unrequested stages."""
+        produced = {
+            "ingest": ("repo_snapshot",),
+            "static": ("parsed_modules_detail",),
+            "normalize": ("normalized_facts",),
+            "graph": ("_program_graph",),
+            "translate": ("_semantic_mappings",),
+            "statespace": ("_state_space_model",),
+            "process": ("_process_model",),
+            "export": ("export_paths",),
+        }
+        for key in produced.get(stage, ()):
+            bundle.get_artifact(key, required=True)
+        if stage == "export":
+            paths = bundle.get_artifact("export_paths", required=True)
+            if not paths or any(not Path(path).exists() for path in paths):
+                raise RuntimeError("export did not produce every required artifact")
+            if all(
+                bundle.get_artifact(key) is not None
+                for key in ("_program_graph", "_state_space_model", "_process_model")
+            ):
+                package = bundle.get_artifact("_gnn_package_dir", required=True)
+                if not Path(package).is_dir():
+                    raise RuntimeError("export did not produce the required GNN package")
+
+    @classmethod
+    def _dynamic_evidence(cls, target: str, config: PipelineConfig) -> dict[str, Any]:
+        """Resolve only effective inputs and bind their presence and bytes."""
+        if (
+            config.dry_run
+            or "dynamic" not in config.stages
+            or "dynamic" in config.skip_stages
+            or config.skip_dynamic
+        ):
+            return {}
+        plugin = config.plugins.get("dynamic", {})
+        coverage = config.coverage_path or plugin.get("coverage_path")
+        trace = config.trace_path or plugin.get("trace_path")
+        if coverage is None:
+            candidate = Path(target).expanduser() / ".coverage"
+            if candidate.is_file():
+                coverage = str(candidate)
+        records: dict[str, Any] = {}
+        for name, raw_path in (("coverage", coverage), ("trace", trace)):
+            if raw_path is None:
+                records[name] = {"path": None, "state": "absent"}
+                continue
+            path = Path(raw_path).expanduser().absolute()
+            record = cls._file_observation(path)
+            record["resolved_path"] = str(path.resolve())
+            if (
+                name == "coverage"
+                and path.suffix.lower() != ".xml"
+                and record["state"] == "present"
+            ):
+                # SQLite readers consume an existing WAL as well as the main
+                # database. Its bytes/presence can change independently.
+                record["wal"] = cls._file_observation(Path(str(path.resolve()) + "-wal"))
+                if record["wal"]["state"] == "unavailable":
+                    record["state"] = "unavailable"
+            records[name] = record
+        return records
+
+    @staticmethod
+    def _file_observation(path: Path) -> dict[str, Any]:
+        record: dict[str, Any] = {"path": str(path)}
+        try:
+            digest = hashlib.sha256()
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(65_536), b""):
+                    digest.update(chunk)
+            record.update(state="present", sha256=digest.hexdigest())
+        except FileNotFoundError:
+            record["state"] = "absent"
+        except OSError as exc:
+            record.update(state="unavailable", error=type(exc).__name__)
+        return record
 
     @staticmethod
     def _digest_payload(payload: Any) -> str:
@@ -288,8 +375,10 @@ class PipelineRunner:
         }
 
     @classmethod
-    def _cache_key(cls, target: str, config: PipelineConfig) -> Any:
-        """Build a content/config/parser/rule-addressed cache key."""
+    def _cache_key(
+        cls, target: str, config: PipelineConfig, evidence: dict[str, Any] | None = None
+    ) -> Any:
+        """Build a source/effective-evidence/config/parser/rule-addressed key."""
         from cogant import __version__ as cogant_version
         from cogant.cache.hasher import hash_repo
         from cogant.cache.store import CacheKey
@@ -312,6 +401,20 @@ class PipelineRunner:
             "upstream_gnn_output_dir",
         ):
             config_payload.pop(ephemeral, None)
+        # Shadowed and disabled evidence is not consumed and cannot invalidate
+        # an otherwise identical analysis. Effective paths and presence live
+        # with the content digests, not in a second config-path convention.
+        config_payload.pop("coverage_path", None)
+        config_payload.pop("trace_path", None)
+        plugins = config_payload.get("plugins", {})
+        dynamic_plugin = plugins.get("dynamic", {})
+        dynamic_plugin.pop("coverage_path", None)
+        dynamic_plugin.pop("trace_path", None)
+        if not dynamic_plugin:
+            plugins.pop("dynamic", None)
+        config_payload["dynamic_evidence"] = (
+            evidence if evidence is not None else cls._dynamic_evidence(target, config)
+        )
         return CacheKey(
             repo_path=str(repo_path),
             content_hash=content_hash,
@@ -382,7 +485,12 @@ class PipelineRunner:
         ]
         stats["files_total"] = len(all_py)
 
-        key = self._cache_key(target, config)
+        evidence = bundle.metadata["dynamic_evidence"]
+        if any(record["state"] == "unavailable" for record in evidence.values()):
+            stats["reason"] = "dynamic evidence is unavailable"
+            stats["files_reparsed"] = stats["files_total"]
+            return "miss"
+        key = self._cache_key(target, config, evidence)
 
         cache_dir = Path(config.cache_dir) if config.cache_dir else None
         store = CacheStore(cache_dir=cache_dir)
@@ -470,6 +578,11 @@ class PipelineRunner:
         """
         if cached.get("errors"):
             return "cached bundle recorded stage errors; recomputing"
+        if any(
+            value not in {StageOutcome.SUCCESS.value, StageOutcome.SKIPPED.value}
+            for value in (cached.get("stage_outcomes") or {}).values()
+        ):
+            return "cached bundle recorded incomplete stages; recomputing"
         if config.dry_run:
             return None
         stage_results = cached.get("stage_results") or {}
@@ -485,9 +598,9 @@ class PipelineRunner:
                 )
             if not out.is_dir():
                 return f"cached export artifacts are missing from {out}; recomputing"
-            for artifact in export.get("artifacts") or []:
-                if not PipelineRunner._artifact_present(Path(str(artifact)), out, config):
-                    return f"cached export artifact {artifact} is missing; recomputing"
+            current = PipelineRunner._export_snapshot(stage_results, config)
+            if current is None or current != cached.get("export_snapshot"):
+                return "cached export artifacts changed or are missing; recomputing"
         if "validate" in runs and "export" in runs and config.upstream_gnn_pipeline:
             upstream_dir = (
                 Path(config.upstream_gnn_output_dir)
@@ -498,16 +611,37 @@ class PipelineRunner:
                 return f"upstream pipeline outputs are missing from {upstream_dir}; recomputing"
         return None
 
-    @staticmethod
-    def _artifact_present(artifact: Path, out: Path, config: PipelineConfig) -> bool:
-        """Whether an exported artifact still exists (possibly relocated by layout_output)."""
-        if artifact.exists():
-            return True
-        if not config.layout_output:
-            return False
-        # The layout post-pass moves each flat file one level down, into
-        # ``data/``, ``diagrams/``, ``figures/``, ... under ``out``.
-        return any(candidate.is_file() for candidate in out.glob(f"*/{artifact.name}"))
+    @classmethod
+    def _export_snapshot(
+        cls, stage_results: dict[str, Any], config: PipelineConfig
+    ) -> dict[str, Any] | None:
+        """Bind exported bytes, including outputs overwritten by another key."""
+        out = Path(config.output_dir).expanduser().resolve()
+        snapshot: dict[str, Any] = {}
+        for raw_path in (stage_results.get("export") or {}).get("artifacts", []):
+            artifact = Path(raw_path)
+            if not artifact.exists() and config.layout_output:
+                from cogant.tools.organize_example_outputs import _dest_for_file
+
+                destination = _dest_for_file(artifact.name)
+                if artifact.parent.resolve() != out or destination is None:
+                    return None
+                artifact = out / destination / artifact.name
+            if artifact.is_dir():
+                files = sorted(path for path in artifact.rglob("*") if path.is_file())
+                records = {
+                    path.relative_to(artifact).as_posix(): cls._file_observation(path)
+                    for path in files
+                }
+                if any(record["state"] != "present" for record in records.values()):
+                    return None
+                snapshot[str(raw_path)] = records
+            else:
+                record = cls._file_observation(artifact)
+                if record["state"] != "present":
+                    return None
+                snapshot[str(raw_path)] = record
+        return snapshot
 
     def _incremental_cache_save(self, target: str, bundle: Bundle, config: PipelineConfig) -> None:
         """Persist the bundle's stage_results into the incremental cache.
@@ -537,8 +671,19 @@ class PipelineRunner:
                 "Incremental cache: not saving a bundle with %d stage error(s)", len(bundle.errors)
             )
             return
+        if any(
+            outcome not in {StageOutcome.SUCCESS, StageOutcome.SKIPPED}
+            for outcome in bundle.stage_outcomes.values()
+        ):
+            return
+        evidence = bundle.metadata["dynamic_evidence"]
+        if any(
+            record["state"] == "unavailable" for record in evidence.values()
+        ) or evidence != self._dynamic_evidence(target, config):
+            logger.warning("Incremental cache: dynamic evidence changed; not saving")
+            return
 
-        key = self._cache_key(target, config)
+        key = self._cache_key(target, config, evidence)
         cache_dir = Path(config.cache_dir) if config.cache_dir else None
         if bundle.metadata.get("source_content_digest") != key.content_hash:
             logger.warning("Incremental cache: source changed during analysis; not saving")
@@ -552,6 +697,7 @@ class PipelineRunner:
             {
                 "stage_results": safe_results,
                 "errors": safe_errors,
+                "export_snapshot": self._export_snapshot(bundle.stage_results, config),
                 "stage_outcomes": {
                     name: outcome.value for name, outcome in bundle.stage_outcomes.items()
                 },
@@ -599,23 +745,14 @@ class PipelineRunner:
         if config.dry_run:
             return {"type": "dynamic_enrichment", "dry_run": True}
 
-        plugins_dynamic = config.plugins.get("dynamic", {}) if config.plugins else {}
-        coverage_path = config.coverage_path or plugins_dynamic.get("coverage_path")
-        trace_path = config.trace_path or plugins_dynamic.get("trace_path")
-
-        # Auto-detect a .coverage file under the target if nothing was supplied.
-        if coverage_path is None:
-            try:
-                from pathlib import Path as _Path
-
-                target_path = _Path(bundle.target)
-                if target_path.exists() and target_path.is_dir():
-                    candidate = target_path / ".coverage"
-                    if candidate.exists() and candidate.is_file():
-                        coverage_path = str(candidate)
-                        logger.info("Dynamic stage auto-detected coverage at %s", coverage_path)
-            except Exception:  # noqa: BLE001
-                logger.debug("Coverage auto-detection skipped", exc_info=True)
+        evidence = bundle.metadata.get("dynamic_evidence")
+        if evidence is None:
+            evidence = self._dynamic_evidence(bundle.target, config)
+            bundle.metadata["dynamic_evidence"] = evidence
+        if any(record["state"] == "unavailable" for record in evidence.values()):
+            raise OSError("dynamic evidence is unavailable")
+        coverage_path = evidence["coverage"]["path"]
+        trace_path = evidence["trace"]["path"]
 
         if coverage_path is None and trace_path is None:
             logger.info("Dynamic stage: no coverage or trace data found; skipping enrichment")
@@ -627,11 +764,16 @@ class PipelineRunner:
                 "trace_nodes_enriched": 0,
             }
 
+        bundle.get_artifact("_program_graph", required=True)
+        if evidence != self._dynamic_evidence(bundle.target, config):
+            raise RuntimeError("dynamic evidence changed before consumption")
         result = orchestration.run_dynamic(
             bundle,
             coverage_path=coverage_path,
             trace_path=trace_path,
         )
+        if evidence != self._dynamic_evidence(bundle.target, config):
+            raise RuntimeError("dynamic evidence changed during consumption")
         if coverage_path is not None:
             result["coverage_path"] = coverage_path
         if trace_path is not None:
@@ -660,6 +802,12 @@ class PipelineRunner:
         """Export: Write all artifacts to disk."""
         if config.dry_run:
             return {"type": "export", "dry_run": True, "output_dir": config.output_dir}
+        if bundle.errors or bundle.pipeline_status in {
+            StageOutcome.FAILED,
+            StageOutcome.PARTIAL,
+            StageOutcome.UNAVAILABLE,
+        }:
+            raise RuntimeError("cannot export a failed or incomplete pipeline")
         return orchestration.run_export(
             bundle,
             config.output_dir,
@@ -670,6 +818,8 @@ class PipelineRunner:
         """Validate: Run validation checks."""
         if config.dry_run:
             return {"type": "validation", "dry_run": True, "passed": True}
+        if config.upstream_gnn_validation or config.upstream_gnn_pipeline:
+            bundle.get_artifact("_gnn_package_dir", required=True)
         upstream_pipeline_dir: Path | None = None
         if config.upstream_gnn_pipeline:
             upstream_pipeline_dir = (

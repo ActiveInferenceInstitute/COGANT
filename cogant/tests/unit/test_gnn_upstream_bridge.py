@@ -7,8 +7,6 @@ from pathlib import Path
 import pytest
 
 from cogant.gnn import (
-    get_upstream_gnn_format_enum,
-    get_upstream_parsing_system,
     parse_upstream_model_gnn_md,
 )
 from cogant.gnn.upstream_bridge import (
@@ -28,30 +26,14 @@ def test_bridge_rejects_pre_v4_upstream(monkeypatch: pytest.MonkeyPatch) -> None
 
     import cogant.gnn.upstream_bridge as ub
 
+    monkeypatch.setenv("COGANT_GNN_ORIGIN", "installed")
     monkeypatch.setattr(importlib.metadata, "version", lambda name: "2.0.0")
     assert ub.is_upstream_gnn_available() is False
     result = ub.run_upstream_validate_gnn("## GNNSection\nm\n")
     assert result.available is False
-    assert result.ok is True
+    assert result.ok is False
     assert result.skipped_reason is not None
-    assert ">= 4.0" in result.skipped_reason
-
-
-def test_bridge_rejects_foreign_gnn_distribution(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A top-level ``gnn`` owned by another distribution is never used."""
-    import importlib.metadata
-
-    import cogant.gnn.upstream_bridge as ub
-
-    monkeypatch.setattr(importlib.metadata, "version", lambda name: "4.1.0")
-    monkeypatch.setattr(
-        importlib.metadata, "packages_distributions", lambda: {"gnn": ["some-other-gnn"]}
-    )
-    ub._gnn_owned_by_upstream_distribution.cache_clear()
-    try:
-        assert ub.is_upstream_gnn_available() is False
-    finally:
-        ub._gnn_owned_by_upstream_distribution.cache_clear()
+    assert "API floor" in result.skipped_reason
 
 
 def test_bridge_reports_missing_distribution(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -62,6 +44,7 @@ def test_bridge_reports_missing_distribution(monkeypatch: pytest.MonkeyPatch) ->
     def _missing(name: str) -> str:
         raise importlib.metadata.PackageNotFoundError(name)
 
+    monkeypatch.setenv("COGANT_GNN_ORIGIN", "installed")
     monkeypatch.setattr(importlib.metadata, "version", _missing)
     assert ub.is_upstream_gnn_available() is False
     assert ub.upstream_version() is None
@@ -251,21 +234,6 @@ def test_validator_runs_upstream_when_core_dep(monkeypatch: pytest.MonkeyPatch) 
     v = GNNValidator()
     r = v.validate_package(str(pkg), upstream_gnn=True)
     assert "upstream_gnn" in r.details
-
-
-@pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")
-def test_get_upstream_gnn_format_enum() -> None:
-    """Re-exported enum class from upstream."""
-    fmt = get_upstream_gnn_format_enum()
-    assert fmt is not None
-    assert any(m.name == "MARKDOWN" for m in fmt)
-
-
-@pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")
-def test_get_upstream_parsing_system() -> None:
-    """Smoke: upstream parser instance constructs."""
-    ps = get_upstream_parsing_system()
-    assert ps is not None
 
 
 @pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")

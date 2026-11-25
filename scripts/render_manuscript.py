@@ -30,12 +30,14 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -117,7 +119,9 @@ def discover(source_dir: Path) -> list[Path]:
     files = [
         path
         for path in source_dir.iterdir()
-        if path.is_file() and path.suffix.lower() == ".md" and path.name not in EXCLUDE_NAMES
+        if path.is_file()
+        and path.suffix.lower() == ".md"
+        and path.name not in EXCLUDE_NAMES
     ]
     main: list[Path] = []
     supplemental: list[Path] = []
@@ -149,7 +153,9 @@ def discover(source_dir: Path) -> list[Path]:
 def load_config(source_dir: Path) -> dict:
     path = source_dir / "config.yaml"
     if not path.is_file():
-        raise SystemExit(f"render_manuscript: missing {path}; run the variable generator first")
+        raise SystemExit(
+            f"render_manuscript: missing {path}; run the variable generator first"
+        )
     loaded = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     return loaded if isinstance(loaded, dict) else {}
 
@@ -173,7 +179,10 @@ def extract_preamble(source_dir: Path) -> str | None:
 def pandoc_metadata(config: dict) -> list[str]:
     paper = config.get("paper") or {}
     metadata = config.get("metadata") or {}
-    args: list[str] = ["--metadata=linkReferences:true", "--metadata=link-citations:true"]
+    args: list[str] = [
+        "--metadata=linkReferences:true",
+        "--metadata=link-citations:true",
+    ]
     if isinstance(paper, dict):
         if paper.get("title"):
             args.append(f"--metadata=title:{paper['title']}")
@@ -188,7 +197,9 @@ def pandoc_metadata(config: dict) -> list[str]:
     ]
     if names:
         args.append(f"--metadata=author:{'; '.join(names)}")
-    language = str(metadata.get("language") or "en") if isinstance(metadata, dict) else "en"
+    language = (
+        str(metadata.get("language") or "en") if isinstance(metadata, dict) else "en"
+    )
     args.append(f"--metadata=lang:{language}")
     return args
 
@@ -245,8 +256,97 @@ def tool_error(names: list[str]) -> int:
     return 2
 
 
+def input_manifest(paths: list[Path]) -> list[dict]:
+    """Observe declared render inputs, not an inferred Git/release identity."""
+    records = []
+    for path in sorted(set(paths)):
+        digest = hashlib.sha256()
+        size = 0
+        with path.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(65_536), b""):
+                size += len(chunk)
+                digest.update(chunk)
+        records.append(
+            {
+                "path": os.path.relpath(path, ROOT),
+                "sha256": digest.hexdigest(),
+                "size_bytes": size,
+            }
+        )
+    return records
+
+
+def publish_render(
+    staged_pdf: Path, pdf: Path, inputs: list[Path], before: list[dict]
+) -> int:
+    """Publish only a new successful artifact; leave prior files on refusal."""
+    if not staged_pdf.is_file() or staged_pdf.stat().st_size < 10_000:
+        return _fail(f"PDF was not produced (or is implausibly small): {pdf}")
+    if input_manifest(inputs) != before:
+        return _fail("declared render inputs changed during rendering")
+    artifact = input_manifest([staged_pdf])[0]
+    receipt = {
+        "schema_version": "2.0",
+        "identity_scope": "observed declared render inputs; not Git or release qualification",
+        "inputs": before,
+        "input_digest": hashlib.sha256(
+            json.dumps(before, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest(),
+        "pdf_artifact": os.path.relpath(pdf, ROOT),
+        "pdf_bytes": artifact["size_bytes"],
+        "pdf_sha256": artifact["sha256"],
+        "artifact_availability": {
+            "scope": "local-output",
+            "observed_at_render": True,
+            "retained_in_repository": False,
+            "fresh_clone_comparable": False,
+        },
+        "limits": "No transitive TeX/toolchain inventory, retained artifact, or fresh-clone source proof.",
+    }
+    RECEIPT.parent.mkdir(parents=True, exist_ok=True)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=RECEIPT.parent,
+            prefix=".render-",
+            delete=False,
+        ) as stream:
+            temporary = Path(stream.name)
+            json.dump(receipt, stream, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        with tempfile.TemporaryDirectory(
+            prefix=".render-publication-", dir=pdf.parent
+        ) as transaction:
+            backup = Path(transaction) / pdf.name
+            had_previous = pdf.exists()
+            if had_previous:
+                shutil.copy2(pdf, backup)
+            try:
+                os.replace(staged_pdf, pdf)
+                os.replace(temporary, RECEIPT)
+            except BaseException:
+                if had_previous:
+                    os.replace(backup, pdf)
+                else:
+                    pdf.unlink(missing_ok=True)
+                raise
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    print(
+        f"render_manuscript: wrote {pdf} ({artifact['size_bytes']} bytes); receipt: {RECEIPT}"
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "--skip-generate",
         action="store_true",
@@ -270,28 +370,34 @@ def main(argv: list[str] | None = None) -> int:
         return status
     crossref = shutil.which("pandoc-crossref")
     if not crossref:
-        print("render_manuscript: pandoc-crossref unavailable; cross-references will not resolve", file=sys.stderr)
+        print(
+            "render_manuscript: pandoc-crossref unavailable; cross-references will not resolve",
+            file=sys.stderr,
+        )
 
-    if not args.skip_generate:
-        if generate_injected_manuscript() != 0:
-            return _fail("variable injection failed")
+    if not args.skip_generate and generate_injected_manuscript() != 0:
+        return _fail("variable injection failed")
     if not INJECTED_DIR.is_dir():
-        return _fail(f"missing injected manuscript tree: {INJECTED_DIR} (run without --skip-generate)")
-    if not args.skip_figure_check:
-        if validate_figure_registry() != 0:
-            return _fail(
-                "figure registry is not backed by generated files; run the batch pipeline "
-                "(cogant/ -> uv run python ../run_all.py --targets calculator,flask_app) first"
-            )
+        return _fail(
+            f"missing injected manuscript tree: {INJECTED_DIR} (run without --skip-generate)"
+        )
+    if not args.skip_figure_check and validate_figure_registry() != 0:
+        return _fail(
+            "figure registry is not backed by generated files; run the batch pipeline "
+            "(cogant/ -> uv run python ../run_all.py --targets calculator,flask_app) first"
+        )
 
     ordered = discover(INJECTED_DIR)
     if not ordered:
         return _fail(f"no manuscript files found in {INJECTED_DIR}")
-    print(f"render_manuscript: {len(ordered)} section file(s), first={ordered[0].name}, last={ordered[-1].name}")
+    print(
+        f"render_manuscript: {len(ordered)} section file(s), first={ordered[0].name}, last={ordered[-1].name}"
+    )
 
     combined = INJECTED_DIR / COMBINED_NAME
     combined.write_text(
-        "\n\n".join(path.read_text(encoding="utf-8").strip() for path in ordered) + "\n",
+        "\n\n".join(path.read_text(encoding="utf-8").strip() for path in ordered)
+        + "\n",
         encoding="utf-8",
     )
     survived = sorted(set(PLACEHOLDER.findall(combined.read_text(encoding="utf-8"))))
@@ -303,42 +409,44 @@ def main(argv: list[str] | None = None) -> int:
     if shutil.which("xelatex") is None:
         return tool_error(["xelatex"])
 
-    command = pandoc_command(
-        pandoc=shutil.which("pandoc") or "pandoc",
-        combined=combined,
-        pdf=args.pdf,
-        preamble_tex=preamble_tex,
-        config=config,
-        crossref=crossref,
-    )
-    print("render_manuscript: " + " ".join(command))
-    source_commit = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
-    ).strip()
-    completed = subprocess.run(command, cwd=INJECTED_DIR, check=False)
-    if completed.returncode != 0:
-        return _fail(
-            f"pandoc exited {completed.returncode}; combined source kept at {combined}"
+    pdf = args.pdf.resolve()
+    pdf.parent.mkdir(parents=True, exist_ok=True)
+    inputs = [*ordered, combined, INJECTED_DIR / "config.yaml"]
+    for optional in (INJECTED_DIR / "references.bib", INJECTED_DIR / "preamble.md"):
+        if optional.is_file():
+            inputs.append(optional)
+    if preamble_tex:
+        inputs.append(Path(preamble_tex))
+    if FIGURES_DIR.is_dir():
+        inputs.extend(path for path in FIGURES_DIR.rglob("*") if path.is_file())
+    before = input_manifest(inputs)
+    # Render beside the destination and atomically publish only after success.
+    # A failed pandoc invocation cannot destroy the previously receipted PDF.
+    with tempfile.TemporaryDirectory(
+        prefix=".cogant-render-", dir=pdf.parent
+    ) as staging:
+        staged_pdf = Path(staging) / pdf.name
+        command = pandoc_command(
+            pandoc=shutil.which("pandoc") or "pandoc",
+            combined=combined,
+            pdf=staged_pdf,
+            preamble_tex=preamble_tex,
+            config=config,
+            crossref=crossref,
         )
+        print("render_manuscript: " + " ".join(command))
+        completed = subprocess.run(command, cwd=INJECTED_DIR, check=False)
+        if completed.returncode != 0:
+            return _fail(
+                f"pandoc exited {completed.returncode}; combined source kept at {combined}"
+            )
+        status = publish_render(staged_pdf, pdf, inputs, before)
+        if status:
+            return status
     if not args.keep_combined:
         combined.unlink(missing_ok=True)
         if preamble_tex:
             Path(preamble_tex).unlink(missing_ok=True)
-    if not args.pdf.is_file() or args.pdf.stat().st_size < 10_000:
-        return _fail(f"PDF was not produced (or is implausibly small): {args.pdf}")
-    pdf_bytes = args.pdf.stat().st_size
-    RECEIPT.write_text(
-        json.dumps(
-            {
-                "source_commit": source_commit,
-                "pdf_artifact": os.path.relpath(args.pdf.resolve(), ROOT),
-                "pdf_bytes": pdf_bytes,
-            },
-            indent=2,
-        ) + "\n",
-        encoding="utf-8",
-    )
-    print(f"render_manuscript: wrote {args.pdf} ({pdf_bytes} bytes); receipt: {RECEIPT}")
     return 0
 
 
