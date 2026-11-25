@@ -22,7 +22,8 @@ def _module():
 def test_root_steps_use_the_installable_package_environment() -> None:
     module = _module()
     step = make_step(
-        "environment", ("uv", "run", "python", "-c", "import cogant; print(cogant.__file__)"),
+        "environment",
+        ("uv", "run", "python", "-c", "import cogant; print(cogant.__file__)"),
         cwd=module.ROOT,
     )
     result = module._run_step("environment", step)
@@ -43,8 +44,6 @@ def test_nonzero_process_is_a_failed_gate() -> None:
     assert result.output_tail == "required failure"
 
 
-
-
 def test_skipped_package_suite_is_recorded() -> None:
     module = _module()
     results, passed = module.run_gate(include_tests=False, dry_run=True)
@@ -54,17 +53,25 @@ def test_skipped_package_suite_is_recorded() -> None:
     assert passed is False
 
 
-def test_skipping_required_suite_cannot_produce_a_passing_release(tmp_path, monkeypatch) -> None:
+def test_skipping_required_suite_cannot_produce_a_passing_release(
+    tmp_path, monkeypatch
+) -> None:
     import json
 
     module = _module()
     marker = tmp_path / "executed"
     step = Step(
         "bounded-real-check",
-        (sys.executable, "-c", f"from pathlib import Path; Path({str(marker)!r}).write_text('yes')"),
+        (
+            sys.executable,
+            "-c",
+            f"from pathlib import Path; Path({str(marker)!r}).write_text('yes')",
+        ),
         cwd=tmp_path,
     )
-    monkeypatch.setattr(module, "build_release_steps", lambda **_: [("bounded-real-check", step)])
+    monkeypatch.setattr(
+        module, "build_release_steps", lambda **_: [("bounded-real-check", step)]
+    )
     monkeypatch.setattr(module, "REPORT_PATH", tmp_path / "report.json")
     assert module.main(["--skip-tests"]) == 1
     assert marker.read_text() == "yes"
@@ -80,10 +87,16 @@ def test_dry_run_reports_no_executed_success(tmp_path, monkeypatch) -> None:
     marker = tmp_path / "must-not-run"
     step = Step(
         "bounded-real-check",
-        (sys.executable, "-c", f"from pathlib import Path; Path({str(marker)!r}).touch()"),
+        (
+            sys.executable,
+            "-c",
+            f"from pathlib import Path; Path({str(marker)!r}).touch()",
+        ),
         cwd=tmp_path,
     )
-    monkeypatch.setattr(module, "build_release_steps", lambda **_: [("bounded-real-check", step)])
+    monkeypatch.setattr(
+        module, "build_release_steps", lambda **_: [("bounded-real-check", step)]
+    )
     monkeypatch.setattr(module, "REPORT_PATH", tmp_path / "report.json")
     assert module.main(["--dry-run"]) == 0
     assert not marker.exists()

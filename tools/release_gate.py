@@ -49,8 +49,6 @@ class GateResult:
     output_tail: str
 
 
-
-
 def _run_step(name: str, step: Step) -> GateResult:
     started = time.perf_counter()
     environment = os.environ.copy()
@@ -95,10 +93,14 @@ def _run_step(name: str, step: Step) -> GateResult:
         )
 
 
-def run_gate(*, include_tests: bool = True, dry_run: bool = False) -> tuple[list[GateResult], bool]:
+def run_gate(
+    *, include_tests: bool = True, dry_run: bool = False
+) -> tuple[list[GateResult], bool]:
     results: list[GateResult] = []
     if not include_tests:
-        results.append(GateResult("package-tests", "skipped", None, 0.0, [], "--skip-tests"))
+        results.append(
+            GateResult("package-tests", "skipped", None, 0.0, [], "--skip-tests")
+        )
     for name, step in build_release_steps(include_tests=include_tests):
         printable = shlex.join(step.argv)
         print(f"[gate] {name}: {printable}")
@@ -117,7 +119,9 @@ def run_gate(*, include_tests: bool = True, dry_run: bool = False) -> tuple[list
             break
     if dry_run:
         return results, False
-    return results, bool(results) and all(result.status == "passed" for result in results)
+    return results, bool(results) and all(
+        result.status == "passed" for result in results
+    )
 
 
 def _write_report(results: list[GateResult], overall_pass: bool) -> None:
@@ -137,7 +141,9 @@ def _write_report(results: list[GateResult], overall_pass: bool) -> None:
         ),
         "results": [asdict(result) for result in results],
     }
-    REPORT_PATH.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    REPORT_PATH.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -150,7 +156,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    results, overall_pass = run_gate(include_tests=not args.skip_tests, dry_run=args.dry_run)
+    results, overall_pass = run_gate(
+        include_tests=not args.skip_tests, dry_run=args.dry_run
+    )
     _write_report(results, overall_pass)
     verdict = "DRY RUN" if args.dry_run else "PASS" if overall_pass else "FAIL"
     print(f"release_gate: {verdict} ({REPORT_PATH})")

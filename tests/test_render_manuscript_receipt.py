@@ -14,7 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture
 def render_workspace(tmp_path, monkeypatch):
-    spec = importlib.util.spec_from_file_location("render_manuscript", ROOT / "scripts/render_manuscript.py")
+    spec = importlib.util.spec_from_file_location(
+        "render_manuscript", ROOT / "scripts/render_manuscript.py"
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     receipt = tmp_path / "docs/manuscript-render.json"
@@ -29,7 +31,9 @@ def render_workspace(tmp_path, monkeypatch):
     return module, receipt, pdf, source
 
 
-def test_render_receipt_binds_actual_input_and_artifact_bytes(render_workspace, tmp_path):
+def test_render_receipt_binds_actual_input_and_artifact_bytes(
+    render_workspace, tmp_path
+):
     module, receipt, pdf, source = render_workspace
     staged = tmp_path / "staged.pdf"
     content = b"%PDF-1.4\n" + b"x" * 10_001
@@ -56,7 +60,9 @@ def test_render_receipt_binds_actual_input_and_artifact_bytes(render_workspace, 
 
 
 @pytest.mark.parametrize("failure", ["missing", "small", "changed-input"])
-def test_render_refusal_preserves_prior_receipt_and_pdf(render_workspace, tmp_path, failure):
+def test_render_refusal_preserves_prior_receipt_and_pdf(
+    render_workspace, tmp_path, failure
+):
     module, receipt, pdf, source = render_workspace
     before = module.input_manifest([source])
     staged = tmp_path / "staged.pdf"
@@ -69,7 +75,9 @@ def test_render_refusal_preserves_prior_receipt_and_pdf(render_workspace, tmp_pa
     assert pdf.read_bytes() == b"previous artifact"
 
 
-def test_published_pdf_stays_readable_until_atomic_replacement(render_workspace, tmp_path, monkeypatch):
+def test_published_pdf_stays_readable_until_atomic_replacement(
+    render_workspace, tmp_path, monkeypatch
+):
     module, _receipt, pdf, source = render_workspace
     staged = tmp_path / "staged.pdf"
     staged.write_bytes(b"%PDF-1.4\n" + b"x" * 10_001)
@@ -81,12 +89,17 @@ def test_published_pdf_stays_readable_until_atomic_replacement(render_workspace,
         return original_replace(source_path, destination)
 
     monkeypatch.setattr(module.os, "replace", replace)
-    assert module.publish_render(staged, pdf, [source], module.input_manifest([source])) == 0
+    assert (
+        module.publish_render(staged, pdf, [source], module.input_manifest([source]))
+        == 0
+    )
     assert observed[0] == b"previous artifact"
     assert all(observed)
 
 
-def test_receipt_publication_failure_restores_prior_pdf(render_workspace, tmp_path, monkeypatch):
+def test_receipt_publication_failure_restores_prior_pdf(
+    render_workspace, tmp_path, monkeypatch
+):
     module, receipt, pdf, source = render_workspace
     staged = tmp_path / "staged.pdf"
     staged.write_bytes(b"%PDF-1.4\n" + b"x" * 10_001)

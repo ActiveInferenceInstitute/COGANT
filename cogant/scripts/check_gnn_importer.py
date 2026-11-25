@@ -18,8 +18,11 @@ def main() -> int:
     parser.add_argument("--job")
     args = parser.parse_args()
     response = invoke(
-        "importer-check", args.repo,
-        require_pointer=args.require_pointer, pointer_workflow=args.workflow, pointer_job=args.job,
+        "importer-check",
+        args.repo,
+        require_pointer=args.require_pointer,
+        pointer_workflow=args.workflow,
+        pointer_job=args.job,
     )
     report = response["value"]
     print(json.dumps(report, indent=2, sort_keys=True))

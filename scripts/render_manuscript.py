@@ -119,7 +119,9 @@ def discover(source_dir: Path) -> list[Path]:
     files = [
         path
         for path in source_dir.iterdir()
-        if path.is_file() and path.suffix.lower() == ".md" and path.name not in EXCLUDE_NAMES
+        if path.is_file()
+        and path.suffix.lower() == ".md"
+        and path.name not in EXCLUDE_NAMES
     ]
     main: list[Path] = []
     supplemental: list[Path] = []
@@ -151,7 +153,9 @@ def discover(source_dir: Path) -> list[Path]:
 def load_config(source_dir: Path) -> dict:
     path = source_dir / "config.yaml"
     if not path.is_file():
-        raise SystemExit(f"render_manuscript: missing {path}; run the variable generator first")
+        raise SystemExit(
+            f"render_manuscript: missing {path}; run the variable generator first"
+        )
     loaded = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     return loaded if isinstance(loaded, dict) else {}
 
@@ -175,7 +179,10 @@ def extract_preamble(source_dir: Path) -> str | None:
 def pandoc_metadata(config: dict) -> list[str]:
     paper = config.get("paper") or {}
     metadata = config.get("metadata") or {}
-    args: list[str] = ["--metadata=linkReferences:true", "--metadata=link-citations:true"]
+    args: list[str] = [
+        "--metadata=linkReferences:true",
+        "--metadata=link-citations:true",
+    ]
     if isinstance(paper, dict):
         if paper.get("title"):
             args.append(f"--metadata=title:{paper['title']}")
@@ -190,7 +197,9 @@ def pandoc_metadata(config: dict) -> list[str]:
     ]
     if names:
         args.append(f"--metadata=author:{'; '.join(names)}")
-    language = str(metadata.get("language") or "en") if isinstance(metadata, dict) else "en"
+    language = (
+        str(metadata.get("language") or "en") if isinstance(metadata, dict) else "en"
+    )
     args.append(f"--metadata=lang:{language}")
     return args
 
@@ -298,14 +307,20 @@ def publish_render(
     temporary: Path | None = None
     try:
         with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=RECEIPT.parent, prefix=".render-", delete=False
+            mode="w",
+            encoding="utf-8",
+            dir=RECEIPT.parent,
+            prefix=".render-",
+            delete=False,
         ) as stream:
             temporary = Path(stream.name)
             json.dump(receipt, stream, indent=2)
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
-        with tempfile.TemporaryDirectory(prefix=".render-publication-", dir=pdf.parent) as transaction:
+        with tempfile.TemporaryDirectory(
+            prefix=".render-publication-", dir=pdf.parent
+        ) as transaction:
             backup = Path(transaction) / pdf.name
             had_previous = pdf.exists()
             if had_previous:
@@ -322,12 +337,16 @@ def publish_render(
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
-    print(f"render_manuscript: wrote {pdf} ({artifact['size_bytes']} bytes); receipt: {RECEIPT}")
+    print(
+        f"render_manuscript: wrote {pdf} ({artifact['size_bytes']} bytes); receipt: {RECEIPT}"
+    )
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "--skip-generate",
         action="store_true",
@@ -351,28 +370,34 @@ def main(argv: list[str] | None = None) -> int:
         return status
     crossref = shutil.which("pandoc-crossref")
     if not crossref:
-        print("render_manuscript: pandoc-crossref unavailable; cross-references will not resolve", file=sys.stderr)
+        print(
+            "render_manuscript: pandoc-crossref unavailable; cross-references will not resolve",
+            file=sys.stderr,
+        )
 
-    if not args.skip_generate:
-        if generate_injected_manuscript() != 0:
-            return _fail("variable injection failed")
+    if not args.skip_generate and generate_injected_manuscript() != 0:
+        return _fail("variable injection failed")
     if not INJECTED_DIR.is_dir():
-        return _fail(f"missing injected manuscript tree: {INJECTED_DIR} (run without --skip-generate)")
-    if not args.skip_figure_check:
-        if validate_figure_registry() != 0:
-            return _fail(
-                "figure registry is not backed by generated files; run the batch pipeline "
-                "(cogant/ -> uv run python ../run_all.py --targets calculator,flask_app) first"
-            )
+        return _fail(
+            f"missing injected manuscript tree: {INJECTED_DIR} (run without --skip-generate)"
+        )
+    if not args.skip_figure_check and validate_figure_registry() != 0:
+        return _fail(
+            "figure registry is not backed by generated files; run the batch pipeline "
+            "(cogant/ -> uv run python ../run_all.py --targets calculator,flask_app) first"
+        )
 
     ordered = discover(INJECTED_DIR)
     if not ordered:
         return _fail(f"no manuscript files found in {INJECTED_DIR}")
-    print(f"render_manuscript: {len(ordered)} section file(s), first={ordered[0].name}, last={ordered[-1].name}")
+    print(
+        f"render_manuscript: {len(ordered)} section file(s), first={ordered[0].name}, last={ordered[-1].name}"
+    )
 
     combined = INJECTED_DIR / COMBINED_NAME
     combined.write_text(
-        "\n\n".join(path.read_text(encoding="utf-8").strip() for path in ordered) + "\n",
+        "\n\n".join(path.read_text(encoding="utf-8").strip() for path in ordered)
+        + "\n",
         encoding="utf-8",
     )
     survived = sorted(set(PLACEHOLDER.findall(combined.read_text(encoding="utf-8"))))
@@ -397,7 +422,9 @@ def main(argv: list[str] | None = None) -> int:
     before = input_manifest(inputs)
     # Render beside the destination and atomically publish only after success.
     # A failed pandoc invocation cannot destroy the previously receipted PDF.
-    with tempfile.TemporaryDirectory(prefix=".cogant-render-", dir=pdf.parent) as staging:
+    with tempfile.TemporaryDirectory(
+        prefix=".cogant-render-", dir=pdf.parent
+    ) as staging:
         staged_pdf = Path(staging) / pdf.name
         command = pandoc_command(
             pandoc=shutil.which("pandoc") or "pandoc",

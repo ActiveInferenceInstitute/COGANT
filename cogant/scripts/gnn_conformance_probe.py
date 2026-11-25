@@ -77,7 +77,9 @@ def main() -> int:
         for level in ("standard", "strict")
     }
     steps = run_upstream_pipeline(
-        UpstreamPipelineConfig(target_dir=package, output_dir=out / "upstream", only_steps=[3, 5, 6])
+        UpstreamPipelineConfig(
+            target_dir=package, output_dir=out / "upstream", only_steps=[3, 5, 6]
+        )
     )
     payload = {
         "version": upstream_version(),
