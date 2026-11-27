@@ -2,7 +2,7 @@
 
 This top-level `docs/` folder holds the repository-level documentation map
 ([`README.md`](README.md)) and the gate/CI run guide
-([`RUN_GUIDE.md`](RUN_GUIDE.md)). It is **not** the MkDocs site source; the
+([`RUN_GUIDE.md`](guides/RUN_GUIDE.md)). It is **not** the MkDocs site source; the
 published site lives under [`../cogant/docs/`](../cogant/docs/index.md).
 
 ## Purpose
@@ -13,18 +13,18 @@ only this checkout: it links each documentation area (module hubs under
 duplicating their content. Each `cogant/docs/<module>/README.md` remains the table
 of contents for that module.
 
-[`RUN_GUIDE.md`](RUN_GUIDE.md) describes the arms of the root `run_gate.py`
+[`RUN_GUIDE.md`](guides/RUN_GUIDE.md) describes the arms of the root `run_gate.py`
 entry point, the CI job that invokes each arm, the GNN conformance pin, and the
 measured wall time of every arm on the estate workstation.
 
 ## What belongs here
 
 - The repository-level index ([`README.md`](README.md)).
-- The gate/CI run guide ([`RUN_GUIDE.md`](RUN_GUIDE.md)).
+- The gate/CI run guide ([`RUN_GUIDE.md`](guides/RUN_GUIDE.md)).
 - The flat canonical-page index ([`documentation-index.md`](documentation-index.md)).
 - The latest successful local render receipt (`manuscript-render.json`), written
   by `scripts/render_manuscript.py`; the PDF itself remains an ignored artifact.
-- Relative links into `cogant/docs/`, the repository root, [`../manuscript/`](../manuscript/README.md),
+- Relative links into `cogant/docs/`, the repository root, [`../manuscript/`](manuscript/README.md),
   and [`../.aii/`](../.aii/README.md).
 
 Do not add a second copy of package documentation, and do not move pages out of

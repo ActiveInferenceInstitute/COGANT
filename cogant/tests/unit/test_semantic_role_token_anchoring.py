@@ -275,7 +275,7 @@ def test_context_rule_rejects_substring_trap_keeps_whole_token() -> None:
 # fix exists to kill (``reset→set``, ``managerial→manager``). The recall loss
 # is partially compensated by prefix-form keywords (``route_``, ``get_``) and by
 # the structural edge rules (READS/WRITES). This trade-off is disclosed in
-# manuscript/08_05_threats_to_validity.md (lexical construct validity). The test
+# docs/manuscript/08_05_threats_to_validity.md (lexical construct validity). The test
 # pins the decision so any future move to morphological normalisation is a
 # deliberate, red-test-visible change rather than a silent drift.
 

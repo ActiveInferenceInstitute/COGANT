@@ -630,7 +630,7 @@ _MANUSCRIPT_FIGURE_RE = re.compile(
 
 
 def _active_manuscript_figure_refs(root: Path) -> set[str]:
-    manuscript_dir = root / "manuscript"
+    manuscript_dir = root / "docs" / "manuscript"
     if not manuscript_dir.is_dir():
         return set()
     refs: set[str] = set()
@@ -647,7 +647,7 @@ def _active_manuscript_figure_refs(root: Path) -> set[str]:
 
 
 def _reference_failures(root: Path, figures: Iterable[ManuscriptFigure]) -> list[str]:
-    manuscript_dir = root / "manuscript"
+    manuscript_dir = root / "docs" / "manuscript"
     if not manuscript_dir.is_dir():
         return []
     refs = _active_manuscript_figure_refs(root)

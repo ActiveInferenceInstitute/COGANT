@@ -84,7 +84,7 @@ The combined PDF uses coloured links (`preamble.md`): **internal and citation** 
 
 ## Cross-references to the package
 
-Prefer **relative** paths from this folder to the docs tree: site home [`../cogant/docs/index.md`](../cogant/docs/index.md), module map [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md), and per-module indexes such as [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md). Do not link a root `docs/README.md` — it is not part of the MkDocs tree (it would duplicate `index.md`).
+Prefer **relative** paths from this folder to the docs tree: site home [`../cogant/docs/index.md`](../../cogant/docs/index.md), module map [`../cogant/docs/reference/documentation_modules.md`](../../cogant/docs/reference/documentation_modules.md), and per-module indexes such as [`../cogant/docs/architecture/README.md`](../../cogant/docs/architecture/README.md). Do not link a root `docs/README.md` — it is not part of the MkDocs tree (it would duplicate `index.md`).
 
 ## See also
 

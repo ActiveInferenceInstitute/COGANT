@@ -32,7 +32,7 @@ manuscript or running the formal proof track.
 - Every symbol used in multiple pages (for example `A`, `B`, `C`, `D`
   matrices, hidden states, observations, actions) has to match the
   manuscript's appendix on inference mathematics. When you rename a
-  symbol, grep `docs/` and `manuscript/` and update both in the same PR.
+  symbol, grep `docs/` and `docs/manuscript/` and update both in the same PR.
 - `active_inference.md` is the theory-track counterpart to
   `../evaluation/ACTIVE_INFERENCE_MAPPING.md`. The evaluation file is
   dated and citable; this file is the stable, non-dated statement. Keep

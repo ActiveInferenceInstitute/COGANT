@@ -3,7 +3,7 @@
 
 Collects definitions ``{#sec:…}``, ``{#tbl:…}``, ``{#eq:…}``, ``{#fig:…}``,
 and COGANT-owned formal references such as ``{#def:…}`` / ``{#prop:…}`` from
-Markdown files under ``manuscript/``. Reports duplicate definitions and
+Markdown files under ``docs/manuscript/``. Reports duplicate definitions and
 references with no matching definition.
 
 Strict mode also scans manuscript source, injected Markdown, rendered HTML, and
@@ -23,7 +23,7 @@ Exit codes
 Usage::
 
     uv run python tools/audit_manuscript_crossrefs.py
-    uv run python tools/audit_manuscript_crossrefs.py --manuscript-dir manuscript/
+    uv run python tools/audit_manuscript_crossrefs.py --manuscript-dir docs/manuscript/
     uv run python tools/audit_manuscript_crossrefs.py --strict-rendered
 
 Path layout is anchored on ``__file__`` at the COGANT project root (or
@@ -264,7 +264,7 @@ def main() -> None:
     parser.add_argument(
         "--manuscript-dir",
         type=Path,
-        default=_REPO_ROOT / "manuscript",
+        default=_REPO_ROOT / "docs" / "manuscript",
         help="Directory containing manuscript *.md fragments",
     )
     parser.add_argument(

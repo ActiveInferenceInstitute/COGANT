@@ -10,7 +10,7 @@ actions, and no POLICY/CONTEXT/CONSTRAINT nodes in the origin, the ablations
 isolate each rule family's contribution to the minimal POMDP skeleton.
 
 > **Status of this appendix (measured).** The rows below are now emitted by
-> [`tools/regenerate_ablation.py`](../tools/regenerate_ablation.py), which
+> [`tools/regenerate_ablation.py`](../../tools/regenerate_ablation.py), which
 > includes `zoo/01_simple_state` in the live ablation harness and writes a
 > per-`MappingKind` decomposition into `METRICS.yaml`. The table is no longer
 > hand-reconstructed from rule assignments. The deltas still retain the engine's

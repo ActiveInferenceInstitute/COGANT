@@ -16,7 +16,7 @@ readable.
 ## Ground Rules
 
 - Do not treat these files as authoritative package documentation; update
-  `README.md`, `AGENTS.md`, `manuscript/`, or `cogant/docs/` when behavior
+  `README.md`, `AGENTS.md`, `docs/manuscript/`, or `cogant/docs/` when behavior
   changes.
 - Do not cite command-output snapshots as current truth without re-running the
   underlying command.

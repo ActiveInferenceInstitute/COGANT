@@ -1,6 +1,6 @@
-"""Verify relative markdown links from ``manuscript/*.md``.
+"""Verify relative markdown links from ``docs/manuscript/*.md``.
 
-Walks every ``manuscript/**/*.md`` file next to this package root, extracts
+Walks every ``docs/manuscript/**/*.md`` file next to this package root, extracts
 inline markdown link targets, and checks that each relative path resolves
 inside the git work tree. Links beginning with ``../../../`` are checked when
 they resolve inside the current checkout and skipped only when COGANT is being
@@ -18,7 +18,7 @@ Exit codes
 ----------
 * ``0`` — all checked links resolved (summary printed to stdout).
 * ``1`` — at least one broken or escaping link was reported, or the
-          ``manuscript/`` directory was missing.
+          ``docs/manuscript/`` directory was missing.
 """
 
 from __future__ import annotations
@@ -32,9 +32,9 @@ from urllib.parse import unquote
 _DOCS_DIR = Path(__file__).resolve().parent
 # Package root: parent of ``docs/`` (``py/``, ``tests/``, …).
 _PKG_ROOT = _DOCS_DIR.parent
-# Staging root: parent of package root (contains ``manuscript/`` next to ``cogant/``).
+# Staging root: parent of package root (contains ``docs/manuscript/`` next to ``cogant/``).
 _STAGING_ROOT = _PKG_ROOT.parent
-_MANUSCRIPT_DIR = _STAGING_ROOT / "manuscript"
+_MANUSCRIPT_DIR = _STAGING_ROOT / "docs" / "manuscript"
 _FIGURES_DIR = _STAGING_ROOT / "output" / "figures"
 _FIGURE_MANIFEST = _FIGURES_DIR / "manifest.json"
 
@@ -165,7 +165,7 @@ def _check_figure_link(errors: list[str], md_path: Path, raw: str, path_part: st
 
 
 def verify_manuscript() -> list[str]:
-    """Return human-readable errors for broken relative links in ``manuscript/``.
+    """Return human-readable errors for broken relative links in ``docs/manuscript/``.
 
     Populates the module-level counters :data:`_LAST_FILES_SCANNED`,
     :data:`_LAST_LINKS_CHECKED`, and :data:`_LAST_LINKS_SKIPPED` so

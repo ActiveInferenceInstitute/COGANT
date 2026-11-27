@@ -42,7 +42,7 @@ def _fixture_root(
     review_queue: list[dict[str, object]] | None = None,
 ) -> Path:
     root = tmp_path / "project"
-    _write_config(root, "manuscript/config.yaml", source_date)
+    _write_config(root, "docs/manuscript/config.yaml", source_date)
     _write_config(root, "output/manuscript/config.yaml", output_date)
     _write_json(
         root / "output" / "claim_ledger.json",

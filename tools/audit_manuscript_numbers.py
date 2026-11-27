@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit hardcoded numbers in manuscript markdown files against METRICS.yaml.
 
-Scans every ``manuscript/**/*.md`` file for numeric claims (test counts,
+Scans every ``docs/manuscript/**/*.md`` file for numeric claims (test counts,
 coverage, version, roundtrip status counts, role-preservation scores, translation-rule
 counts, fixture counts, LOC, suite runtime, IR schema sizes, and macro-F1
 figures) and compares them against ``cogant/evaluation/METRICS.yaml``.
@@ -14,7 +14,7 @@ fuzzy ±0.5 % envelope). Findings are partitioned into:
 * ``MISMATCH``          — real drift (these gate CI)
 * ``EXPECTED_MISMATCH`` — whitelisted contextually-valid differences
 * ``UNVERIFIED``        — no METRICS.yaml entry to compare against
-* ``ARCHIVE_ONLY``      — found in ``manuscript/_archive/``; informational
+* ``ARCHIVE_ONLY``      — found in ``docs/manuscript/_archive/``; informational
 
 A Markdown audit report is written to ``--output``.
 
@@ -29,7 +29,7 @@ Exit codes
 
 Usage:
     python tools/audit_manuscript_numbers.py
-    python tools/audit_manuscript_numbers.py --manuscript-dir manuscript/ --output path/to/audit.md
+    python tools/audit_manuscript_numbers.py --manuscript-dir docs/manuscript/ --output path/to/audit.md
 """
 
 import argparse
@@ -47,7 +47,7 @@ sys.path.insert(0, str(_TOOLS_DIR))
 from manuscript_vars import resolve_path  # noqa: E402
 
 METRICS_PATH = _REPO_ROOT / "cogant" / "evaluation" / "METRICS.yaml"
-MANUSCRIPT_DIR = _REPO_ROOT / "manuscript"
+MANUSCRIPT_DIR = _REPO_ROOT / "docs" / "manuscript"
 OUTPUT_PATH = _REPO_ROOT / "cogant" / "_rnd" / "sweep_2026_04" / "manuscript_number_audit.md"
 
 
@@ -754,7 +754,7 @@ def render_report(
     lines += [
         "## Archive-Only Claims",
         "",
-        "These numbers appear in `manuscript/_archive/` files and are expected to differ",
+        "These numbers appear in `docs/manuscript/_archive/` files and are expected to differ",
         "from current METRICS.yaml values.",
         "No action required unless an archive file is being actively used.",
         "",
@@ -906,7 +906,7 @@ def main():
         "--include-archive",
         action="store_true",
         default=True,
-        help="Include manuscript/_archive/ files (default: True, marked as ARCHIVE_ONLY)",
+        help="Include docs/manuscript/_archive/ files (default: True, marked as ARCHIVE_ONLY)",
     )
     args = parser.parse_args()
 

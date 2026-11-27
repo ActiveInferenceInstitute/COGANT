@@ -2,9 +2,9 @@
 
 This appendix reports the native v{{VERSION}} roundtrip ledger used by the main
 text. The authoritative aggregate values are injected from
-[`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml); the
+[`../cogant/evaluation/METRICS.yaml`](../../cogant/evaluation/METRICS.yaml); the
 per-target rows are checked in at
-[`../cogant/evaluation/dataset/roundtrip_results.jsonl`](../cogant/evaluation/dataset/roundtrip_results.jsonl).
+[`../cogant/evaluation/dataset/roundtrip_results.jsonl`](../../cogant/evaluation/dataset/roundtrip_results.jsonl).
 
 ## A.1 Current aggregate ledger
 

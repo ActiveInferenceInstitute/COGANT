@@ -34,8 +34,8 @@ def _active_status_doc(path: Path) -> bool:
         "README.md",
         "AGENTS.md",
         "PROMOTION.md",
-        "manuscript/README.md",
-        "manuscript/AGENTS.md",
+        "docs/manuscript/README.md",
+        "docs/manuscript/AGENTS.md",
         "cogant/README.md",
         "cogant/AGENTS.md",
         "cogant/docs/roadmap/README.md",
@@ -76,7 +76,7 @@ def _roundtrip_current_count_doc(path: Path) -> bool:
     }
     return (
         rel in current_count_docs
-        or rel.startswith("manuscript/")
+        or rel.startswith("docs/manuscript/")
         or rel.startswith("output/manuscript/")
     )
 
@@ -113,8 +113,8 @@ def _active_guidance_doc(path: Path) -> bool:
         "README.md",
         "AGENTS.md",
         "PROMOTION.md",
-        "manuscript/README.md",
-        "manuscript/AGENTS.md",
+        "docs/manuscript/README.md",
+        "docs/manuscript/AGENTS.md",
         "cogant/README.md",
         "cogant/AGENTS.md",
     )
@@ -195,7 +195,7 @@ def _manuscript_body(path: Path) -> bool:
         return False
     if path.name in _MANUSCRIPT_BODY_SKIP:
         return False
-    return rel.parts[:1] == ("manuscript",) or rel.parts[:2] == ("output", "manuscript")
+    return rel.parts[:2] == ("docs", "manuscript") or rel.parts[:2] == ("output", "manuscript")
 
 
 def _roundtrip_claim_is_qualified(text: str, start: int, end: int) -> bool:
@@ -494,7 +494,7 @@ BANNED_PATTERNS = [
         "Describe related-work subsections by title or @sec identifier, not raw fragment ranges.",
         applies_to=lambda path: (
             path.is_relative_to(ROOT)
-            and path.relative_to(ROOT).as_posix() == "manuscript/README.md"
+            and path.relative_to(ROOT).as_posix() == "docs/manuscript/README.md"
         ),
     ),
     BannedPattern(
@@ -547,7 +547,7 @@ DEFAULT_SCAN_PATHS = [
     ROOT / "TODO.md",
     ROOT / "PROMOTION.md",
     ROOT / "tools",
-    ROOT / "manuscript",
+    ROOT / "docs" / "manuscript",
     ROOT / "output" / "manuscript",
     ROOT / "cogant" / "README.md",
     ROOT / "cogant" / "AGENTS.md",
@@ -600,7 +600,7 @@ def _iter_manuscript_body(manuscript_dir: Path) -> list[Path]:
 def audit_ir_expansion(findings: list[str]) -> None:
     expansion_re = re.compile(r"\bintermediate representations?\s*\(IR\)", re.IGNORECASE)
     ir_re = re.compile(r"\bIR\b")
-    for manuscript_dir in (ROOT / "manuscript", ROOT / "output" / "manuscript"):
+    for manuscript_dir in (ROOT / "docs" / "manuscript", ROOT / "output" / "manuscript"):
         files = _iter_manuscript_body(manuscript_dir)
         if not files:
             continue

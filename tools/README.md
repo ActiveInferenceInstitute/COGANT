@@ -1,7 +1,7 @@
 # tools/
 
 Manuscript-grounding utilities. The numbers that appear in
-[`../manuscript/`](../manuscript/) are written here to a single source of
+[`../manuscript/`](../docs/manuscript/) are written here to a single source of
 truth (`../cogant/evaluation/METRICS.yaml`) and substituted into the
 prose by these scripts. The gates refuse out-of-sync metrics and numeric
 mismatches; the claim ledger inventories unsupported literal claims for
@@ -13,9 +13,9 @@ review and can be made stricter with its release-only flags.
 | [`regenerate_ablation.py`](regenerate_ablation.py) | Run the live translation/state-space/matrix pipeline on the 6 packaged fixtures and (re)write the `ablation:` block in `METRICS.yaml`. |
 | [`manuscript_vars.py`](manuscript_vars.py) | Library — pure functions mapping `{{TOKEN}}` placeholders to dotted paths in `METRICS.yaml`. No I/O. |
 | [`inject_manuscript_vars.py`](inject_manuscript_vars.py) | CLI — substitute `{{TOKEN}}` placeholders in a file or directory. |
-| [`audit_manuscript_citations.py`](audit_manuscript_citations.py) | Verify Pandoc citation keys used in manuscript body files exist in `manuscript/references.bib`; fail on missing or duplicate BibTeX keys. |
+| [`audit_manuscript_citations.py`](audit_manuscript_citations.py) | Verify Pandoc citation keys used in manuscript body files exist in `docs/manuscript/references.bib`; fail on missing or duplicate BibTeX keys. |
 | [`audit_manuscript_formalisms.py`](audit_manuscript_formalisms.py) | Verify COGANT-owned formalism labels and generated numbering for `@def:` / `@prop:` / `@inv:` / `@conj:` / `@alg:` / `@thm:` references. |
-| [`audit_manuscript_numbers.py`](audit_manuscript_numbers.py) | Scan `manuscript/**/*.md` for raw numbers, compare to `METRICS.yaml`, fail on any MISMATCH, and report expected/manual-review cases. |
+| [`audit_manuscript_numbers.py`](audit_manuscript_numbers.py) | Scan `docs/manuscript/**/*.md` for raw numbers, compare to `METRICS.yaml`, fail on any MISMATCH, and report expected/manual-review cases. |
 | [`audit_manuscript_math_adjacency.py`](audit_manuscript_math_adjacency.py) | Resolve manuscript variables and fail on inline math spans whose closing `$` is immediately followed by a digit, preventing Pandoc `$-$10` leaks. |
 | [`audit_manuscript_claim_scope.py`](audit_manuscript_claim_scope.py) | Reject high-risk manuscript overclaims: uncaveated guarantees, inferential-statistics language, and semantic-totality claims. |
 | [`audit_robustness_table.py`](audit_robustness_table.py) | Bind `@tbl:robustness-transforms` rows to `cogant/evaluation/robustness/robustness_results.json` so hand-written transform verdicts cannot drift. |
@@ -61,7 +61,7 @@ Substitute `{{TOKEN}}` placeholders into the rendered manuscript:
 uv run python tools/inject_manuscript_vars.py \
     --output-dir output/manuscript \
     --strict \
-    manuscript/
+    docs/manuscript/
 ```
 
 Fast freshness gate (used by `metrics-fresh` GitHub Actions job):

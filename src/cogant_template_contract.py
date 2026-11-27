@@ -1,7 +1,7 @@
 """Template-facing project contract for the nested COGANT package.
 
 The parent `docxology/template` infrastructure treats an active project as a
-directory with top-level `src/`, `tests/`, `scripts/`, and `manuscript/`
+directory with top-level `src/`, `tests/`, `scripts/`, and `docs/manuscript/`
 surfaces. COGANT intentionally keeps its real Python/Rust package in the
 nested `cogant/` directory, so this module gives the template a small,
 importable source file while keeping implementation ownership clear.
@@ -41,7 +41,7 @@ def contract_paths(root: Path | None = None) -> TemplateContractPaths:
         package_root=package_root,
         package_import_root=package_root / "py" / "cogant",
         package_tests=package_root / "tests",
-        manuscript_root=base / "manuscript",
+        manuscript_root=base / "docs" / "manuscript",
         tools_root=base / "tools",
         scripts_root=base / "scripts",
         run_all=base / "run_all.py",

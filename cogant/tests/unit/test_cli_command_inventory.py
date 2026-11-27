@@ -1,7 +1,7 @@
 """Regression test for the top-level Typer command surface.
 
 The CLI exposes a fixed surface of subcommands documented in
-``cogant/docs/cli/commands.md`` and ``manuscript/03_api_and_workflows.md``.
+``cogant/docs/cli/commands.md`` and ``docs/manuscript/03_api_and_workflows.md``.
 This test guards against accidental drift in either direction (a command
 silently dropped, or a new one added without updating the docs) by
 asserting the exact count plus the presence of three commands the docs

@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MANUSCRIPT_DIR = ROOT / "manuscript"
+MANUSCRIPT_DIR = ROOT / "docs" / "manuscript"
 OUTPUT_DIR = ROOT / "output"
 
 

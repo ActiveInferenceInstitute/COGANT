@@ -60,7 +60,7 @@ DOC_TARGETS: list[tuple[str, str]] = [
     ("cogant/py/cogant/api/README.md", "PipelineRunner reference"),
     ("cogant/py/cogant/api/AGENTS.md", "API agents overview"),
     ("cogant/py/cogant/gnn/AGENTS.md", "GNN exporter overview"),
-    ("manuscript/03_api_and_workflows.md", "Manuscript API/workflows section"),
+    ("docs/manuscript/03_api_and_workflows.md", "Manuscript API/workflows section"),
 ]
 
 

@@ -3,7 +3,7 @@
 
 The audit scans rendered-body Markdown fragments, strips fenced and inline code,
 collects Pandoc citation keys, and verifies that every used key exists in
-``manuscript/references.bib``. Cross-reference tokens such as ``@sec:...`` and
+``docs/manuscript/references.bib``. Cross-reference tokens such as ``@sec:...`` and
 formalism tokens such as ``@def:...`` are handled by dedicated audits and ignored
 here.
 
@@ -23,7 +23,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MANUSCRIPT_DIR = ROOT / "manuscript"
+MANUSCRIPT_DIR = ROOT / "docs" / "manuscript"
 BIB_PATH = MANUSCRIPT_DIR / "references.bib"
 
 SKIP_NAMES = frozenset({"AGENTS.md", "README.md", "SYNTAX.md"})

@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-MANUSCRIPT_DIR = ROOT / "manuscript"
+MANUSCRIPT_DIR = ROOT / "docs" / "manuscript"
 OUTPUT_DIR = ROOT / "output" / "analysis"
 DEFAULT_JSON = OUTPUT_DIR / "manuscript_evidence_audit.json"
 DEFAULT_MARKDOWN = OUTPUT_DIR / "manuscript_evidence_audit.md"

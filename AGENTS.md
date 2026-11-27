@@ -6,10 +6,10 @@
 |------|------|
 | [`cogant/`](cogant/) | Nested COGANT package (`py/cogant/`, `tests/`, `pyproject.toml`, Rust crates, docs). **This is the installable package root.** |
 | [`docs/`](docs/README.md) | Repository-level documentation index. The canonical docs are the MkDocs site at [`cogant/docs/`](cogant/docs/index.md); this index points into it and into the root-level documents instead of duplicating them. |
-| [`manuscript/`](manuscript/) | PDF/HTML manuscript templates with `{{PLACEHOLDER}}` substitution syntax. Source of truth for prose; never edit by hand any number that has a `{{...}}` token. |
+| [`docs/manuscript/`](docs/manuscript/) | PDF/HTML manuscript templates with `{{PLACEHOLDER}}` substitution syntax. Source of truth for prose; never edit by hand any number that has a `{{...}}` token. |
 | [`tools/`](tools/) | `MANUSCRIPT_VARS` registry, metrics regeneration CLI, inject CLI, audit helpers, manuscript figure copier. |
 |[`scripts/`](scripts/)|Thin orchestrators (`z_generate_manuscript_variables.py`, which also refreshes `output/figures/`; `render_manuscript.py`, the repository-local PDF render).|
-|[`run_gate.py`](run_gate.py)|Single gate/CI entry point with separately runnable arms (`lint`, `types`, `content`, `docs`, `test-fast`, `test-full`, `gnn`, `wheel`, `rust`, `manuscript`). CI jobs invoke these arms; see [`docs/RUN_GUIDE.md`](docs/RUN_GUIDE.md).|
+|[`run_gate.py`](run_gate.py)|Single gate/CI entry point with separately runnable arms (`lint`, `types`, `content`, `docs`, `test-fast`, `test-full`, `gnn`, `wheel`, `rust`, `manuscript`). CI jobs invoke these arms; see [`docs/guides/RUN_GUIDE.md`](docs/guides/RUN_GUIDE.md).|
 | [`src/`](src/), [`tests/`](tests/), [`pyproject.toml`](pyproject.toml) | Tiny parent-template compatibility shell so `docxology/template` project discovery sees top-level source/tests when linked under `projects/working/cogant/`. The real package remains nested under `cogant/`. |
 | [`run_all.py`](run_all.py), [`run_all.sh`](run_all.sh), [`run_all.example.json`](run_all.example.json) | Configurable batch run: `translate` + GNN exports + `render` + `viz` + `validate` per target. Targets are either `path` (under inner `cogant/`) or `git_url` (shallow clone to `<output_root>/<target_id>/_git_source/`). If `run_all.json` is absent, built-in defaults cover the three `examples/control_positive/*` fixtures plus two small Pallets repos; the shipped `run_all.json` is the larger corpus config. The shipped and built-in configs set `output_root: "cogant/output"`; `run_all.example.json` uses `output`. Each target writes under `<output_root>/<target_id>/` (with `data/`, `figures/`, `site/`, `reports/`, `gnn_package/`, `analysis/`, `exports/`, `roundtrip/`). Stderr + optional `--log`: per-target banner, per-step wall time / exit status, batch `summary` in `<output_root>/run_manifest.json`, cross-target `summary.md`/`summary.json`, and `<output_root>/dashboard/` when `steps.batch_dashboard` is enabled. |
 | `output/` | Generated manuscript outputs — `data/manuscript_variables.json`, `output/manuscript/` injected copy, and copied figures (all disposable and regeneratable). Batch runs write per-target directories under the configured `<output_root>/<target_id>/`; the shipped `run_all.json` uses `cogant/output`, while `run_all.example.json` uses project-root `output`. |
@@ -28,7 +28,7 @@ Two paths named `cogant/` exist and mean different things:
 
 ```
 COGANT_PROJECT_ROOT/                 ← project root (this file's directory)
-  manuscript/                         ← manuscript templates
+  docs/manuscript/                         ← manuscript templates
   tools/                              ← manuscript tooling (MANUSCRIPT_VARS registry, inject/regenerate/audit/figure CLIs)
   scripts/                            ← thin orchestrators (z_generate_manuscript_variables.py)
   src/, tests/, pyproject.toml         ← parent-template compatibility shell
@@ -53,7 +53,7 @@ When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it m
 | `tools/manuscript_vars.py` | `MANUSCRIPT_VARS` registry (placeholder → YAML dotpath), `resolve_path`, `format_value_for_path`, `build_flat_variables`, `substitute_text`, `find_unresolved_placeholders` |
 | `tools/inject_manuscript_vars.py` | CLI: substitute one file or directory; `--dry-run`, `--report`, `--strict` flags |
 | `tools/regenerate_metrics.py` | Rebuilds `cogant/evaluation/METRICS.yaml` from live test + pipeline runs |
-| `tools/audit_manuscript_citations.py` | Verifies body citation keys exist in `manuscript/references.bib`; fails on missing or duplicate keys |
+| `tools/audit_manuscript_citations.py` | Verifies body citation keys exist in `docs/manuscript/references.bib`; fails on missing or duplicate keys |
 | `tools/audit_manuscript_formalisms.py` | Verifies typed formalism labels, generated formal numbering, and `@def:` / `@prop:` / `@inv:` / `@conj:` / `@alg:` / `@thm:` references |
 | `tools/audit_manuscript_numbers.py` | Checks all prose numbers against `METRICS.yaml`; flags drift |
 | `tools/audit_manuscript_markdown_links.py` | Rejects rendered body links to `.md` files; public manuscript links should be intra-manuscript refs, figures/tables/equations/formalisms, or citations |
@@ -120,11 +120,11 @@ uv run python -m infrastructure.validation.cli markdown projects/working/cogant/
 uv run python -m infrastructure.validation.cli markdown projects/working/cogant/output/manuscript/
 ```
 
-All `{{PLACEHOLDER}}` tokens in `manuscript/*.md` resolve against `cogant/evaluation/METRICS.yaml`
+All `{{PLACEHOLDER}}` tokens in `docs/manuscript/*.md` resolve against `cogant/evaluation/METRICS.yaml`
 via the registry in `tools/manuscript_vars.py`. **Never hand-edit a number that has a `{{...}}`
 token** — fix the METRICS.yaml source instead.
 `tools/regenerate_ablation.py` populates `ablation.*` in `METRICS.yaml` and is called by `tools/regenerate_metrics.py`.
-Keep `manuscript/config.yaml` `paper.date` empty for active publication builds so the parent template fills the render date.
+Keep `docs/manuscript/config.yaml` `paper.date` empty for active publication builds so the parent template fills the render date.
 
 ## Package development commands (run from `cogant/` — inner package root)
 

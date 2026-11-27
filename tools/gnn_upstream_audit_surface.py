@@ -180,7 +180,7 @@ class UpstreamRun:
 
 @dataclass(frozen=True)
 class AuditSurface:
-    """Bounded audit surface for manuscript/docs consumption."""
+    """Bounded audit surface for docs/manuscript/docs consumption."""
 
     upstream_commit: str | None
     expected_commit: str | None

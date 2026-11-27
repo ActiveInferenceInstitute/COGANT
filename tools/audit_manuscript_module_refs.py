@@ -9,7 +9,7 @@ manuscript cited ``cogant.viz.png_export`` (coverage table + figure-provenance
 table) after that module was deleted, and no gate caught it — a reader following
 the reference lands on a module that no longer exists.
 
-This tool closes that gap. It scans Markdown under ``manuscript/`` for backticked
+This tool closes that gap. It scans Markdown under ``docs/manuscript/`` for backticked
 dotted names rooted at ``cogant`` (e.g. ``cogant.viz.png``,
 ``cogant.schemas.semantic.MappingKind``) and verifies each resolves to a live
 module, package, or module attribute in the installed ``cogant`` package.
@@ -37,7 +37,7 @@ Exit codes
 Usage::
 
     uv run python tools/audit_manuscript_module_refs.py
-    uv run python tools/audit_manuscript_module_refs.py --manuscript-dir manuscript/
+    uv run python tools/audit_manuscript_module_refs.py --manuscript-dir docs/manuscript/
     uv run python tools/audit_manuscript_module_refs.py --strict
 
 Path layout is anchored on ``__file__`` at the COGANT project root (or
@@ -218,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--manuscript-dir",
         type=Path,
-        default=_REPO_ROOT / "manuscript",
+        default=_REPO_ROOT / "docs" / "manuscript",
         help="Directory of manuscript Markdown fragments (default: manuscript/).",
     )
     parser.add_argument(

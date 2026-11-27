@@ -5,7 +5,7 @@
 
 Public home: <https://github.com/ActiveInferenceInstitute/COGANT> · Earlier manuscript deposit: [10.5281/zenodo.20705351](https://doi.org/10.5281/zenodo.20705351) (manuscript series: [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)). The current computational artifact is identified by its Git commit.
 
-Codebase-to-GNN translation — **package** under [`cogant/`](cogant/), **manuscript** under [`manuscript/`](manuscript/). This checkout is self-contained at the COGANT project root; when linked into `docxology/template`, the same tree is expected to appear at `projects/working/cogant/` and be rendered with the lifecycle-qualified project name `working/cogant`. See [`PROMOTION.md`](PROMOTION.md) for the render-location checklist.
+Codebase-to-GNN translation — **package** under [`cogant/`](cogant/), **manuscript** under [`docs/manuscript/`](docs/manuscript/). This checkout is self-contained at the COGANT project root; when linked into `docxology/template`, the same tree is expected to appear at `projects/working/cogant/` and be rendered with the lifecycle-qualified project name `working/cogant`. See [`PROMOTION.md`](PROMOTION.md) for the render-location checklist.
 
 Top-level [`src/`](src/), [`tests/`](tests/), and [`pyproject.toml`](pyproject.toml)
 form a tiny compatibility shell for the parent `docxology/template` project
@@ -60,7 +60,7 @@ to the [docs site home](cogant/docs/index.md):
 | Working sidecar checkout | `<cogant-sidecar>` | `<cogant-sidecar>/cogant` | Current local checkout; run project-local commands here. |
 | Parent-template render path | `<template-checkout>/projects/working/cogant` | `<template-checkout>/projects/working/cogant/cogant` | Created by the sidecar/template linker; render with `--project working/cogant`. |
 
-In this documentation, **COGANT project root** means the directory containing this README, `run_all.py`, `tools/`, `scripts/`, `manuscript/`, and the nested package directory. **COGANT package root** means the inner [`cogant/`](cogant/) directory containing `pyproject.toml`, `py/cogant/`, package tests, docs, and Rust crates.
+In this documentation, **COGANT project root** means the directory containing this README, `run_all.py`, `tools/`, `scripts/`, `docs/manuscript/`, and the nested package directory. **COGANT package root** means the inner [`cogant/`](cogant/) directory containing `pyproject.toml`, `py/cogant/`, package tests, docs, and Rust crates.
 
 ## Explicit finite state-space models
 
@@ -137,7 +137,7 @@ uv run python tools/check_metrics_fresh.py --fail-on-dirty
 
 `tools/audit_stage_list.py` enforces `RUNNER_STAGES` vs. doc/CLI drift. `tools/audit_manuscript_module_refs.py` verifies every backticked `cogant.*` module/attribute cited in the manuscript still resolves in the installed package (run it from the inner `cogant/` env so the package's dependencies are importable); it catches references to deleted modules such as the former `cogant.viz.png_export`. `tools/check_metrics_fresh.py --fail-on-dirty` is a release gate that refuses uncommitted metric provenance.
 
-**Coverage table (`{#tbl:coverage-stmt-modules}`).** Per-module `Stmts` / `Cover` rows in [`manuscript/06_04_tests_mutation_and_benchmarks.md`](manuscript/06_04_tests_mutation_and_benchmarks.md) are hand-copied from `coverage report`. After `uv run pytest tests/ --cov=py/cogant` in [`cogant/`](cogant/) (inner package root), run `uv run python tools/check_coverage_table.py` from this project root to compare the table to the report; use `--strict` to fail on drift. See [`manuscript/AGENTS.md`](manuscript/AGENTS.md) and [`PROMOTION.md`](PROMOTION.md).
+**Coverage table (`{#tbl:coverage-stmt-modules}`).** Per-module `Stmts` / `Cover` rows in [`docs/manuscript/06_04_tests_mutation_and_benchmarks.md`](docs/manuscript/06_04_tests_mutation_and_benchmarks.md) are hand-copied from `coverage report`. After `uv run pytest tests/ --cov=py/cogant` in [`cogant/`](cogant/) (inner package root), run `uv run python tools/check_coverage_table.py` from this project root to compare the table to the report; use `--strict` to fail on drift. See [`docs/manuscript/AGENTS.md`](docs/manuscript/AGENTS.md) and [`PROMOTION.md`](PROMOTION.md).
 
 Rendering uses `output/manuscript/` when present. The repository-local render
 entry point is `scripts/render_manuscript.py`; it injects the variables,
@@ -219,7 +219,7 @@ Empty checkouts make benchmarks skip rather than fail, so this step is only requ
 
 Every check runs through one entry point at the project root; CI invokes the
 same arms, so a command exists in exactly one place
-([`docs/RUN_GUIDE.md`](docs/RUN_GUIDE.md) maps jobs to arms and records their
+([`docs/guides/RUN_GUIDE.md`](docs/guides/RUN_GUIDE.md) maps jobs to arms and records their
 measured wall time):
 
 ```bash
@@ -241,7 +241,7 @@ The top-level compatibility shell under [`tests/`](tests/) has its own small sui
 
 ## See also
 
-- [`manuscript/README.md`](manuscript/README.md) — section index and validation commands
+- [`docs/manuscript/README.md`](docs/manuscript/README.md) — section index and validation commands
 - [`cogant/README.md`](cogant/README.md) — package overview
 - [`cogant/CONTRIBUTING.md`](cogant/CONTRIBUTING.md) — contribution guidelines and development setup
 - Package tests and coverage policy: `cogant/pyproject.toml` (`pytest` defaults, `[tool.coverage.*]`)

@@ -81,7 +81,7 @@ uv run python scripts/03_render_pdf.py --project working/cogant
 
 ```text
 projects/working/cogant/
-├── manuscript/
+├── docs/manuscript/
 ├── output/
 ├── scripts/
 ├── src/

@@ -67,19 +67,19 @@ has exactly one ruff invocation, `run_gate.py lint`.
 
 ## GNN conformance pin
 
-- Pin file: [`.github/gnn-pin.json`](../.github/gnn-pin.json), schema
+- Pin file: [`.github/gnn-pin.json`](../../.github/gnn-pin.json), schema
   `gnn-importer-pin/v1`, repository
   `ActiveInferenceInstitute/Generalized_Notation_Notation`, tag `v5.1.0`,
   commit `75c834bd8519dc7b5adc4d24f16bf393cfd1ecdf`.
 - Workflow job: key `gnn-conformance`, display name
   `gnn conformance (pinned)`, in
-  [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
-- Probe: [`cogant/scripts/gnn_conformance_probe.py`](../cogant/scripts/gnn_conformance_probe.py)
+  [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml).
+- Probe: [`cogant/scripts/gnn_conformance_probe.py`](../../cogant/scripts/gnn_conformance_probe.py)
   emits a package from `cogant/examples/control_positive/calculator`, validates
   it at the `standard` and `strict` levels, and runs upstream steps 3, 5 and 6.
-  What the job parses is recorded in [`.github/GNN.md`](../.github/GNN.md).
+  What the job parses is recorded in [`.github/GNN.md`](../../.github/GNN.md).
 - The job prepares the upstream environment through the `upstream` extra in
-  [`cogant/pyproject.toml`](../cogant/pyproject.toml), then calls
+  [`cogant/pyproject.toml`](../../cogant/pyproject.toml), then calls
   `python -m gnn.importers check` on the project root with `--require-pointer`,
   `--workflow .github/workflows/ci.yml` and `--job gnn-conformance`.
   The shared reader owns the pin, pointer and discovered specification checks.
@@ -87,7 +87,7 @@ has exactly one ruff invocation, `run_gate.py lint`.
   `cogant/uv.lock` supplies dependency observations, not another expected pin.
   Shared-reader adoption arrived with the pin advance from `v5.0.3`
   (`8f293d9b`) to `v5.1.0` (`75c834bd`); the interim local readers are gone,
-  as [`.github/GNN.md`](../.github/GNN.md) records.
+  as [`.github/GNN.md`](../../.github/GNN.md) records.
 
 The Python setup in every job uses the org composite action
 `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448`.
@@ -103,7 +103,7 @@ The Python setup in every job uses the org composite action
   3.12, where the wheel is available; on this host the arm can run under 3.12
   with `UV_PYTHON=3.12 UV_PROJECT_ENVIRONMENT=.venv-gnn`.
 - A successful `manuscript` render writes
-  [`manuscript-render.json`](manuscript-render.json): source commit,
+  [`manuscript-render.json`](../manuscript-render.json): source commit,
   repository-relative PDF artifact location, and exact byte count. Commit this
   small receipt after a successful run; the PDF remains under ignored `output/`.
 - `wheel`: network access for `uv build` dependencies and the isolated install.

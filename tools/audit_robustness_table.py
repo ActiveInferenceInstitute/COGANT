@@ -6,7 +6,7 @@ canonical source of truth for the semantics-preserving / sensitivity / negative-
 control transform results: it writes
 ``cogant/evaluation/robustness/robustness_results.json`` and a generated
 ``robustness_table.md``. The manuscript also carries a hand-authored table
-(``{#tbl:robustness-transforms}`` in ``manuscript/08_05_threats_to_validity.md``)
+(``{#tbl:robustness-transforms}`` in ``docs/manuscript/08_05_threats_to_validity.md``)
 with per-transform *Role similarity* and *Verdict* cells.
 
 The project claim policy states: *no manuscript metric unless injected from a
@@ -40,7 +40,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS_JSON = ROOT / "cogant" / "evaluation" / "robustness" / "robustness_results.json"
-MANUSCRIPT_TABLE = ROOT / "manuscript" / "08_05_threats_to_validity.md"
+MANUSCRIPT_TABLE = ROOT / "docs" / "manuscript" / "08_05_threats_to_validity.md"
 
 # Marker that identifies the manuscript robustness table block.
 TABLE_LABEL = "{#tbl:robustness-transforms}"

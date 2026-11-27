@@ -30,7 +30,7 @@ DEFAULT_MARKDOWN_OUTPUT = ANALYSIS_ROOT / "publication_readiness.md"
 FIXED_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 HISTORICAL_FIXED_DATE_RE = re.compile(r"\b(?:2026-05-22|May\s+22(?:nd)?)\b", re.IGNORECASE)
 ACTIVE_MANUSCRIPT_PATHS = (
-    Path("manuscript"),
+    Path("docs/manuscript"),
     Path("output/manuscript"),
 )
 
@@ -141,7 +141,7 @@ def _scan_active_date_text(root: Path) -> list[str]:
 def _date_config_check(root: Path) -> dict[str, Any]:
     issues: list[str] = []
     configs: list[dict[str, Any]] = []
-    for rel_path in (Path("manuscript/config.yaml"), Path("output/manuscript/config.yaml")):
+    for rel_path in (Path("docs/manuscript/config.yaml"), Path("output/manuscript/config.yaml")):
         path = root / rel_path
         if not path.exists() and rel_path.parts[0] == "output":
             configs.append(

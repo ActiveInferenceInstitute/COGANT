@@ -4,7 +4,7 @@
 This is the authoritative render entry point.  It follows the parent template's
 conventions without importing the template package:
 
-* Pandoc Markdown sections under ``manuscript/`` in discovery order
+* Pandoc Markdown sections under ``docs/manuscript/`` in discovery order
   (``00_``–``10_`` main sections, then ``S0*`` appendices, then ``98_``
   glossary, then other files, then ``99_`` references last).
 * Declared variables: ``{{TOKEN}}`` placeholders are resolved by
@@ -41,7 +41,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-MANUSCRIPT_DIR = ROOT / "manuscript"
+MANUSCRIPT_DIR = ROOT / "docs" / "manuscript"
 OUTPUT_DIR = ROOT / "output"
 INJECTED_DIR = OUTPUT_DIR / "manuscript"
 FIGURES_DIR = OUTPUT_DIR / "figures"
