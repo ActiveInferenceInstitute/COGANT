@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MANUSCRIPT_DIR = ROOT / "manuscript"
+MANUSCRIPT_DIR = ROOT / "docs" / "manuscript"
 SKIP_NAMES = frozenset({"AGENTS.md", "README.md", "SYNTAX.md"})
 
 

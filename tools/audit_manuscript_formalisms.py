@@ -211,7 +211,7 @@ def audit(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manuscript-dir", type=Path, default=_REPO_ROOT / "manuscript")
+    parser.add_argument("--manuscript-dir", type=Path, default=_REPO_ROOT / "docs" / "manuscript")
     parser.add_argument("--generated-dir", type=Path, default=_REPO_ROOT / "output" / "manuscript")
     parser.add_argument("--registry", type=Path, default=_REPO_ROOT / "output" / "data" / "formalism_registry.json")
     parser.add_argument("--strict", action="store_true")

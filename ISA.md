@@ -10,7 +10,7 @@ updated: 2026-09-08
 COGANT is a private working project that pairs an installable Python package
 with a manuscript and generated evidence artifacts. The authoritative project
 root is `<cogant-sidecar>`; the installable
-package root is `cogant/`; manuscript source lives in `manuscript/`; generated
+package root is `cogant/`; manuscript source lives in `docs/manuscript/`; generated
 manuscript output lives in `output/`; native package evaluation output lives
 under `cogant/evaluation/`.
 
@@ -39,9 +39,9 @@ artifact:
 | Roundtrip ledger | `cogant/evaluation/dataset/roundtrip_results.jsonl` |
 | Aggregate metrics | `cogant/evaluation/METRICS.yaml` |
 | Manuscript variables | `tools/manuscript_vars.py` and `output/data/manuscript_variables.json` |
-| Manuscript source | `manuscript/*.md`, `manuscript/config.yaml`, `manuscript/references.bib` |
+| Manuscript source | `docs/manuscript/*.md`, `docs/manuscript/config.yaml`, `docs/manuscript/references.bib` |
 | Rendered manuscript source tree | `output/manuscript/` |
-| Figure registry | `manuscript/figures/registry.json` plus generated PNGs under `output/figures/` |
+| Figure registry | `docs/manuscript/figures/registry.json` plus generated PNGs under `output/figures/` |
 | Pipeline runner | `run_all.py`, `tools/run_all_runner.py`, and `run_all.json` |
 
 ## Required Gates
@@ -153,7 +153,7 @@ target.
     overflow is fixed.
 
 - **2026-06-08 — Peer-review incorporation (manuscript).** Acted on an external
-  deep review. (1) Fixed a real rendering bug in `manuscript/09_ablation.md`: the
+  deep review. (1) Fixed a real rendering bug in `docs/manuscript/09_ablation.md`: the
   rule-family ablation table wrote `$-${{TOKEN}}`, and pandoc does not treat a
   closing `$` immediately followed by a digit as math, so `$-$10` leaked
   literally; replaced with a Unicode minus `−` (renders in both the HTML and

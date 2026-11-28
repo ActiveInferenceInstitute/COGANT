@@ -307,7 +307,7 @@ def source_template_findings(root: Path) -> list[AuditFinding]:
     if findings:
         return findings
 
-    manuscript_root = root / "manuscript"
+    manuscript_root = root / "docs" / "manuscript"
     if not manuscript_root.exists():
         return [AuditFinding("manuscript", "manuscript source directory is missing")]
 

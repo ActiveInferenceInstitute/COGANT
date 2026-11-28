@@ -46,7 +46,7 @@ These world-model and organization-model claims are checked as scope claims befo
 
 ## Forward compatibility
 
-Promoting COGANT into the sidecar `projects/` tree integrates manuscript PDF rendering with the template’s validation gates. Cross-references in this folder use paths **relative to these Markdown files** (for example [`../cogant/docs/`](../cogant/docs/)) so links stay stable when the tree moves.
+Promoting COGANT into the sidecar `projects/` tree integrates manuscript PDF rendering with the template’s validation gates. Cross-references in this folder use paths **relative to these Markdown files** (for example [`../cogant/docs/`](../../cogant/docs/)) so links stay stable when the tree moves.
 
 ## When the extraction story weakens
 

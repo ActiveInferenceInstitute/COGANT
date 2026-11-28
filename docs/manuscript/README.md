@@ -2,19 +2,19 @@
 
 Template-aligned Markdown for **COGANT** (Codebase-to-GNN Translation): theory of the program graph IR and practice of the Python/Rust pipeline. Authoritative API, CLI, export schema, and plugin docs remain in the package tree:
 
-**Documentation map:** [`../cogant/docs/index.md`](../cogant/docs/index.md) (MkDocs site home; narrative entry) and [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md) (every `docs/<module>/` area). Consolidated CLI flags: [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md). Implementation scope: [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
+**Documentation map:** [`../../cogant/docs/index.md`](../../cogant/docs/index.md) (MkDocs site home; narrative entry) and [`../../cogant/docs/reference/documentation_modules.md`](../../cogant/docs/reference/documentation_modules.md) (every `docs/<module>/` area). Consolidated CLI flags: [`../../cogant/docs/cli_reference.md`](../../cogant/docs/cli_reference.md). Implementation scope: [`../../cogant/docs/reference/implementation_status.md`](../../cogant/docs/reference/implementation_status.md).
 
 ## Location terms
 
 | Term | Meaning |
 | --- | --- |
 | COGANT project root | The directory above this manuscript folder; in this working checkout, `<cogant-sidecar>`. |
-| COGANT package root | The nested `../cogant/` directory containing `pyproject.toml`, `py/cogant/`, package tests, and package docs. |
+| COGANT package root | The nested `../../cogant/` directory containing `pyproject.toml`, `py/cogant/`, package tests, and package docs. |
 | Template render location | `<template-checkout>/projects/working/cogant`; parent-template validators and renderers apply only there. |
 
 ## Section files
 
-Stem order follows the parent template renderer (`infrastructure/rendering/manuscript_discovery.py`) when linked under `projects/working/cogant/`: digit-prefixed names sort lexicographically, so overview pages that own a chapter prefix use `NN_00_...` before `NN_01_...` detail files. Discovery concatenates main sections (`00_`-`10_`), then supplemental appendices (`S01_`-`S06_`), then glossary files (`98_`), then the **other** bucket (for example `SYNTAX.md`), then optional `99_*.md` references last. Do not hard-code section-file counts in prose; re-count with `find manuscript -maxdepth 1 -name '*.md'` from the COGANT project root after adds or splits.
+Stem order follows the parent template renderer (`infrastructure/rendering/manuscript_discovery.py`) when linked under `projects/working/cogant/`: digit-prefixed names sort lexicographically, so overview pages that own a chapter prefix use `NN_00_...` before `NN_01_...` detail files. Discovery concatenates main sections (`00_`-`10_`), then supplemental appendices (`S01_`-`S06_`), then glossary files (`98_`), then the **other** bucket (for example `SYNTAX.md`), then optional `99_*.md` references last. Do not hard-code section-file counts in prose; re-count with `find docs/manuscript -maxdepth 1 -name '*.md'` from the COGANT project root after adds or splits.
 
 **Pandoc-crossref sanity** (COGANT project root): `uv run python tools/audit_manuscript_crossrefs.py` — fails on duplicate `{#sec:…}` / `{#tbl:…}` ids or orphan `@sec:` / `@tbl:` references across body fragments (`SYNTAX.md` and a few helpers are skipped so example ids do not pollute the audit). **Formalism sanity:** `uv run python tools/audit_manuscript_formalisms.py --strict` — fails on `{#sec:def-...}`-style formal labels, hand-numbered formal claims, unresolved `@def:` / `@prop:` / `@inv:` / `@conj:` / `@alg:` / `@thm:` references, or generated numbering drift. **Citation sanity:** `uv run python tools/audit_manuscript_citations.py` — fails when a body citation key is missing from `references.bib` or duplicated there.
 
@@ -50,7 +50,7 @@ Stem order follows the parent template renderer (`infrastructure/rendering/manus
 
 Supporting files excluded by the template renderer: `config.yaml`, `preamble.md`, `references.bib`, `AGENTS.md`, and `README.md`. `SYNTAX.md` and `supplementary.md` are ordinary Markdown files in this flat directory and may enter the "other" bucket unless the renderer skip list excludes them; keep example labels in `SYNTAX.md` out of the audited body or add an explicit renderer exclusion before publication.
 
-**Volatile metrics.** Quantitative claims use `{{ PLACEHOLDER }}` tokens (no spaces in real keys; see registry) filled from [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml). Regenerate metrics, then build the injected manuscript:
+**Volatile metrics.** Quantitative claims use `{{ PLACEHOLDER }}` tokens (no spaces in real keys; see registry) filled from [`../../cogant/evaluation/METRICS.yaml`](../../cogant/evaluation/METRICS.yaml). Regenerate metrics, then build the injected manuscript:
 
 Run these from the COGANT project root:
 
@@ -68,11 +68,11 @@ From the parent template root after linking under `projects/working/cogant/`:
 uv run python projects/working/cogant/scripts/z_generate_manuscript_variables.py
 ```
 
-Outputs: `../output/data/manuscript_variables.json`, `../output/data/formalism_registry.json`, `../output/manuscript/*.md` (plus copied `config.yaml`, `references.bib`, `preamble.md`), and `../output/figures/manifest.json` with the curated real-run and evaluation PNGs referenced from the manuscript. The renderer prefers `output/manuscript/` when those files exist, and the figure paths in generated Markdown resolve to sibling assets under `output/figures/`. Formal numbers are generated into `output/manuscript/` only; source prose keeps typed labels such as `{#def:program-graph}` and references such as `@def:program-graph`.
+Outputs: `../../output/data/manuscript_variables.json`, `../../output/data/formalism_registry.json`, `../../output/manuscript/*.md` (plus copied `config.yaml`, `references.bib`, `preamble.md`), and `../../output/figures/manifest.json` with the curated real-run and evaluation PNGs referenced from the manuscript. The renderer prefers `output/manuscript/` when those files exist, and the figure paths in generated Markdown resolve to sibling assets under `output/figures/`. Formal numbers are generated into `output/manuscript/` only; source prose keeps typed labels such as `{#def:program-graph}` and references such as `@def:program-graph`.
 
-**Publication metadata and readiness.** `config.yaml` keeps `paper.date` empty on purpose; the template renderer fills the date at render time. Do not replace it with a fixed calendar date for active publication builds. `scripts/z_generate_manuscript_variables.py` also refreshes `../output/analysis/publication_readiness.json` and `.md`, which classify claim-ledger rows as metric-backed, artifact-backed, citation-backed, validator-backed, boundary/limitation, or unsupported. A strict readiness block means the manuscript still has a metadata, claim-support, figure, or validator issue that must be fixed before promotion.
+**Publication metadata and readiness.** `config.yaml` keeps `paper.date` empty on purpose; the template renderer fills the date at render time. Do not replace it with a fixed calendar date for active publication builds. `scripts/z_generate_manuscript_variables.py` also refreshes `../../output/analysis/publication_readiness.json` and `.md`, which classify claim-ledger rows as metric-backed, artifact-backed, citation-backed, validator-backed, boundary/limitation, or unsupported. A strict readiness block means the manuscript still has a metadata, claim-support, figure, or validator issue that must be fixed before promotion.
 
-**Manuscript figures.** The copied figures come from declared package-generated and evaluation outputs: calculator run artifacts under `../cogant/output/`, fixture metric figures under `../cogant/evaluation/figures/`, and the measured ablation render produced from `../cogant/evaluation/METRICS.yaml`. The registry covers the native graphical abstract and interpretability overview, forward graph/state-space/matrix renders, the all-page GNN Markdown mosaic, the Markov-blanket partition, the calculator-focused `run_all.py` publication timeline with the explicit `roundtrip_calculator` stage, roundtrip diff, rule-evidence trace, evidence-coverage/review-readiness panel, deterministic inference trace, rule-family ablation, and fixture graph/role/state-space/timing figures. The optional upstream GNN visualization path is intentionally outside this publication registry until its separately pinned integration job emits complete provenance. The figure manifest and per-figure `.figure.json` sidecars record renderer, source artifact, data digest, dimensions, byte size, visual QA, reading guide, limitation, and alt text; strict promotion also rejects degraded SVG-rasterization placeholders, native-required detail panels produced by fallback rasterization, and timeline dimensions that are unsuitable for publication. Refresh them from the COGANT project root with:
+**Manuscript figures.** The copied figures come from declared package-generated and evaluation outputs: calculator run artifacts under `../../cogant/output/`, fixture metric figures under `../../cogant/evaluation/figures/`, and the measured ablation render produced from `../../cogant/evaluation/METRICS.yaml`. The registry covers the native graphical abstract and interpretability overview, forward graph/state-space/matrix renders, the all-page GNN Markdown mosaic, the Markov-blanket partition, the calculator-focused `run_all.py` publication timeline with the explicit `roundtrip_calculator` stage, roundtrip diff, rule-evidence trace, evidence-coverage/review-readiness panel, deterministic inference trace, rule-family ablation, and fixture graph/role/state-space/timing figures. The optional upstream GNN visualization path is intentionally outside this publication registry until its separately pinned integration job emits complete provenance. The figure manifest and per-figure `.figure.json` sidecars record renderer, source artifact, data digest, dimensions, byte size, visual QA, reading guide, limitation, and alt text; strict promotion also rejects degraded SVG-rasterization placeholders, native-required detail panels produced by fallback rasterization, and timeline dimensions that are unsuitable for publication. Refresh them from the COGANT project root with:
 
 ```bash
 uv run python tools/manuscript_figures.py --strict
@@ -86,13 +86,13 @@ uv run python tools/audit_publication_readiness.py --strict
 
 **pandoc-crossref:** install `pandoc-crossref` on your `PATH` (for example `brew install pandoc-crossref` on macOS) so `@sec:` / `@tbl:` references in the manuscript expand in the combined PDF. See [`SYNTAX.md`](SYNTAX.md).
 
-Optional spot-check from the COGANT project root: `uv run python tools/inject_manuscript_vars.py manuscript/00_abstract.md --dry-run`
+Optional spot-check from the COGANT project root: `uv run python tools/inject_manuscript_vars.py docs/manuscript/00_abstract.md --dry-run`
 
 Retired monoliths (not concatenated into the PDF) may live under an `_archive/` subdirectory — for example `cogant_paper_monolith.md` or `02_methodology_monolith.md` — if and when they are brought back. No such archive ships with the current tree; see [`AGENTS.md`](AGENTS.md) for the archival convention.
 
 ## Pipeline discovery
 
-This manuscript tree is nested next to the package as `../cogant/`. In a standalone COGANT checkout, use the local commands in this README. In the parent `docxology/template` repository, discovery-based scripts such as `scripts/03_render_pdf.py --project working/cogant` apply only after the project appears under `projects/working/cogant/` with the layout expected by the template (for this codebase: `src/`, `tests/`, and `pyproject.toml` at the project root, with the real package nested under `cogant/`).
+This manuscript tree is nested next to the package as `../../cogant/`. In a standalone COGANT checkout, use the local commands in this README. In the parent `docxology/template` repository, discovery-based scripts such as `scripts/pipeline/stage_03_render.py --project working/COGANT --skip-manuscript-hydration` apply only after the project appears under `projects/working/cogant/` with the layout expected by the template (for this codebase: `src/`, `tests/`, and `pyproject.toml` at the project root, with the real package nested under `cogant/`).
 
 ## Validate Markdown (now)
 
@@ -116,7 +116,7 @@ uv run python -m infrastructure.validation.cli markdown ./projects/working/cogan
 
 ## COGANT package tests
 
-The implementation and integration tests for the translator live under [`../cogant/tests/`](../cogant/tests/) (relative to this manuscript folder). From that package root:
+The implementation and integration tests for the translator live under [`../../cogant/tests/`](../../cogant/tests/) (relative to this manuscript folder). From that package root:
 
 ```bash
 uv run pytest tests/ -q
@@ -124,15 +124,15 @@ uv run pytest tests/ -q
 uv run pytest tests/ -q --cov=py/cogant
 ```
 
-Unit coverage for GNN action fields (`effects` vs `affects_state_vars`) lives in [`../cogant/tests/unit/test_gnn_formatter_action_effects.py`](../cogant/tests/unit/test_gnn_formatter_action_effects.py).
+Unit coverage for GNN action fields (`effects` vs `affects_state_vars`) lives in [`../../cogant/tests/unit/test_gnn_formatter_action_effects.py`](../../cogant/tests/unit/test_gnn_formatter_action_effects.py).
 
 For API and CLI details, use package docs as the authoritative reference:
 
-- [`../cogant/docs/api/README.md`](../cogant/docs/api/README.md)
-- [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md)
-- [`../cogant/docs/export/README.md`](../cogant/docs/export/README.md)
-- [`../cogant/docs/evaluation/README.md`](../cogant/docs/evaluation/README.md) — R&D log and empirical reports
-- [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md)
+- [`../../cogant/docs/api/README.md`](../../cogant/docs/api/README.md)
+- [`../../cogant/docs/cli/README.md`](../../cogant/docs/cli/README.md)
+- [`../../cogant/docs/export/README.md`](../../cogant/docs/export/README.md)
+- [`../../cogant/docs/evaluation/README.md`](../../cogant/docs/evaluation/README.md) — R&D log and empirical reports
+- [`../../cogant/docs/reference/implementation_status.md`](../../cogant/docs/reference/implementation_status.md)
 
 ## Render PDF
 
@@ -161,11 +161,11 @@ When this tree is linked under the parent template as
 `projects/working/cogant/`, the template renderer remains available:
 
 ```bash
-uv run python scripts/03_render_pdf.py --project working/cogant
+uv run python scripts/pipeline/stage_03_render.py --project working/COGANT --skip-manuscript-hydration
 ```
 
 ## See also
 
 - [`AGENTS.md`](AGENTS.md) — editor protocol for this folder
-- [`../cogant/AGENTS.md`](../cogant/AGENTS.md) — package tree orientation (docs live under `cogant/docs/`)
+- [`../../cogant/AGENTS.md`](../../cogant/AGENTS.md) — package tree orientation (docs live under `cogant/docs/`)
 - Parent template code-project manuscript docs — exemplar layout when this tree is linked under `docxology/template/projects/working/cogant/`

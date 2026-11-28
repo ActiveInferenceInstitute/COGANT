@@ -146,7 +146,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.6.0] - 2026-05-18
 
 ### Changed
-- Version bumped to 0.6.0 (`cogant.__version__`); `manuscript/config.yaml` aligned to 0.6.0.
+- Version bumped to 0.6.0 (`cogant.__version__`); `docs/manuscript/config.yaml` aligned to 0.6.0.
 
 ### Fixed (audit-driven fidelity pass, 2026-05-18)
 - Canonical metrics regenerated from a clean full `uv run pytest tests/ --cov=py/cogant`
@@ -168,7 +168,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Out-of-date `projects_in_progress/cogant` path references corrected to
   `projects/working/cogant` across active docs, scripts, and tooling.
 - Generated the missing `output/claim_ledger.md` snapshot referenced by
-  `manuscript/S06_appendix_source_references.md` (manuscript link checker now clean).
+  `docs/manuscript/S06_appendix_source_references.md` (manuscript link checker now clean).
 
 ## [0.5.1] - 2026-05-09
 
@@ -252,21 +252,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   parity), wired into `tools/manuscript_figures.py` as
   `cogant_rule_family_ablation.png` (curated copy + synthesized
   `.figure.json` sidecar; strict figure-copy passes at 14 figures, 0
-  missing, 0 metadata failures), and referenced from `manuscript/09_ablation.md`
+  missing, 0 metadata failures), and referenced from `docs/manuscript/09_ablation.md`
   as `@fig:cogant-rule-family-ablation`. No-mocks tests in
   `tests/unit/test_viz_ablation.py` (valid-PNG, byte-determinism, real
   shipped METRICS.yaml). Closes the gap where iteration-2 produced measured
   ablation data but no figure visualized it.
 
 ### Fixed
-- **`manuscript/09_ablation.md` `requests_lib` matrix-fallback A-rows was a
+- **`docs/manuscript/09_ablation.md` `requests_lib` matrix-fallback A-rows was a
   wrong hardcoded literal.** The cell read `30 / 36` while
   `ablation.matrix_fallback.requests_lib.a_rows_uniform` in `METRICS.yaml`
   is `32`. `requests_lib` was the only matrix-fallback row left fully
   hand-maintained; it is now tokenized (`{{ABLATION_REQUESTS_LIB_A_ROWS_UNIFORM/_TOTAL}}`
   registered in `tools/manuscript_vars.py`, alongside the pre-existing
   C-entries tokens) so it can no longer drift.
-- **`manuscript/98_notation_supplement.md` undercounted `MappingKind`.** It
+- **`docs/manuscript/98_notation_supplement.md` undercounted `MappingKind`.** It
   called the formal $\mathcal{K}_M$ list "Full ... (11 kinds)" while the
   code `MappingKind` enum in `cogant.schemas.semantic` has **14** members.
   Reworded to distinguish the 11-kind *formal* alphabet from the 14-member
@@ -292,13 +292,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   as a step in `regenerate_metrics.py`. Deterministic; no-mocks test
   (`tests/test_regenerate_ablation.py`) including a positive control that
   proves `rule_filter` genuinely restricts the rule set. Rule-family,
-  fixpoint, and matrix-fallback tables in `manuscript/09_ablation.md` now
+  fixpoint, and matrix-fallback tables in `docs/manuscript/09_ablation.md` now
   resolve from `{{ABLATION_*}}` placeholders — closes the open
   ablation-regeneration backlog item (manuscript ablation numbers are no
   longer hand-edited).
 
 ### Erratum
-- **`manuscript/09_ablation.md` rule-family ablation numbers were
+- **`docs/manuscript/09_ablation.md` rule-family ablation numbers were
   hand-reconstructed and materially inaccurate.** Replacing them with
   measured values from the new harness corrected, on the `flask_app`
   fixture: control family **−5 CONTEXT → measured net Δ 0**; behavioural

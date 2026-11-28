@@ -108,7 +108,7 @@ def test_registered_manuscript_variables_pass_source_scan(tmp_path: Path) -> Non
     repo = _git_repo(tmp_path)
     _track(
         repo,
-        "manuscript/00_demo.md",
+        "docs/manuscript/00_demo.md",
         "A registered {{VERSION}} placeholder is expected in manuscript sources.\n",
     )
 

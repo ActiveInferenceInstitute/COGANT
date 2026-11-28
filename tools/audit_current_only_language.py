@@ -39,7 +39,7 @@ EXCLUDED_PARTS = {
 
 EXCLUDED_RELATIVE = {
     Path("cogant/coverage.json"),
-    Path("manuscript/references.bib"),
+    Path("docs/manuscript/references.bib"),
 }
 
 

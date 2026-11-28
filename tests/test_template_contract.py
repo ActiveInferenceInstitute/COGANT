@@ -19,7 +19,7 @@ def test_contract_paths_map_to_nested_package_layout() -> None:
     assert paths.package_root == paths.project_root / "cogant"
     assert paths.package_import_root == paths.package_root / "py" / "cogant"
     assert paths.package_tests == paths.package_root / "tests"
-    assert paths.manuscript_root == paths.project_root / "manuscript"
+    assert paths.manuscript_root == paths.project_root / "docs" / "manuscript"
     assert paths.run_all == paths.project_root / "run_all.py"
 
 
@@ -29,7 +29,7 @@ def test_validate_contract_passes_for_current_checkout() -> None:
 
 def test_validate_contract_reports_missing_labels(tmp_path: Path) -> None:
     (tmp_path / "cogant" / "py" / "cogant").mkdir(parents=True)
-    (tmp_path / "manuscript").mkdir()
+    (tmp_path / "docs" / "manuscript").mkdir(parents=True)
 
     missing = validate_contract(tmp_path)
 

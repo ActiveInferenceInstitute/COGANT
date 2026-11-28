@@ -67,7 +67,7 @@ IR theory, translation engine, confidence/provenance model, round-trip evaluatio
 reproducibility contract. Rendered PDFs ship as assets on the
 [GitHub releases](https://github.com/ActiveInferenceInstitute/COGANT/releases) (archived
 [v0.6.0 release](https://github.com/ActiveInferenceInstitute/COGANT/releases/tag/v0.6.0)); the
-markdown sources live under [`manuscript/`](../manuscript/).
+markdown sources live under [`docs/manuscript/`](../docs/manuscript/).
 
 ## Citation
 

@@ -97,7 +97,7 @@ def audit_directories(directories: list[Path]) -> list[Finding]:
 def audit(root: Path = ROOT, *, include_generated: bool = True) -> list[Finding]:
     """Scan source manuscript and, optionally, generated manuscript output."""
 
-    directories = [root / "manuscript"]
+    directories = [root / "docs" / "manuscript"]
     if include_generated:
         directories.append(root / "output" / "manuscript")
     return audit_directories(directories)
@@ -108,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--manuscript-dir",
         type=Path,
-        default=ROOT / "manuscript",
+        default=ROOT / "docs" / "manuscript",
         help="Source manuscript directory to scan.",
     )
     parser.add_argument(

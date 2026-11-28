@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_ROOTS = (ROOT / "manuscript", ROOT / "output" / "manuscript")
+DEFAULT_ROOTS = (ROOT / "docs" / "manuscript", ROOT / "output" / "manuscript")
 
 
 @dataclass(frozen=True)

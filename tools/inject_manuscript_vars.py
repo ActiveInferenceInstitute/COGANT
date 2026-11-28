@@ -19,9 +19,9 @@ Invocation is directory-independent: paths are resolved relative to
 
 Usage:
     python tools/inject_manuscript_vars.py <input.md> [--dry-run] [--output out.md]
-    python tools/inject_manuscript_vars.py manuscript/ --all [--dry-run]
-    python tools/inject_manuscript_vars.py manuscript/ --all --output-dir staging/
-    python tools/inject_manuscript_vars.py manuscript/ --all --strict   # CI gate
+    python tools/inject_manuscript_vars.py docs/manuscript/ --all [--dry-run]
+    python tools/inject_manuscript_vars.py docs/manuscript/ --all --output-dir staging/
+    python tools/inject_manuscript_vars.py docs/manuscript/ --all --strict   # CI gate
     python tools/inject_manuscript_vars.py --report                     # show resolved table
 """
 

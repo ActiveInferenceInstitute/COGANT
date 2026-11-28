@@ -1,7 +1,7 @@
 """Registry of manuscript template variables and their METRICS.yaml paths.
 
 This module is the authoritative mapping from ``{{PLACEHOLDER}}`` tokens used
-in ``manuscript/*.md`` to dotted paths inside ``cogant/evaluation/METRICS.yaml``.
+in ``docs/manuscript/*.md`` to dotted paths inside ``cogant/evaluation/METRICS.yaml``.
 It also provides the shared helpers used by every downstream consumer:
 
 * :func:`resolve_path` — walk a nested mapping by dotted path.

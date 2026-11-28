@@ -89,7 +89,7 @@ def test_audit_stage_list_fails_on_corrupted_canonical(tmp_path: Path, monkeypat
         "cogant/py/cogant/api/README.md",
         "cogant/py/cogant/api/AGENTS.md",
         "cogant/py/cogant/gnn/AGENTS.md",
-        "manuscript/03_api_and_workflows.md",
+        "docs/manuscript/03_api_and_workflows.md",
     ):
         target = fake_root / name
         target.parent.mkdir(parents=True, exist_ok=True)

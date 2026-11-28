@@ -11,7 +11,7 @@ metrics, manuscript source, and validation gates listed in [`../ISA.md`](../ISA.
   active review decision.
 - Prefer generator and test changes over narrative-only edits when a claim can
   be checked mechanically.
-- Use `README.md`, `AGENTS.md`, `manuscript/`, `cogant/docs/`, and
+- Use `README.md`, `AGENTS.md`, `docs/manuscript/`, `cogant/docs/`, and
   `cogant/evaluation/METRICS.yaml` as the public-facing contract.
 
 ## Current Evidence To Refresh

@@ -12,7 +12,7 @@ COGANT keeps its documentation **with the installable package** at
 [`cogant/docs/`](../cogant/docs/index.md), published as an MkDocs site. The
 repository also carries project-level documents at the root (`README.md`,
 `AGENTS.md`, `DESIGN.md`, `ISA.md`, `PROMOTION.md`, `TODO.md`) and the manuscript
-sources under [`manuscript/`](../manuscript/README.md). Use this page as the
+sources under [`docs/manuscript/`](manuscript/README.md). Use this page as the
 single entry point to all of them.
 
 ## Start here
@@ -25,14 +25,14 @@ single entry point to all of them.
 | Look up a command or flag | [`cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) · [`cogant/docs/cli/README.md`](../cogant/docs/cli/README.md) |
 | Answer a common question | [`cogant/docs/faq.md`](../cogant/docs/faq.md) |
 | Contribute code or docs | [`cogant/CONTRIBUTING.md`](../cogant/CONTRIBUTING.md) · [`cogant/docs/AGENTS.md`](../cogant/docs/AGENTS.md) |
-| Run the checks / understand CI | [`docs/RUN_GUIDE.md`](RUN_GUIDE.md) · [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
+| Run the checks / understand CI | [`docs/guides/RUN_GUIDE.md`](guides/RUN_GUIDE.md) · [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
 
 ## Gates and CI
 
 Every check has one entry point, [`run_gate.py`](../run_gate.py), with separately
 runnable arms (`lint`, `types`, `content`, `docs`, `test-fast`, `test-property`,
 `test-full`, `gnn`, `wheel`, `rust`, `manuscript`). GitHub Actions jobs invoke those arms
-instead of repeating their commands; [`docs/RUN_GUIDE.md`](RUN_GUIDE.md) maps
+instead of repeating their commands; [`docs/guides/RUN_GUIDE.md`](guides/RUN_GUIDE.md) maps
 each job to its arm and records the measured wall time per arm.
 
 - **GNN pin:** [`.github/gnn-pin.json`](../.github/gnn-pin.json) — schema
@@ -44,7 +44,7 @@ each job to its arm and records the measured wall time per arm.
 - **Python setup:** every job uses the org composite action
   `ActiveInferenceInstitute/.github/.github/actions/setup-python-uv@7159e67315330aac8e414aebae0ad1e999a41448`.
 - **Manuscript render:** `uv run --directory cogant python ../scripts/render_manuscript.py`
-  from this project root; see [`manuscript/README.md`](../manuscript/README.md).
+  from this project root; see [`docs/manuscript/README.md`](manuscript/README.md).
 - **Successful render receipt:** [`manuscript-render.json`](manuscript-render.json)
   records the source commit, local PDF artifact path and exact byte count.
 
@@ -98,9 +98,9 @@ each area below is the table of contents for that module.
 | [`ISA.md`](../ISA.md) | Information-system architecture note. |
 | [`PROMOTION.md`](../PROMOTION.md) | Checklist for rendering under the parent template. |
 | [`TODO.md`](../TODO.md) | Owner-facing execution backlog. |
-| [`docs/RUN_GUIDE.md`](RUN_GUIDE.md) | Gate arms, CI job mapping, conformance pin, measured wall time. |
+| [`docs/guides/RUN_GUIDE.md`](guides/RUN_GUIDE.md) | Gate arms, CI job mapping, conformance pin, measured wall time. |
 | [`CITATION.cff`](../CITATION.cff) | Machine-readable citation metadata. |
-| [`manuscript/README.md`](../manuscript/README.md) | Manuscript section index and validation commands. |
+| [`docs/manuscript/README.md`](manuscript/README.md) | Manuscript section index and validation commands. |
 | [`cogant/README.md`](../cogant/README.md) | Package overview. |
 | [`cogant/CONTRIBUTING.md`](../cogant/CONTRIBUTING.md) | Contribution guidelines and development setup. |
 | [`cogant/CHANGELOG.md`](../cogant/CHANGELOG.md) | Release history (source of truth for `cogant/docs/changelog.md`). |
@@ -122,7 +122,7 @@ Related machine-readable trees outside the docs site:
 - **Link checkers:** [`cogant/docs/verify_doc_links.py`](../cogant/docs/verify_doc_links.py)
   (relative links from the docs tree) and
   [`cogant/docs/verify_manuscript_links.py`](../cogant/docs/verify_manuscript_links.py)
-  (manuscript links; needs a sibling `manuscript/`, expected to report "directory
+  (manuscript links; needs a sibling `docs/manuscript/`, expected to report "directory
   not found" in a package-only checkout).
 - **Conventions for authors and agents:** [`cogant/docs/AGENTS.md`](../cogant/docs/AGENTS.md)
   (one topic per file; extend a module directory instead of recreating monoliths).

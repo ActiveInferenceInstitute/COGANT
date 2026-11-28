@@ -14,7 +14,7 @@ manuscript. It performs the following steps, in order:
 4. **Number formalisms** into ``output/data/formalism_registry.json`` so typed
    source labels such as ``{#def:program-graph}`` render as generated formal
    references in the injected manuscript.
-5. **Clean and substitute** every ``{{VAR}}`` in ``manuscript/*.md`` and write
+5. **Clean and substitute** every ``{{VAR}}`` in ``docs/manuscript/*.md`` and write
    the result to ``output/manuscript/*.md``. The cleanup removes previously
    generated Markdown fragments so section renames cannot leave duplicate render
    inputs.
@@ -110,7 +110,7 @@ from manuscript_vars import (  # noqa: E402
 
 logger = get_logger(__name__)
 
-MANUSCRIPT_DIR = COGANT_STAGING_ROOT / "manuscript"
+MANUSCRIPT_DIR = COGANT_STAGING_ROOT / "docs" / "manuscript"
 OUTPUT_DIR = COGANT_STAGING_ROOT / "output"
 DATA_DIR = OUTPUT_DIR / "data"
 INJECTED_MS_DIR = OUTPUT_DIR / "manuscript"
@@ -321,8 +321,8 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "Exit non-zero if any {{PLACEHOLDER}} remains unresolved in "
             "output/manuscript/ or any registered manuscript figure is "
-            "missing/incompletely described. Off by default because manuscript/README.md "
-            "and manuscript/AGENTS.md contain literal ``{{PLACEHOLDER}}`` "
+            "missing/incompletely described. Off by default because docs/manuscript/README.md "
+            "and docs/manuscript/AGENTS.md contain literal ``{{PLACEHOLDER}}`` "
             "tokens as documentation. Use in CI when you know the manuscript "
             "files are pure templates and the package figures have been generated."
         ),
@@ -365,7 +365,7 @@ def main(argv: list[str] | None = None) -> int:
 
     md_files = sorted(MANUSCRIPT_DIR.glob("*.md"))
     if not md_files:
-        msg = f"No manuscript/*.md files found under {MANUSCRIPT_DIR}"
+        msg = f"No docs/manuscript/*.md files found under {MANUSCRIPT_DIR}"
         logger.error(msg)
         raise SystemExit(f"ERROR: {msg}")
 

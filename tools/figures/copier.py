@@ -331,7 +331,7 @@ def _write_template_figure_registry(
 
 def _manuscript_figure_labels_by_filename(root: Path) -> dict[str, set[str]]:
     labels: dict[str, set[str]] = {}
-    manuscript_dir = root / "manuscript"
+    manuscript_dir = root / "docs" / "manuscript"
     if not manuscript_dir.exists():
         return labels
     for path in sorted(manuscript_dir.glob("*.md")):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare generated manuscript tables to their machine-readable sources.
 
-The table in ``manuscript/06_04_tests_mutation_and_benchmarks.md`` ({#tbl:coverage-stmt-modules})
+The table in ``docs/manuscript/06_04_tests_mutation_and_benchmarks.md`` ({#tbl:coverage-stmt-modules})
 is maintained manually from ``coverage report`` / ``coverage.json``. The fixture
 metric tables in ``06_03_performance_and_fixture_metrics.md`` are maintained from
 ``cogant/evaluation/figures/metrics.json``, and the benchmark table in
@@ -34,7 +34,7 @@ def _default_paths() -> tuple[Path, Path]:
     """tools/ -> staging root; package root = staging/cogant/."""
     tools_dir = Path(__file__).resolve().parent
     staging = tools_dir.parent
-    return staging / "manuscript" / "06_04_tests_mutation_and_benchmarks.md", staging / "cogant"
+    return staging / "docs" / "manuscript" / "06_04_tests_mutation_and_benchmarks.md", staging / "cogant"
 
 
 def _parse_table(md_path: Path) -> list[tuple[str, int, int]]:
